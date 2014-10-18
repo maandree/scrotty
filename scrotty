@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# scrotty — Screenshot program for Linux's TTY
+# Copyright © 2014  Mattias Andrée (maandree@member.fsf.org)
+# 
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this library.  If not, see <http://www.gnu.org/licenses/>.
+
+
+f=0
+while [ -e /dev/fb$f ]; do
+    pathname=fb$f.png
+    if [ -e $pathname ]; then
+	i=2
+	while [ -e $pathname.$i ]; do
+	    (( i++ ))
+	done
+	pathname=$pathname.$i
+    fi
+    (
+	echo P3
+	cat /sys/class/graphics/fb0/virtual_size | sed -e 's/,/ /'
+	echo 255
+	cat /dev/fb0 | od -t u1 -v | cut -d ' ' -f 1 --complement |
+	  sed -e 's/\([0-9]\+\) \+\([0-9]\+\) \+\([0-9]\+\) \+\([0-9]\+\)/\3 \2 \1/g'
+    ) | convert /dev/stdin $pathname
+    (( f++ ))
+done
+
+exit 0
+
