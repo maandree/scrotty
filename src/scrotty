@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+# -*- python -*-
+'''
+scrotty — Screenshot program for Linux's TTY
+Copyright © 2014  Mattias Andrée (maandree@member.fsf.org)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
+import os, sys
+
+fbno = 0
+
+def write(string):
+    os.write(pipe_write, string.encode('utf-8'))
+
+while os.path.exists('/dev/fb%i' % fbno):
+    with open('/dev/fb%i' % fbno, 'rb') as file:
+        data = file.read()
+    
+    pathname = 'fb%i.png' % fbno
+    if os.path.exists(pathname):
+        i = 2
+        while os.path.exists('%s.%i' % (pathname, i)):
+            i += 1
+        pathname = '%s.%i' % (pathname, i)
+    
+    (pipe_read, pipe_write) = os.pipe()
+    pid = os.fork()
+    
+    if pid == 0:
+        os.close(pipe_write)
+        if pipe_read != 0:
+            os.close(0)
+            os.dup2(pipe_read, 0)
+            os.close(pipe_read)
+        os.execlp('convert', 'convert', '/dev/stdin', pathname)
+    
+    os.close(pipe_read)
+    
+    write('P3\n')
+    with open('/sys/class/graphics/fb%i/virtual_size' % fbno, 'rb') as file:
+        write(file.read().decode('utf-8', 'strict').replace(',', ' '))
+    write('255\n')
+    
+    j = 0
+    data_length = len(data)
+    for i in range(0, data_length, 4):
+        r, g, b = data[i + 2], data[i + 1], data[i + 0]
+        j += 1
+        if (j == 5) or (i + 4 == data_length):
+            j = 0
+            write('%i %i %i\n' % (r, g, b))
+        else:
+            write('%i %i %i ' % (r, g, b))
+    
+    os.close(pipe_write)
+    
+    reaped = 0
+    while reaped != pid:
+        (reaped, status) = os.waitpid(pid, 0)
+    if status == 0:
+        print('Saved framebuffer %i to %s' % (fbno, pathname), file = sys.stderr)
+    else:
+        sys.exit(1)
+    fbno += 1
+
