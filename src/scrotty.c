@@ -66,33 +66,22 @@ static const char* inttable[] =
  * 
  * @param   fbname  The framebuffer device
  * @param   fbno    The number of the framebuffer
+ * @param   width   The width of the image
+ * @param   height  The height of the image
  * @param   fd      The file descriptor connected to `convert`'s stdin
  * @return          Zero on success, -1 on error
  */
-static int save_pnm(const char* fbpath, int fbno, int fd)
+static int save_pnm(const char* fbpath, int fbno, long width, long height, int fd)
 {
   char buf[PATH_MAX];
   FILE* file;
-  int saved_errno, sizefd, fbfd, r, g, b;
+  int saved_errno, fbfd, r, g, b;
   ssize_t got, off;
-  
-  /* Open the file with the framebuffer's dimensions. */
-  sprintf(buf, SYSDIR "/class/graphics/fb%i/virtual_size", fbno);
-  if (sizefd = open(buf, O_RDONLY), sizefd < 0)
-    return -1;
-  
-  /* Get the dimensions of the framebuffer. */
-  if (got = read(sizefd, buf, sizeof(buf) / sizeof(char) - 1), got < 0)
-    return saved_errno = errno, close(sizefd), errno = saved_errno, -1;
-  close(sizefd);
-  /* The read content is formated as `%{1},%{2}\n`, we want it do be `%{1} %{2}\n\0`. */
-  buf[got] = '\0';
-  *strchr(buf, ',') = ' ';
   
   /* Open the framebuffer device for reading. */
   if (fbfd = open(fbpath, O_RDONLY), fbfd < 0)
     return -1;
-
+  
   /* Create a FILE*, for writing, for the image file. */
   file = fdopen(fd, "w");
   if (file == NULL)
@@ -100,7 +89,7 @@ static int save_pnm(const char* fbpath, int fbno, int fd)
   
   /* The PNM image should begin with `P3\n%{width} %{height}\n%{colour max=255}\n`.
      ('\n' and ' ' can be exchanged at will.) */
-  fprintf(file, "P3\n%s255\n", buf);
+  fprintf(file, "P3\n%l %l255\n", width, height);
   
   /* Convert raw framebuffer data into an PNM image. */
   for (off = 0;;)
@@ -149,10 +138,12 @@ static int save_pnm(const char* fbpath, int fbno, int fd)
  * @param   fbname    The framebuffer device
  * @param   imgname   The pathname of the output image
  * @param   fbno      The number of the framebuffer
+ * @param   width     The width of the image
+ * @param   height    The height of the image
  * @param   execname  `argv[0]` from `main`
  * @return            Zero on success, -1 on error
  */
-static int save(const char* fbpath, const char* imgpath, int fbno, const char* execname)
+static int save(const char* fbpath, const char* imgpath, int fbno, long width, long height, const char* execname)
 {
   int pipe_rw[2];
   pid_t pid, reaped;
@@ -161,11 +152,11 @@ static int save(const char* fbpath, const char* imgpath, int fbno, const char* e
   /* Create a pipe that for sending data into the `convert` program. */
   if (pipe(pipe_rw) < 0)
     return -1;
-
+  
   /* Fork the process, the child will exec. `convert`. */
   if (pid = fork(), pid == -1)
     return saved_errno = errno, close(pipe_rw[0]), close(pipe_rw[1]), errno = saved_errno, -1;
-
+  
   /* Child process: */
   if (pid == 0)
     {
@@ -190,19 +181,56 @@ static int save(const char* fbpath, const char* imgpath, int fbno, const char* e
   close(pipe_rw[0]);
   
   /* Create a PNM-image of the framebuffer. */
-  if (save_pnm(fbpath, fbno, pipe_rw[1]) < 0)
+  if (save_pnm(fbpath, fbno, width, height, pipe_rw[1]) < 0)
     return saved_errno = errno, close(pipe_rw[1]), errno = saved_errno, -1;
   
   /* Close the write-end of the pipe. */
   close(pipe_rw[1]);
-
+  
   /* Wait for `convert` to exit. */
   for (reaped = 0; reaped != pid;)
     if (reaped = waitpid(pid, &status, 0), reaped < 0)
       return -1;
-
+  
   /* Return successfully if and only if `convert` did. */
   return status == 0 ? 0 : -1;
+}
+
+
+/**
+ * Get the dimensions of the framebuffer
+ * 
+ * @param   fbno    The number of the framebuffer
+ * @param   width   Output parameter for the width of the image
+ * @param   height  Output parameter for the height of the image
+ * @return          Zero on success, -1 on error
+ */
+static int measure(int fbno, long* width, long* height)
+{
+  char buf[PATH_MAX];
+  char* delim;
+  int sizefd, saved_errno;
+  ssize_t got;
+  
+  /* Open the file with the framebuffer's dimensions. */
+  sprintf(buf, SYSDIR "/class/graphics/fb%i/virtual_size", fbno);
+  if (sizefd = open(buf, O_RDONLY), sizefd < 0)
+    return -1;
+  
+  /* Get the dimensions of the framebuffer. */
+  if (got = read(sizefd, buf, sizeof(buf) / sizeof(char) - 1), got < 0)
+    return saved_errno = errno, close(sizefd), errno = saved_errno, -1;
+  close(sizefd);
+  
+  /* The read content is formated as `%{width},%{height}\n`,
+     convert it to `%{width}\0%{height}\0` and parse it. */
+  buf[got] = '\0';
+  delim = strchr(buf, ',');
+  *delim++ = '\0';
+  *width = atol(buf);
+  *height = atol(delim);
+  
+  return 0;
 }
 
 
@@ -218,6 +246,7 @@ int main(int argc, char* argv[])
   char fbpath[PATH_MAX];
   char imgpath[PATH_MAX];
   int i, fbno;
+  long width, height;
   
   (void) argc;
   
@@ -228,6 +257,10 @@ int main(int argc, char* argv[])
       sprintf(fbpath, DEVDIR "/fb%i", fbno);
       if (access(fbpath, F_OK))
 	break;
+      
+      /* Get the size of the framebuffer. */
+      if (measure(fbno, &width, &height) < 0)
+	return perror(*argv), 1;
       
       /* Get output pathname. */
       sprintf(imgpath, "fb%i.png", fbno);
@@ -240,7 +273,7 @@ int main(int argc, char* argv[])
 	  }
       
       /* Take a screenshot of the current framebuffer. */
-      if (save(fbpath, imgpath, fbno, *argv) < 0)
+      if (save(fbpath, imgpath, fbno, width, height, *argv) < 0)
 	return perror(*argv), 1;
       fprintf(stderr, "Saved framebuffer %i to %s\n", fbno, imgpath);
     }
