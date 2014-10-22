@@ -62,6 +62,12 @@ static const char* inttable[] =
 
 
 /**
+ * `argv[0]` from `main`
+ */
+static const char* execname;
+
+
+/**
  * Create an PNM-file that is sent to `convert` for convertion to a compressed format
  * 
  * @param   fbname  The framebuffer device
@@ -140,10 +146,9 @@ static int save_pnm(const char* fbpath, int fbno, long width, long height, int f
  * @param   fbno      The number of the framebuffer
  * @param   width     The width of the image
  * @param   height    The height of the image
- * @param   execname  `argv[0]` from `main`
  * @return            Zero on success, -1 on error
  */
-static int save(const char* fbpath, const char* imgpath, int fbno, long width, long height, const char* execname)
+static int save(const char* fbpath, const char* imgpath, int fbno, long width, long height)
 {
   int pipe_rw[2];
   pid_t pid, reaped;
@@ -235,6 +240,46 @@ static int measure(int fbno, long* width, long* height)
 
 
 /**
+ * Take a screenshot of a framebuffer
+ * 
+ * @param   fbno  The number of the framebuffer
+ * @return        Zero on success, -1 on error, 1 if the framebuffer does not exist
+ */
+static int save_fb(int fbno)
+{
+  char fbpath[PATH_MAX];
+  char imgpath[PATH_MAX];
+  long width, height;
+  int i;
+  
+  /* Get pathname for framebuffer, and stop if we have read all existing ones. */
+  sprintf(fbpath, DEVDIR "/fb%i", fbno);
+  if (access(fbpath, F_OK))
+    return 1;
+  
+  /* Get the size of the framebuffer. */
+  if (measure(fbno, &width, &height) < 0)
+    return -1;
+  
+  /* Get output pathname. */
+  sprintf(imgpath, "fb%i.png", fbno);
+  if (access(imgpath, F_OK) == 0)
+    for (i = 2;; i++)
+      {
+	sprintf(imgpath, "fb%i.png.%i", fbno, i);
+	if (access(imgpath, F_OK))
+	  break;
+      }
+  
+  /* Take a screenshot of the current framebuffer. */
+  if (save(fbpath, imgpath, fbno, width, height) < 0)
+    return -1;
+  fprintf(stderr, "Saved framebuffer %i to %s\n", fbno, imgpath);
+  return 0;
+}
+
+
+/**
  * Take a screenshow of all framebuffers
  * 
  * @param   argc  The number of elements in `argv`
@@ -243,39 +288,18 @@ static int measure(int fbno, long* width, long* height)
  */
 int main(int argc, char* argv[])
 {
-  char fbpath[PATH_MAX];
-  char imgpath[PATH_MAX];
-  int i, fbno;
-  long width, height;
+  int fbno, r;
   
   (void) argc;
+  
+  execname = *argv;
   
   /* The a screenshot of each framebuffer. */
   for (fbno = 0;; fbno++)
     {
-      /* Get pathname for framebuffer, and stop if we have read all existing ones. */
-      sprintf(fbpath, DEVDIR "/fb%i", fbno);
-      if (access(fbpath, F_OK))
-	break;
-      
-      /* Get the size of the framebuffer. */
-      if (measure(fbno, &width, &height) < 0)
-	return perror(*argv), 1;
-      
-      /* Get output pathname. */
-      sprintf(imgpath, "fb%i.png", fbno);
-      if (access(imgpath, F_OK) == 0)
-	for (i = 2;; i++)
-	  {
-	    sprintf(imgpath, "fb%i.png.%i", fbno, i);
-	    if (access(imgpath, F_OK))
-	      break;
-	  }
-      
-      /* Take a screenshot of the current framebuffer. */
-      if (save(fbpath, imgpath, fbno, width, height, *argv) < 0)
-	return perror(*argv), 1;
-      fprintf(stderr, "Saved framebuffer %i to %s\n", fbno, imgpath);
+      r = save_fb(fbno);
+      if (r < 0)  return perror(execname), 1;
+      if (r > 0)  break;
     }
   
   return 0;
