@@ -37,7 +37,17 @@
 #endif
 
 
+
 #define LIST_0_9(P)  P"0\n", P"1\n", P"2\n", P"3\n", P"4\n", P"5\n", P"6\n", P"7\n", P"8\n", P"9\n"
+
+/**
+ * [0, 255]-integer-to-text convertion lookup table for faster conversion from
+ * raw framebuffer data to the PNM format. The values have a whitespace at the
+ * end for even faster conversion.
+ * Lines should not be longer than 70 (although most programs will probably
+ * work even if there are longer lines), therefore the selected whitespace
+ * is LF (new line).
+ */
 static const char* inttable[] =
   {
     LIST_0_9(""),  LIST_0_9("1"), LIST_0_9("2"), LIST_0_9("3"), LIST_0_9("4"),
@@ -51,6 +61,14 @@ static const char* inttable[] =
   };
 
 
+/**
+ * Create an PNM-file that is sent to `convert` for convertion to a compressed format
+ * 
+ * @param   fbname  The framebuffer device
+ * @param   fbno    The number of the framebuffer
+ * @param   fd      The file descriptor connected to `convert`'s stdin
+ * @return          Zero on success, -1 on error
+ */
 static int save_pnm(const char* fbpath, int fbno, int fd)
 {
   char buf[PATH_MAX];
@@ -58,40 +76,55 @@ static int save_pnm(const char* fbpath, int fbno, int fd)
   int saved_errno, sizefd, fbfd, r, g, b;
   ssize_t got, off;
   
+  /* Open the file with the framebuffer's dimensions. */
   sprintf(buf, SYSDIR "/class/graphics/fb%i/virtual_size", fbno);
   if (sizefd = open(buf, O_RDONLY), sizefd < 0)
     return -1;
   
+  /* Get the dimensions of the framebuffer. */
   if (got = read(sizefd, buf, sizeof(buf) / sizeof(char) - 1), got < 0)
     return saved_errno = errno, close(sizefd), errno = saved_errno, -1;
   close(sizefd);
+  /* The read content is formated as `%{1},%{2}\n`, we want it do be `%{1} %{2}\n\0`. */
   buf[got] = '\0';
   *strchr(buf, ',') = ' ';
   
-  fbfd = open(fbpath, O_RDONLY);
-  if (fbfd < 0)
+  /* Open the framebuffer device for reading. */
+  if (fbfd = open(fbpath, O_RDONLY), fbfd < 0)
     return -1;
-  
+
+  /* Create a FILE*, for writing, for the image file. */
   file = fdopen(fd, "w");
   if (file == NULL)
     return saved_errno = errno, close(fbfd), errno = saved_errno, -1;
+  
+  /* The PNM image should begin with `P3\n%{width} %{height}\n%{colour max=255}\n`.
+     ('\n' and ' ' can be exchanged at will.) */
   fprintf(file, "P3\n%s255\n", buf);
   
+  /* Convert raw framebuffer data into an PNM image. */
   for (off = 0;;)
     {
+      /* Read data from the framebuffer, we may have up to 3 bytes buffered. */
       got = read(fbfd, buf + off, sizeof(buf) - off * sizeof(char));
       if (got < 0)
 	return saved_errno = errno, fclose(file), close(fbfd), errno = saved_errno, -1;
       if (got += off, got == 0)
 	break;
       
+      /* Convert read pixels. */
       for (off = 0; off < got; off += 4)
 	{
+	  /* A pixel in the framebuffer is formatted as `%{blue}%{green}%{red}%{x}` in binary. */
 	  r = buf[off + 2] & 255;
 	  g = buf[off + 1] & 255;
 	  b = buf[off + 0] & 255;
+	  /* A pixel in the PNM image is formatted as `%{red} %{green} %{blue} ` in text. */
 	  fprintf(file, "%s%s%s", inttable[r], inttable[g], inttable[b]);
 	}
+      
+      /* If we read a whole number of pixels, reset the buffer, otherwise,
+         move the unconverted bytes to the beginning of the buffer. */
       if (off != got)
 	{
 	  off -= 4;
@@ -102,6 +135,7 @@ static int save_pnm(const char* fbpath, int fbno, int fd)
 	off = 0;
     }
   
+  /* Close files and return successfully. */
   fflush(file);
   fclose(file);
   close(fbfd);
@@ -109,51 +143,76 @@ static int save_pnm(const char* fbpath, int fbno, int fd)
 }
 
 
+/**
+ * Create an image of a framebuffer
+ * 
+ * @param   fbname    The framebuffer device
+ * @param   imgname   The pathname of the output image
+ * @param   fbno      The number of the framebuffer
+ * @param   execname  `argv[0]` from `main`
+ * @return            Zero on success, -1 on error
+ */
 static int save(const char* fbpath, const char* imgpath, int fbno, const char* execname)
 {
   int pipe_rw[2];
   pid_t pid, reaped;
   int saved_errno, status;
   
+  /* Create a pipe that for sending data into the `convert` program. */
   if (pipe(pipe_rw) < 0)
     return -1;
-  
+
+  /* Fork the process, the child will exec. `convert`. */
   if (pid = fork(), pid == -1)
     return saved_errno = errno, close(pipe_rw[0]), close(pipe_rw[1]), errno = saved_errno, -1;
-  
+
+  /* Child process: */
   if (pid == 0)
     {
+      /* Close the write-end of the pipe. */
       close(pipe_rw[1]);
+      /* Turn the read-end of the into stdin. */
       if (pipe_rw[0] != STDIN_FILENO)
 	{
 	  close(STDIN_FILENO);
 	  dup2(pipe_rw[0], STDIN_FILENO);
 	  close(pipe_rw[0]);
 	}
+      /* Exec. `convert` to convert the PNM-image we create to a compressed image. */
       execlp("convert", "convert", DEVDIR "/stdin", imgpath, NULL);
       perror(execname);
       exit(1);
     }
   
+  /* Parent process: */
+  
+  /* Close the read-end of the pipe. */
   close(pipe_rw[0]);
   
+  /* Create a PNM-image of the framebuffer. */
   if (save_pnm(fbpath, fbno, pipe_rw[1]) < 0)
     return saved_errno = errno, close(pipe_rw[1]), errno = saved_errno, -1;
   
+  /* Close the write-end of the pipe. */
   close(pipe_rw[1]);
-  
-  reaped = 0;
-  while (reaped != pid)
-    {
-      reaped = waitpid(pid, &status, 0);
-      if (reaped < 0)
-	return -1;
-    }
-  
+
+  /* Wait for `convert` to exit. */
+  for (reaped = 0; reaped != pid;)
+    if (reaped = waitpid(pid, &status, 0), reaped < 0)
+      return -1;
+
+  /* Return successfully if and only if `convert` did. */
   return status == 0 ? 0 : -1;
 }
 
 
+/**
+ * Take a screenshow of all framebuffers
+ * 
+ * @param   argc  The number of elements in `argv`
+ * @param   argv  Command line arguments
+ * @return        Zero on and only on success
+ */
 int main(int argc, char* argv[])
 {
   char fbpath[PATH_MAX];
@@ -162,12 +221,15 @@ int main(int argc, char* argv[])
   
   (void) argc;
   
+  /* The a screenshot of each framebuffer. */
   for (fbno = 0;; fbno++)
     {
+      /* Get pathname for framebuffer, and stop if we have read all existing ones. */
       sprintf(fbpath, DEVDIR "/fb%i", fbno);
       if (access(fbpath, F_OK))
 	break;
       
+      /* Get output pathname. */
       sprintf(imgpath, "fb%i.png", fbno);
       if (access(imgpath, F_OK) == 0)
 	for (i = 2;; i++)
@@ -177,6 +239,7 @@ int main(int argc, char* argv[])
 	      break;
 	  }
       
+      /* Take a screenshot of the current framebuffer. */
       if (save(fbpath, imgpath, fbno, *argv) < 0)
 	return perror(*argv), 1;
       fprintf(stderr, "Saved framebuffer %i to %s\n", fbno, imgpath);
