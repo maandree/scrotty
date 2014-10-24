@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 
 #ifndef PATH_MAX
@@ -95,7 +96,7 @@ static int save_pnm(const char* fbpath, int fbno, long width, long height, int f
   
   /* The PNM image should begin with `P3\n%{width} %{height}\n%{colour max=255}\n`.
      ('\n' and ' ' can be exchanged at will.) */
-  fprintf(file, "P3\n%l %l255\n", width, height);
+  fprintf(file, "P3\n%li %li\n255\n", width, height);
   
   /* Convert raw framebuffer data into an PNM image. */
   for (off = 0;;)
@@ -110,10 +111,12 @@ static int save_pnm(const char* fbpath, int fbno, long width, long height, int f
       /* Convert read pixels. */
       for (off = 0; off < got; off += 4)
 	{
-	  /* A pixel in the framebuffer is formatted as `%{blue}%{green}%{red}%{x}` in binary. */
-	  r = buf[off + 2] & 255;
-	  g = buf[off + 1] & 255;
-	  b = buf[off + 0] & 255;
+	  /* A pixel in the framebuffer is formatted as `%{blue}%{green}%{red}%{x}`
+	     in big-endian binary, or `%{x}%{red}%{green}%{blue}` in little-endian binary. */
+	  uint32_t* pixel = (uint32_t*)(buf + off);
+	  r = (*pixel >> 16) & 255;
+	  g = (*pixel >> 8) & 255;
+	  b = (*pixel >> 0) & 255;
 	  /* A pixel in the PNM image is formatted as `%{red} %{green} %{blue} ` in text. */
 	  fprintf(file, "%s%s%s", inttable[r], inttable[g], inttable[b]);
 	}

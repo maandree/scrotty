@@ -31,8 +31,9 @@ while [ -e /dev/fb$f ]; do
 	echo P3
 	cat /sys/class/graphics/fb$f/virtual_size | sed -e 's/,/ /'
 	echo 255
-	cat /dev/fb$f | od -t u1 -v | cut -d ' ' -f 1 --complement |
-	  sed -e 's/\([0-9]\+\) \+\([0-9]\+\) \+\([0-9]\+\) \+\([0-9]\+\)/\3 \2 \1/g'
+	(echo 'ibase=16;'; cat /dev/fb$f | od -t x4 -v | cut -d ' ' -f 1 --complement |
+	    sed -e 's/\(..\)\(..\)\(..\)\(..\)\( \|$\)/\2 \3 \4 /g' |
+	    sed -e 's/ /\n/g' | sed -e '/^$/d' -e 'y/abcedf/ABCEDF/') | bc
     ) | convert /dev/stdin $pathname
     (( f++ ))
 done
