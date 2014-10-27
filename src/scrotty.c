@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
   
   execname = *argv;
   
-  /* The a screenshot of each framebuffer. */
+  /* Take a screenshot of each framebuffer. */
   for (fbno = 0;; fbno++)
     {
       r = save_fb(fbno);

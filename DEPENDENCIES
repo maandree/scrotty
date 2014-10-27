@@ -1,0 +1,20 @@
+RUNTIME DEPENDENCIES:
+
+	linux
+	libc
+	imagemagick
+
+
+BUILD DEPENDENCIES:
+
+	make
+	coreutils
+	libc
+	c99
+
+
+INSTALL DEPENDENCIES:
+
+	make
+	coreutils
+
