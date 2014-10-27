@@ -15,6 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef PROGRAM_NAME
+# define PROGRAM_NAME  "scrotty"
+#endif
+#ifndef PROGRAM_VERSION
+# define PROGRAM_VERSION  "1.0"
+#endif
+
+
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
@@ -66,6 +74,12 @@ static const char* inttable[] =
  * `argv[0]` from `main`
  */
 static const char* execname;
+
+/**
+ * Arguments for `convert`,
+ * the output file should be printed into `convert_args[2]`.
+ */
+static char** convert_args;
 
 
 /**
@@ -178,7 +192,8 @@ static int save(const char* fbpath, const char* imgpath, int fbno, long width, l
 	  close(pipe_rw[0]);
 	}
       /* Exec. `convert` to convert the PNM-image we create to a compressed image. */
-      execlp("convert", "convert", DEVDIR "/stdin", imgpath, NULL);
+      sprintf(convert_args[2], "%s", imgpath);
+      execvp("convert", convert_args);
       perror(execname);
       exit(1);
     }
@@ -282,8 +297,96 @@ static int save_fb(int fbno)
 }
 
 
+#define p(...)  if (printf(__VA_ARGS__) < 0)  return -1;
+
+
 /**
- * Take a screenshow of all framebuffers
+ * Print usage information
+ * 
+ * @return  Zero on success, -1 on error
+ */
+static int print_help(void)
+{
+  p("SYNOPSIS\n");
+  p("\t%s [options...] [filename-pattern] [-- options-for-convert...]\n", execname);
+  p("\n");
+  p("OPTIONS\n");
+  p("\t--help         Print usage information.\n");
+  p("\t--version      Print program name and version.\n");
+  p("\t--copyright    Print copyright information.\n");
+  p("\t--exec CMD     Command to run for each saved image.\n");
+  p("\n");
+  p("SPECIAL STRINGS\n");
+  p("\tBoth the --exec and filename-pattern parameters can take format specifiers\n");
+  p("\tthat are expanded by scrotty when encountered. There are two types of format\n");
+  p("\tspecifier. Characters preceded by a '%%' are interpretted by strftime(2).\n");
+  p("\tSee `man strftime` for examples. These options may be used to refer to the\n");
+  p("\tcurrent date and time. The second kind are internal to scrotty and are prefixed\n");
+  p("\tby '$'. The following specifiers are recognised:\n");
+  p("\n");
+  p("\t\n");
+  p("\t$i  framebuffer index\n");
+  p("\t$f  image filename/pathname (ignored when used in filename-pattern)\n");
+  p("\t$n  image filename          (ignored when used in filename-pattern)\n");
+  p("\t$p  image width multiplied by image height\n");
+  p("\t$w  image width\n");
+  p("\t$h  image height\n");
+  p("\t$$  expands to a literal '$'\n");
+  p("\t\\n  expands to a new line\n");
+  p("\t\\\\  expands to a literal '\\'\n");
+  p("\t\\   expands to a literal ' ' (the string is a backslash followed by a space)\n");
+  p("\n");
+  p("\tA space that is not prefixed by a backslash in --exec is interpreted as an\n");
+  p("\targument delimiter. This is the case even at the beginning and end of the\n");
+  p("\tstring and if the a space was the previous character in the string.\n");
+  p("\n");
+  return 0;
+}
+
+
+/**
+ * Print program name and version
+ * 
+ * @return  Zero on success, -1 on error
+ */
+static int print_version(void)
+{
+  p("%s %s\n", PROGRAM_NAME, PROGRAM_VERSION);
+  return 0;
+}
+
+
+/**
+ * Print copyright information
+ * 
+ * @return  Zero on success, -1 on error
+ */
+static int print_copyright(void)
+{
+  p("scrotty -- Screenshot program for Linux's TTY\n");
+  p("Copyright (C) 2014  Mattias Andrée (maandree@member.fsf.org)\n");
+  p("\n");
+  p("This program is free software: you can redistribute it and/or modify\n");
+  p("it under the terms of the GNU General Public License as published by\n");
+  p("the Free Software Foundation, either version 3 of the License, or\n");
+  p("(at your option) any later version.\n");
+  p("\n");
+  p("This program is distributed in the hope that it will be useful,\n");
+  p("but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
+  p("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n");
+  p("GNU General Public License for more details.\n");
+  p("\n");
+  p("You should have received a copy of the GNU General Public License\n");
+  p("along with this program.  If not, see <http://www.gnu.org/licenses/>.\n");
+  return 0;
+}
+
+
+#undef p
+
+
+/**
+ * Take a screenshot of all framebuffers
  * 
  * @param   argc  The number of elements in `argv`
  * @param   argv  Command line arguments
@@ -291,11 +394,46 @@ static int save_fb(int fbno)
  */
 int main(int argc, char* argv[])
 {
-  int fbno, r;
-  
-  (void) argc;
+  int fbno, r, i, dash = argc, exec = -1, help = 0, version = 0, copyright = 0, filepattern = -1;
+  static char convert_args_2[PATH_MAX];
   
   execname = *argv;
+  
+  /* Parse command line. */
+  for (i = 1; i < argc; i++)
+    {
+      if      (!strcmp(argv[i], "--help"))       help = 1;
+      else if (!strcmp(argv[i], "--version"))    version = 1;
+      else if (!strcmp(argv[i], "--copyright"))  copyright = 1;
+      else if (!strcmp(argv[i], "--exec"))       exec = ++i; /* TODO use this */
+      else if (!strcmp(argv[i], "--"))
+	{
+	  dash = i + 1;
+	  break;
+	}
+      else if ((argv[i][0] == '-') || (filepattern != -1))
+	return fprintf(stderr, "Unrecognised option. Type `%s --help` for help.\n", execname), 1;
+      else
+	filepattern = i; /* TODO use this */
+    }
+  
+  /* Check that --exec is valid. */
+  if (exec == argc)
+    return fprintf(stderr, "--exec has no argument. Type `%s --help` for help.\n", execname), 1;
+  
+  /* Was --help, --version or --copyright used? */
+  if (help)       return -(print_help());
+  if (version)    return -(print_version());
+  if (copyright)  return -(print_copyright());
+  
+  /* Create arguments for `convert`. */
+  convert_args = alloca((4 + (argc - dash)) * sizeof(char*));
+  convert_args[0] = "convert";
+  convert_args[1] = DEVDIR "/stdin";
+  convert_args[2] = convert_args_2;
+  for (i = dash; i < argc; i++)
+    convert_args[i - dash + 2] = argv[i];
+  convert_args[3 + (argc - dash)] = NULL;
   
   /* Take a screenshot of each framebuffer. */
   for (fbno = 0;; fbno++)
