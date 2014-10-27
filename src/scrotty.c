@@ -33,6 +33,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <alloca.h>
 
 
 #ifndef PATH_MAX
