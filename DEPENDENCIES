@@ -10,7 +10,7 @@ BUILD DEPENDENCIES:
 	make
 	coreutils
 	libc
-	c99
+	gcc
 
 
 INSTALL DEPENDENCIES:

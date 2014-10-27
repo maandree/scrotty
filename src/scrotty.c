@@ -33,7 +33,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <alloca.h>
+#include <time.h>
 
 
 #ifndef PATH_MAX
@@ -259,12 +261,128 @@ static int measure(int fbno, long* width, long* height)
 
 
 /**
+ * Duplicate all '%':s in a buffer until the first occurrence of a zero byte
+ * 
+ * @param   buf  The buffer
+ * @param   n    The size of the buffer
+ * @return       -1 if the buffer is too small, otherwise
+ *               the new position of the first zero byte
+ */
+static ssize_t duplicate_percents(char* restrict buf, size_t n)
+{
+  size_t p = 0, pi, pc = 0, i;
+  
+  /* Count number of '%':s. */
+  for (i = 0; buf[i]; i++)
+    if (buf[i] == '%')
+      pc++;
+  
+  /* Check whether the string will overflow. */
+  if (i + pc > n)
+    return -1;
+  
+  /* Duplicate all '%':s. */
+  for (pi = 0; pi < pc; pi++)
+    {
+      p = (size_t)(strchr(buf + p, '%') - buf);
+      memmove(buf + p + 1, buf + p, (i - (p - pi)) * sizeof(char));
+      p += 2;
+    }
+  
+  return (ssize_t)(i + pi);
+}
+
+
+/**
+ * Parse and evaluate a --exec argument or filename pattern
+ * 
+ * If `path != NULL` than all non-escaped spaces in
+ * `pattern` will be stored as 255-bytes in `buf`.
+ * 
+ * @param   buf      The output buffer
+ * @param   n        The size of `buf`
+ * @param   pattern  The pattern to evaluate
+ * @param   fbno     The index of the framebuffer
+ * @param   width    The width of the image/framebuffer
+ * @param   height   The height of the image/framebuffer
+ * @param   path     The filename of the saved image, `NULL` during the evaluation of the filename pattern
+ * @return           Zero on success, -1 on error
+ */
+static int evaluate(char* restrict buf, size_t n, const char* restrict pattern,
+		    int fbno, long width, long height, const char* restrict path)
+{
+#define p(format, value)  r = snprintf(buf + i, n - i, format "%zn", value, &j)
+  
+  size_t i = 0;
+  ssize_t j = 0;
+  int percent = 0, backslash = 0, dollar = 0, r;
+  char c;
+  char* fmt;
+  time_t t;
+  struct tm tm;
+  
+  while ((c = *pattern++))
+    {
+      if (dollar)
+	{
+	  dollar = 0;
+	  if (path == NULL)
+	    if ((c == 'f') || (c == 'n'))
+	      continue;
+	  if      (c == 'i')  p("%i", fbno);
+	  else if (c == 'f')  p("%s", path);
+	  else if (c == 'n')  p("%s", strrchr(path, '/') ? (strrchr(path, '/') + 1) : path);
+	  else if (c == 'p')  p("%ju", (uintmax_t)width * (uintmax_t)height);
+	  else if (c == 'w')  p("%li", width);
+	  else if (c == 'h')  p("%li", height);
+	  else if (c == '$')  r = 0, j = 1, buf[i] = '$';
+	  else
+	    continue;
+	  if ((r < 0) || (j <= 0))
+	    return -1;
+	  if ((c == 'f') || (c == 'n'))
+	    if (j = duplicate_percents(buf + i, n - i), j < 0)
+	      return errno = ENAMETOOLONG, -1;
+	  i += (size_t)j;
+	}
+      else if (backslash)  buf[i++] = (c == 'n' ? '\n' : c), backslash = 0;
+      else if (percent)    buf[i++] = c, percent = 0;
+      else if (c == '%')   buf[i++] = c, percent = 1;
+      else if (c == '\\')  backslash = 1;
+      else if (c == '$')   dollar = 1;
+      else if (c == ' ')   buf[i++] = path == NULL ? ' ' : 255; /* 255 is not valid in UTF-8. */
+      else                 buf[i++] = c;
+      
+      if (i >= n)
+	return errno = ENAMETOOLONG, -1;
+    }
+  buf[i] = '\0';
+  
+  if (strchr(buf, '%') == NULL)
+    return 0;
+  
+  fmt = alloca((strlen(buf) + 1) * sizeof(char));
+  memcpy(fmt, buf, (strlen(buf) + 1) * sizeof(char));
+  
+  t = time(NULL);
+  localtime_r(&t, &tm);
+  if (strftime(buf, n, fmt, &tm) == 0)
+    return errno = ENAMETOOLONG, -1;
+  
+  return 0;
+  
+#undef p
+}
+
+
+/**
  * Take a screenshot of a framebuffer
  * 
- * @param   fbno  The number of the framebuffer
- * @return        Zero on success, -1 on error, 1 if the framebuffer does not exist
+ * @param   fbno         The number of the framebuffer
+ * @param   filepattern  The pattern for the filename, `NULL` for default
+ * @return               Zero on success, -1 on error, 1 if the framebuffer does not exist
  */
-static int save_fb(int fbno)
+static int save_fb(int fbno, const char* filepattern)
 {
   char fbpath[PATH_MAX];
   char imgpath[PATH_MAX];
@@ -279,16 +397,22 @@ static int save_fb(int fbno)
   /* Get the size of the framebuffer. */
   if (measure(fbno, &width, &height) < 0)
     return -1;
-  
+
   /* Get output pathname. */
-  sprintf(imgpath, "fb%i.png", fbno);
-  if (access(imgpath, F_OK) == 0)
-    for (i = 2;; i++)
-      {
-	sprintf(imgpath, "fb%i.png.%i", fbno, i);
-	if (access(imgpath, F_OK))
-	  break;
-      }
+  if (filepattern == NULL)
+    {
+      sprintf(imgpath, "fb%i.png", fbno);
+      if (access(imgpath, F_OK) == 0)
+	for (i = 2;; i++)
+	  {
+	    sprintf(imgpath, "fb%i.png.%i", fbno, i);
+	    if (access(imgpath, F_OK))
+	      break;
+	  }
+    }
+  else
+    if (evaluate(imgpath, PATH_MAX, filepattern, fbno, width, height, NULL) < 0)
+      return -1;
   
   /* Take a screenshot of the current framebuffer. */
   if (save(fbpath, imgpath, fbno, width, height) < 0)
@@ -415,7 +539,7 @@ int main(int argc, char* argv[])
       else if ((argv[i][0] == '-') || (filepattern != -1))
 	return fprintf(stderr, "Unrecognised option. Type `%s --help` for help.\n", execname), 1;
       else
-	filepattern = i; /* TODO use this */
+	filepattern = i;
     }
   
   /* Check that --exec is valid. */
@@ -439,7 +563,7 @@ int main(int argc, char* argv[])
   /* Take a screenshot of each framebuffer. */
   for (fbno = 0;; fbno++)
     {
-      r = save_fb(fbno);
+      r = save_fb(fbno, filepattern < 0 ? NULL : argv[filepattern]);
       if (r < 0)  return perror(execname), 1;
       if (r > 0)  break;
     }
