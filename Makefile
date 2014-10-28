@@ -87,7 +87,7 @@ pdf: scrotty.pdf
 .PHONY: dvi
 dvi: scrotty.dvi
 %.dvi: info/%.texinfo info/fdl.texinfo
-	@mkdir -p objo
+	@mkdir -p obj
 	cd obj ; yes X | $(TEXI2DVI) ../$<
 	mv obj/$@ $@
 
