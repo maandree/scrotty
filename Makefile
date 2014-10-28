@@ -118,13 +118,13 @@ install-copyright: install-copying install-license
 
 .PHONY: install-copying
 install-copying:
-	install -dm755 -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)"
-	install -m644 COPYING -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)/COPYING"
+	install -dm755 -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	install -m644 COPYING -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/COPYING"
 
 .PHONY: install-license
 install-license:
-	install -dm755 -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)"
-	install -m644 LICENSE -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)/LICENSE"
+	install -dm755 -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	install -m644 LICENSE -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/LICENSE"
 
 .PHONY: install-doc
 install-doc: install-info install-pdf install-ps install-dvi
@@ -153,9 +153,9 @@ install-dvi: scrotty.dvi
 .PHONY: uninstall
 uninstall:
 	-rm -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
-	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)/COPYING"
-	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)/LICENSE"
-	-rmdir -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)"
+	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/COPYING"
+	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/LICENSE"
+	-rmdir -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
 	-rm -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
