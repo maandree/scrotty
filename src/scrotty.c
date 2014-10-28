@@ -320,7 +320,7 @@ static int evaluate(char* restrict buf, size_t n, const char* restrict pattern,
   char* fmt;
   time_t t;
   struct tm tm;
-
+  
   /* Expand '$' and '\'. */
   while ((c = *pattern++))
     {
@@ -380,18 +380,80 @@ static int evaluate(char* restrict buf, size_t n, const char* restrict pattern,
 
 
 /**
+ * Run a command for an image
+ * 
+ * @param   flatten_args  The arguments to run, 255 delimits the arguments
+ * @return                Zero on success -1 on error
+ */
+static int exec_image(char* flatten_args)
+{
+  char** args;
+  char* arg;
+  size_t i, arg_count = 1;
+  pid_t pid, reaped;
+  int status;
+  
+  /* Count arguments. */
+  for (i = 0; flatten_args[i]; i++)
+    if (flatten_args[i] == 255)
+      arg_count++;
+  
+  /* Allocate argument array. */
+  args = alloca((arg_count + 1) * sizeof(char*));
+  
+  /* Unflatten argument array. */
+  for (arg = flatten_args, i = 0;;)
+    {
+      args[i++] = arg;
+      arg = strchr(arg, 255);
+      if (arg == NULL)
+	break;
+      *arg++ = '\0';
+    }
+  args[i] = NULL;
+
+  /* Fork process. */
+  pid = fork();
+  if (pid == -1)
+    return -1;
+
+  /* Child process: */
+  if (pid == 0)
+    {
+      execvp(*args, args);
+      perror(execname);
+      exit(1);
+      return -1;
+    }
+  
+  /* Parent process: */
+  
+  /* Wait for child to exit. */
+  for (reaped = 0; reaped != pid;)
+    if (reaped = waitpid(pid, &status, 0), reaped < 0)
+      return -1;
+  
+  /* Return successfully if and only if `the child` did. */
+  return status == 0 ? 0 : -1;
+}
+
+
+/**
  * Take a screenshot of a framebuffer
  * 
  * @param   fbno         The number of the framebuffer
  * @param   filepattern  The pattern for the filename, `NULL` for default
  * @return               Zero on success, -1 on error, 1 if the framebuffer does not exist
  */
-static int save_fb(int fbno, const char* filepattern)
+static int save_fb(int fbno, const char* filepattern, const char* execpattern)
 {
   char fbpath[PATH_MAX];
   char imgpath[PATH_MAX];
+  char* execargs = NULL;
+  char* old;
   long width, height;
-  int i;
+  size_t size = PATH_MAX;
+  int i, saved_errno;
   
   /* Get pathname for framebuffer, and stop if we have read all existing ones. */
   sprintf(fbpath, DEVDIR "/fb%i", fbno);
@@ -422,7 +484,29 @@ static int save_fb(int fbno, const char* filepattern)
   if (save(fbpath, imgpath, fbno, width, height) < 0)
     return -1;
   fprintf(stderr, "Saved framebuffer %i to %s\n", fbno, imgpath);
-  return 0;
+  
+  /* Should we run a command over the image? */
+  if (execpattern == NULL)
+    return 0;
+  
+  /* Get execute arguments. */
+ retry:
+  execargs = realloc(old = execargs, size * sizeof(char));
+  if (execargs == NULL)
+    return saved_errno = errno, free(old), errno = saved_errno, -1;
+  if (evaluate(execargs, size, execpattern, fbno, width, height, imgpath) < 0)
+    {
+      if ((errno != ENAMETOOLONG) || ((size >> 8) <= PATH_MAX))
+	return -1;
+      size <<= 1;
+      goto retry;
+    }
+  
+  /* Run command over image. */
+  i = exec_image(execargs);
+  saved_errno = errno;
+  free(execargs);
+  return errno = saved_errno, i;
 }
 
 
@@ -567,7 +651,7 @@ int main(int argc, char* argv[])
   /* Take a screenshot of each framebuffer. */
   for (fbno = 0;; fbno++)
     {
-      r = save_fb(fbno, filepattern < 0 ? NULL : argv[filepattern]);
+      r = save_fb(fbno, filepattern < 0 ? NULL : argv[filepattern], exec < 0 ? NULL : argv[exec]);
       if (r < 0)  return perror(execname), 1;
       if (r > 0)  break;
     }
