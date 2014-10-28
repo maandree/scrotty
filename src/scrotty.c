@@ -320,7 +320,8 @@ static int evaluate(char* restrict buf, size_t n, const char* restrict pattern,
   char* fmt;
   time_t t;
   struct tm tm;
-  
+
+  /* Expand '$' and '\'. */
   while ((c = *pattern++))
     {
       if (dollar)
@@ -358,12 +359,15 @@ static int evaluate(char* restrict buf, size_t n, const char* restrict pattern,
     }
   buf[i] = '\0';
   
+  /* Check whether there are any '%' to expand. */
   if (strchr(buf, '%') == NULL)
     return 0;
   
+  /* Copy the buffer so we can reuse the buffer and use its old content for the format. */
   fmt = alloca((strlen(buf) + 1) * sizeof(char));
   memcpy(fmt, buf, (strlen(buf) + 1) * sizeof(char));
   
+  /* Expand '%'. */
   t = time(NULL);
   localtime_r(&t, &tm);
   if (strftime(buf, n, fmt, &tm) == 0)
