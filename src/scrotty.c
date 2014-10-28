@@ -89,13 +89,12 @@ static char** convert_args;
  * Create an PNM-file that is sent to `convert` for convertion to a compressed format
  * 
  * @param   fbname  The framebuffer device
- * @param   fbno    The number of the framebuffer
  * @param   width   The width of the image
  * @param   height  The height of the image
  * @param   fd      The file descriptor connected to `convert`'s stdin
  * @return          Zero on success, -1 on error
  */
-static int save_pnm(const char* fbpath, int fbno, long width, long height, int fd)
+static int save_pnm(const char* fbpath, long width, long height, int fd)
 {
   char buf[PATH_MAX];
   FILE* file;
@@ -119,7 +118,7 @@ static int save_pnm(const char* fbpath, int fbno, long width, long height, int f
   for (off = 0;;)
     {
       /* Read data from the framebuffer, we may have up to 3 bytes buffered. */
-      got = read(fbfd, buf + off, sizeof(buf) - off * sizeof(char));
+      got = read(fbfd, buf + off, sizeof(buf) - (size_t)off * sizeof(char));
       if (got < 0)
 	return saved_errno = errno, fclose(file), close(fbfd), errno = saved_errno, -1;
       if (got += off, got == 0)
@@ -143,7 +142,7 @@ static int save_pnm(const char* fbpath, int fbno, long width, long height, int f
       if (off != got)
 	{
 	  off -= 4;
-	  memcpy(buf, buf + off, (got - off) * sizeof(char));
+	  memcpy(buf, buf + off, (size_t)(got - off) * sizeof(char));
 	  off = got - off;
 	}
       else
@@ -163,12 +162,11 @@ static int save_pnm(const char* fbpath, int fbno, long width, long height, int f
  * 
  * @param   fbname    The framebuffer device
  * @param   imgname   The pathname of the output image
- * @param   fbno      The number of the framebuffer
  * @param   width     The width of the image
  * @param   height    The height of the image
  * @return            Zero on success, -1 on error
  */
-static int save(const char* fbpath, const char* imgpath, int fbno, long width, long height)
+static int save(const char* fbpath, const char* imgpath, long width, long height)
 {
   int pipe_rw[2];
   pid_t pid, reaped;
@@ -207,7 +205,7 @@ static int save(const char* fbpath, const char* imgpath, int fbno, long width, l
   close(pipe_rw[0]);
   
   /* Create a PNM-image of the framebuffer. */
-  if (save_pnm(fbpath, fbno, width, height, pipe_rw[1]) < 0)
+  if (save_pnm(fbpath, width, height, pipe_rw[1]) < 0)
     return saved_errno = errno, close(pipe_rw[1]), errno = saved_errno, -1;
   
   /* Close the write-end of the pipe. */
@@ -351,7 +349,7 @@ static int evaluate(char* restrict buf, size_t n, const char* restrict pattern,
       else if (c == '%')   buf[i++] = c, percent = 1;
       else if (c == '\\')  backslash = 1;
       else if (c == '$')   dollar = 1;
-      else if (c == ' ')   buf[i++] = path == NULL ? ' ' : 255; /* 255 is not valid in UTF-8. */
+      else if (c == ' ')   buf[i++] = path == NULL ? ' ' : (char)255; /* 255 is not valid in UTF-8. */
       else                 buf[i++] = c;
       
       if (i >= n)
@@ -370,7 +368,10 @@ static int evaluate(char* restrict buf, size_t n, const char* restrict pattern,
   /* Expand '%'. */
   t = time(NULL);
   localtime_r(&t, &tm);
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wformat-nonliteral"
   if (strftime(buf, n, fmt, &tm) == 0)
+# pragma GCC diagnostic pop
     return errno = ENAMETOOLONG, -1;
   
   return 0;
@@ -395,7 +396,7 @@ static int exec_image(char* flatten_args)
   
   /* Count arguments. */
   for (i = 0; flatten_args[i]; i++)
-    if (flatten_args[i] == 255)
+    if ((unsigned char)(flatten_args[i]) == 255)
       arg_count++;
   
   /* Allocate argument array. */
@@ -477,11 +478,11 @@ static int save_fb(int fbno, const char* filepattern, const char* execpattern)
 	  }
     }
   else
-    if (evaluate(imgpath, PATH_MAX, filepattern, fbno, width, height, NULL) < 0)
+    if (evaluate(imgpath, (size_t)PATH_MAX, filepattern, fbno, width, height, NULL) < 0)
       return -1;
   
   /* Take a screenshot of the current framebuffer. */
-  if (save(fbpath, imgpath, fbno, width, height) < 0)
+  if (save(fbpath, imgpath, width, height) < 0)
     return -1;
   fprintf(stderr, "Saved framebuffer %i to %s\n", fbno, imgpath);
   
@@ -608,6 +609,8 @@ static int print_copyright(void)
 int main(int argc, char* argv[])
 {
   int fbno, r, i, dash = argc, exec = -1, help = 0, version = 0, copyright = 0, filepattern = -1;
+  static char convert_args_0[] = "convert";
+  static char convert_args_1[] = DEVDIR "/stdin";
   static char convert_args_2[PATH_MAX];
   
   execname = *argv;
@@ -640,9 +643,9 @@ int main(int argc, char* argv[])
   if (copyright)  return -(print_copyright());
   
   /* Create arguments for `convert`. */
-  convert_args = alloca((4 + (argc - dash)) * sizeof(char*));
-  convert_args[0] = "convert";
-  convert_args[1] = DEVDIR "/stdin";
+  convert_args = alloca((size_t)(4 + (argc - dash)) * sizeof(char*));
+  convert_args[0] = convert_args_0;
+  convert_args[1] = convert_args_1;
   convert_args[2] = convert_args_2;
   for (i = dash; i < argc; i++)
     convert_args[i - dash + 2] = argv[i];
