@@ -20,7 +20,10 @@ DOCDIR ?= $(DATADIR)/doc
 INFODIR ?= $(DATADIR)/info
 # The license base path including prefix
 LICENSEDIR ?= $(DATADIR)/licenses
+
+# The /dev directory that should be compiled into the program
 DEVDIR = /dev
+# The /sys directory that should be compiled into the program
 SYSDIR = /sys
 
 # The name of the command as it should be installed
@@ -48,6 +51,7 @@ STD = -std=gnu99
 DEFS = -D'DEVDIR="$(DEVDIR)"' -D'SYSDIR="$(SYSDIR)"'
 
 
+
 .PHONY: all
 all: cmd
 
@@ -61,6 +65,42 @@ obj/scrotty.o: src/scrotty.c
 bin/scrotty: obj/scrotty.o
 	@mkdir -p bin
 	$(CC) $(STD) $(OPTIMISE) $(WARN) $(LDFLAGS) -o $@ $^
+
+
+.PHONY: install
+install: install-base
+
+.PHONY: install-all
+install-all: install-base
+
+.PHONY: install-base
+install-base: install-cmd install-copyright
+
+.PHONY: install-cmd
+install-cmd: bin/scrotty
+	install -dm755 -- "$(DESTDIR)$(BINDIR)"
+	install -m755 $< -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
+
+.PHONY: install-copyright
+install-copyright: install-copying install-license
+
+.PHONY: install-copying
+install-copying:
+	install -dm755 -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)"
+	install -m644 COPYING -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)/COPYING"
+
+.PHONY: install-license
+install-license:
+	install -dm755 -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)"
+	install -m644 LICENSE -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)/LICENSE"
+
+
+.PHONY: uninstall
+uninstall:
+	-rm -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
+	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)/COPYING"
+	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)/LICENSE"
+	-rmdir -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)"
 
 
 .PHONY: clean
