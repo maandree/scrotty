@@ -52,8 +52,11 @@ DEFS = -D'DEVDIR="$(DEVDIR)"' -D'SYSDIR="$(SYSDIR)"'
 
 
 
+.PHONY: default
+default: cmd info
+
 .PHONY: all
-all: cmd
+all: cmd doc
 
 .PHONY: cmd
 cmd: bin/scrotty
@@ -66,12 +69,41 @@ bin/scrotty: obj/scrotty.o
 	@mkdir -p bin
 	$(CC) $(STD) $(OPTIMISE) $(WARN) $(LDFLAGS) -o $@ $^
 
+.PHONY: doc
+doc: info pdf dvi ps
+
+.PHONY: info
+info: scrotty.info
+%.info: info/%.texinfo info/fdl.texinfo
+	makeinfo $<
+
+.PHONY: pdf
+pdf: scrotty.pdf
+%.pdf: info/%.texinfo info/fdl.texinfo
+	@mkdir -p obj
+	cd obj ; yes X | texi2pdf ../$<
+	mv obj/$@ $@
+
+.PHONY: dvi
+dvi: scrotty.dvi
+%.dvi: info/%.texinfo info/fdl.texinfo
+	@mkdir -p objo
+	cd obj ; yes X | $(TEXI2DVI) ../$<
+	mv obj/$@ $@
+
+.PHONY: ps
+ps: scrotty.ps
+%.ps: info/%.texinfo info/fdl.texinfo
+	@mkdir -p obj
+	cd obj ; yes X | texi2pdf --ps ../$<
+	mv obj/$@ $@
+
 
 .PHONY: install
-install: install-base
+install: install-base install-info
 
 .PHONY: install-all
-install-all: install-base
+install-all: install-base install-doc
 
 .PHONY: install-base
 install-base: install-cmd install-copyright
@@ -94,6 +126,29 @@ install-license:
 	install -dm755 -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)"
 	install -m644 LICENSE -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)/LICENSE"
 
+.PHONY: install-doc
+install-doc: install-info install-pdf install-ps install-dvi
+
+.PHONY: install-info
+install-info: scrotty.info
+	install -dm755 -- "$(DESTDIR)$(INFODIR)"
+	install -m644 $< -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
+
+.PHONY: install-pdf
+install-pdf: scrotty.pdf
+	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
+	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
+
+.PHONY: install-ps
+install-ps: scrotty.ps
+	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
+	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
+
+.PHONY: install-dvi
+install-dvi: scrotty.dvi
+	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
+	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
+
 
 .PHONY: uninstall
 uninstall:
@@ -101,6 +156,10 @@ uninstall:
 	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)/COPYING"
 	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)/LICENSE"
 	-rmdir -- "$(DESTDIR)$(LICENSEDIR)/$(PACKAGE)"
+	-rm -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
+	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
+	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
+	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
 
 
 .PHONY: clean

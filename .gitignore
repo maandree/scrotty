@@ -9,4 +9,8 @@ obj/
 *.out
 *.su
 *.gch
+*.info
+*.dvi
+*.ps
+*.pdf
 

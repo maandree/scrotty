@@ -535,7 +535,7 @@ static int print_help(void)
   p("\tspecifier. Characters preceded by a '%%' are interpretted by strftime(2).\n");
   p("\tSee `man strftime` for examples. These options may be used to refer to the\n");
   p("\tcurrent date and time. The second kind are internal to scrotty and are prefixed\n");
-  p("\tby '$'. The following specifiers are recognised:\n");
+  p("\tby '$' or '\\'. The following specifiers are recognised:\n");
   p("\n");
   p("\t\n");
   p("\t$i  framebuffer index\n");
@@ -551,7 +551,7 @@ static int print_help(void)
   p("\n");
   p("\tA space that is not prefixed by a backslash in --exec is interpreted as an\n");
   p("\targument delimiter. This is the case even at the beginning and end of the\n");
-  p("\tstring and if the a space was the previous character in the string.\n");
+  p("\tstring and if a space was the previous character in the string.\n");
   p("\n");
   return 0;
 }
