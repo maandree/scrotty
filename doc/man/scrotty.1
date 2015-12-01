@@ -1,0 +1,105 @@
+.TH SCROTTY 1 SCROTTY
+.SH NAME
+scrotty \- Screenshot program for Linux's TTY.
+.SH SYNOPSIS
+.B scrotty
+.RI [ OPTION ]...\ [ FILENAME_PATTERN ]
+[\-\-
+.IR CONVERT_OPTION ...]
+.SH DESCRIPTION
+.B scrotty
+is a minimalist screenshoter for the
+.BR Linux\ VT .
+It takes a screenshot of your framebuffers (multiple are
+supported.)
+.B X
+is not supported.
+.PP
+.B scrotty
+is designed after
+.BR scrot (1),
+but includes a some improvements. Namely it does not support
+delaying the screenshot, selecting image quality or creating
+thumbnails, but it has support for adding arbitrary arguments
+to
+.BR convert (1),
+which is used to save the image.
+.SH OPTIONS
+.TP
+.B \-\-help
+Print usage information.
+.TP
+.B \-\-version
+Print program name and version.
+.TP
+.B \-\-copyright
+Print copyright information.
+.TP
+.BR \-\-exec \ \fICMD\fP
+Command to run for each saved image.
+.SH "SPECIAL STRINGS"
+Both the
+.B \-\-exec
+and
+.I FILENAME_PATTERN
+parameters can take format specifiers that are expanded by
+.B scrotty
+when encountered. There are two types of format specifier.
+Characters preceded by a \(aq%\(aq are interpretted by
+.BR strftime (3).
+These options may be used to refer to the current date and
+time. The second kind are internal to
+.B scrotty
+and are prefixed by \(aq$\(aq or \(aq\\\(aq. The following
+specifiers are recognised:
+.PP
+$i      framebuffer index
+.br
+$f      image filename/pathname (ignored in FILENAME_PATTERN)
+.br
+$n      image filename          (ignored in FILENAME_PATTERN)
+.br
+$p      image width multiplied by image height
+.br
+$w      image width
+.br
+$h      image height
+.br
+$$      expands to a literal \(aq$\(aq
+.br
+\\n      expands to a new line
+.br
+\\\\      expands to a literal \(aq\\\(aq
+.br
+\\       expands to a literal \(aq \(aq (backslash, space)
+.PP
+A space that is not prefixed by a backslash in
+.B \-\-exec
+is interpreted as an argument delimiter. This is the case
+even at the beginning and end of the string and if a space
+was the previous character in the string.
+.SH RATIONALE
+Taking screenshots was a pain before this. Screenshots
+are useful if you want to remember something or send an
+image of how something looks.
+.SH "SEE ALSO"
+.BR scrot (1),
+.BR convert (1),
+.BR strftime (3)
+.PP
+Full documentation available locally via: info \(aq(scrotty)\(aq
+.SH AUTHORS
+Principal author, Mattias Andrée.  See the COPYING file for the full
+list of authors.
+.SH LICENSE
+Copyright \(co 2014, 2015  Mattias Andrée
+.br
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+.br
+This is free software: you are free to change and redistribute it.
+.br
+There is NO WARRANTY, to the extent permitted by law.
+.SH BUGS
+Please report bugs to https://github.com/maandree/scrotty/issues or to
+maandree@member.fsf.org
+

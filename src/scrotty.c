@@ -533,7 +533,7 @@ static int print_help(void)
   p("SPECIAL STRINGS\n");
   p("\tBoth the --exec and filename-pattern parameters can take format specifiers\n");
   p("\tthat are expanded by scrotty when encountered. There are two types of format\n");
-  p("\tspecifier. Characters preceded by a '%%' are interpretted by strftime(2).\n");
+  p("\tspecifier. Characters preceded by a '%%' are interpretted by strftime(3).\n");
   p("\tSee `man strftime` for examples. These options may be used to refer to the\n");
   p("\tcurrent date and time. The second kind are internal to scrotty and are prefixed\n");
   p("\tby '$' or '\\'. The following specifiers are recognised:\n");

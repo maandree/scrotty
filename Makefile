@@ -5,21 +5,25 @@
 
 
 # The package path prefix, if you want to install to another root, set DESTDIR to that root
-PREFIX ?= /usr
+PREFIX = /usr
 # The command path excluding prefix
-BIN ?= /bin
+BIN = /bin
 # The resource path excluding prefix
-DATA ?= /share
+DATA = /share
 # The command path including prefix
-BINDIR ?= $(PREFIX)$(BIN)
+BINDIR = $(PREFIX)$(BIN)
 # The resource path including prefix
-DATADIR ?= $(PREFIX)$(DATA)
+DATADIR = $(PREFIX)$(DATA)
 # The generic documentation path including prefix
-DOCDIR ?= $(DATADIR)/doc
+DOCDIR = $(DATADIR)/doc
 # The info manual documentation path including prefix
-INFODIR ?= $(DATADIR)/info
+INFODIR = $(DATADIR)/info
+# The man page documentation path including prefix
+MANDIR = $(DATADIR)/man
+# The man page section 1 path including prefix
+MAN1DIR = $(MANDIR)/man1
 # The license base path including prefix
-LICENSEDIR ?= $(DATADIR)/licenses
+LICENSEDIR = $(DATADIR)/licenses
 
 # The /dev directory that should be compiled into the program
 DEVDIR = /dev
@@ -27,12 +31,12 @@ DEVDIR = /dev
 SYSDIR = /sys
 
 # The name of the command as it should be installed
-COMMAND ?= scrotty
+COMMAND = scrotty
 # The name of the package as it should be installed
-PKGNAME ?= scrotty
+PKGNAME = scrotty
 
 # Optimisation settings for C code compilation
-OPTIMISE ?= -Og -g
+OPTIMISE = -Og -g
 # Warnings settings for C code compilation
 WARN = -Wall -Wextra -pedantic -Wdouble-promotion -Wformat=2 -Winit-self -Wmissing-include-dirs      \
        -Wtrampolines -Wmissing-prototypes -Wmissing-declarations -Wnested-externs                    \
@@ -53,10 +57,13 @@ DEFS = -D'DEVDIR="$(DEVDIR)"' -D'SYSDIR="$(SYSDIR)"'
 
 
 .PHONY: default
-default: cmd info
+default: base info
 
 .PHONY: all
-all: cmd doc
+all: base doc
+
+.PHONY: base
+base: cmd
 
 .PHONY: cmd
 cmd: bin/scrotty
@@ -73,34 +80,36 @@ bin/scrotty: obj/scrotty.o
 doc: info pdf dvi ps
 
 .PHONY: info
-info: scrotty.info
-%.info: info/%.texinfo info/fdl.texinfo
+info: bin/scrotty.info
+bin/%.info: doc/info/%.texinfo doc/info/fdl.texinfo
+	@mkdir -p bin
 	makeinfo $<
+	mv $*.info $@
 
 .PHONY: pdf
-pdf: scrotty.pdf
-%.pdf: info/%.texinfo info/fdl.texinfo
-	@mkdir -p obj/pdf
-	cd obj/pdf ; yes X | texi2pdf ../../$<
-	mv obj/pdf/$@ $@
+pdf: bin/scrotty.pdf
+bin/%.pdf: doc/info/%.texinfo doc/info/fdl.texinfo
+	@mkdir -p obj/pdf bin
+	cd obj/pdf && texi2pdf ../../$< < /dev/null
+	mv obj/pdf/$*.pdf $@
 
 .PHONY: dvi
-dvi: scrotty.dvi
-%.dvi: info/%.texinfo info/fdl.texinfo
-	@mkdir -p obj/dvi
-	cd obj/dvi ; yes X | $(TEXI2DVI) ../../$<
-	mv obj/dvi/$@ $@
+dvi: bin/scrotty.dvi
+bin/%.dvi: doc/info/%.texinfo doc/info/fdl.texinfo
+	@mkdir -p obj/dvi bin
+	cd obj/dvi && $(TEXI2DVI) ../../$< < /dev/null
+	mv obj/dvi/$*.dvi $@
 
 .PHONY: ps
-ps: scrotty.ps
-%.ps: info/%.texinfo info/fdl.texinfo
-	@mkdir -p obj/ps
-	cd obj/ps ; yes X | texi2pdf --ps ../../$<
-	mv obj/ps/$@ $@
+ps: bin/scrotty.ps
+bin/%.ps: doc/info/%.texinfo doc/info/fdl.texinfo
+	@mkdir -p obj/ps bin
+	cd obj/ps && texi2pdf --ps ../../$< < /dev/null
+	mv obj/ps/$*.ps $@
 
 
 .PHONY: install
-install: install-base install-info
+install: install-base install-info install-man
 
 .PHONY: install-all
 install-all: install-base install-doc
@@ -127,27 +136,32 @@ install-license:
 	install -m644 LICENSE -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/LICENSE"
 
 .PHONY: install-doc
-install-doc: install-info install-pdf install-ps install-dvi
+install-doc: install-info install-pdf install-ps install-dvi install-man
 
 .PHONY: install-info
-install-info: scrotty.info
+install-info: bin/scrotty.info
 	install -dm755 -- "$(DESTDIR)$(INFODIR)"
 	install -m644 $< -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
 
 .PHONY: install-pdf
-install-pdf: scrotty.pdf
+install-pdf: bin/scrotty.pdf
 	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
 	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
 
 .PHONY: install-ps
-install-ps: scrotty.ps
+install-ps: bin/scrotty.ps
 	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
 	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
 
 .PHONY: install-dvi
-install-dvi: scrotty.dvi
+install-dvi: bin/scrotty.dvi
 	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
 	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
+
+.PHONY: install-man
+install-man: doc/man/scrotty.1
+	install -dm755 -- "$(DESTDIR)$(MAN1DIR)"
+	install -m644 $< -- "$(DESTDIR)$(MAN1DIR)/$(COMMAND).1"
 
 
 .PHONY: uninstall
@@ -160,9 +174,10 @@ uninstall:
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
+	-rm -- "$(DESTDIR)$(MAN1DIR)/$(COMMAND).1"
 
 
 .PHONY: clean
 clean:
-	-rm -r bin obj scrotty.{info,pdf,ps,dvi} *.su src/*.su
+	-rm -r bin obj
 

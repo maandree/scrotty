@@ -1,2 +1,65 @@
-Screenshot program for Linux's TTY.
+NAME
+	scrotty - Screenshot program for Linux's TTY.
+
+SYNOPSIS
+	scrotty [OPTION]... [FILENAME_PATTERN] [-- CONVERT_OPTION...]
+
+DESCRIPTION
+	scrotty is a minimalist screenshoter for the Linux VT. It takes
+	a screenshot of your framebuffers (multiple are supported.)
+	X is not supported.
+
+	scrotty is designed after scrot(1), but includes a some
+	improvements. Namely it does not support delaying the screenshot,
+	selecting image quality or creating thumbnails, but it has
+	support for adding arbitrary arguments to convert(1), which is
+	used to save the image.
+
+OPTIONS
+	--help
+		Print usage information.
+
+	--version
+		Print program name and version.
+
+	--copyright
+		Print copyright information.
+
+	--exec CMD
+		Command to run for each saved image.
+
+SPECIAL STRINGS
+	Both the --exec and FILENAME_PATTERN parameters can take format
+	specifiers that are expanded by scrotty when encountered. There
+	are two types of format specifier. Characters preceded by a '%'
+	are interpretted by strftime(3). These options may be used to
+	refer to the current date and time. The second kind are internal
+	to scrotty and are prefixed by '$' or '\'. The following specifiers
+	are recognised:
+	
+	$i	framebuffer index
+	$f	image filename/pathname (ignored in FILENAME_PATTERN)
+	$n	image filename          (ignored in FILENAME_PATTERN)
+	$p	image width multiplied by image height
+	$w	image width
+	$h	image height
+	$$	expands to a literal '$'
+	\n	expands to a new line
+	\\	expands to a literal '\'
+	\ 	expands to a literal ' ' (backslash, space)
+
+	A space that is not prefixed by a backslash in --exec is
+	interpreted as an argument delimiter. This is the case even at
+	the beginning and end of the string and if a space was the
+	previous character in the string.
+
+RATIONALE
+	Taking screenshots was a pain before this. Screenshots
+	are useful if you want to remember something or send an
+	image of how something looks.
+
+SEE ALSO
+	scrot(1), convert(1), strftime(3)
+
+	Full documentation available locally via: info '(scrotty)'
 

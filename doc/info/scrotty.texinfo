@@ -17,7 +17,7 @@
 
 
 @copying
-Copyright @copyright{} 2014 Mattias Andrée
+Copyright @copyright{} 2014, 2015 Mattias Andrée
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -41,7 +41,8 @@ Texts. A copy of the license is included in the section entitled
 @author by Mattias Andrée (maandree)
 
 @page
-@c @center `'
+@center `I don't know how to make a screenshot, because I normally use my computer in
+@center text-mode. I have @sc{X} and @sc{GNOME} installed, but I use them only occasionally.' --- rms
 @vskip 0pt plus 1filll
 @insertcopying
 @end titlepage
@@ -70,7 +71,7 @@ rendered on the framebuffer.}
 @command{scrotty} is designed after @command{scrot}, but
 includes a some improvements. Namely it does not support
 delaying the screenshot, selecting image quality or creating
-thumbnails, but it as supports for adding arbitrary arguments
+thumbnails, but it has support for adding arbitrary arguments
 to @command{convert} (from the ImageMagick project), which is
 used to save the image.
 
