@@ -170,7 +170,6 @@ bin/mo/%/messages.mo: po/%.po
 	@$(MKDIR) -p bin/mo/$*
 	cd bin/mo/$* && $(MSGFMT) ../../../$<
 
-
 obj/scrotty.pot: src/scrotty.c
 	@$(MKDIR) -p obj
 	$(CPP) -DUSE_GETTEXT=1 src/scrotty.c |  \
@@ -189,6 +188,14 @@ po/%.po: obj/scrotty.pot
 	else  \
 	$(MSGMERGE) --no-wrap -U $@ $<;  \
 	fi
+
+.PHONY: TAGS
+TAGS:
+	@echo "TAGS is not implemented. Did not see the need. Feel free to implement if you want."
+
+.PHONY: tags
+tags:
+	@echo "tags is not implemented. Did not see the need. Feel free to implement if you want."
 
 
 .PHONY: install
