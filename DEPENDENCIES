@@ -12,7 +12,7 @@ BUILD DEPENDENCIES:
 	libc
 	gcc
 	texinfo (opt-out, for info, pdf, dvi and ps manuals)
-	texlive-core (opt-in, for pdf, dvi and ps manuals)
+	texlive-plainextra (opt-in, for pdf, dvi and ps manuals)
 
 
 INSTALL DEPENDENCIES:
