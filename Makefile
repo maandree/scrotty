@@ -48,6 +48,8 @@ RM ?= rm
 RMDIR ?= rmdir
 TRUE ?= true
 TEST ?= test
+ECHO ?= echo
+PRINTF ?= printf
 INSTALL ?= install
 INSTALL_PROGRAM ?= $(INSTALL) -m755
 INSTALL_DATA ?= $(INSTALL) -m644
@@ -300,7 +302,7 @@ uninstall:
 
 .PHONY: clean
 clean:
-	-$(RM) -r bin obj
+	-$(RM) -r bin obj $(PKGNAME)-*.tar* $(PKGNAME)-*.checksums*
 
 .PHONY: distclean
 distclean: clean
@@ -310,4 +312,82 @@ mostlyclean: clean
 
 .PHONY: maintainer-clean
 maintainer-clean: clean
+
+
+# These rules are used for making releases
+
+DIST_FMTS = tar tar.xz tar.bz2 tar.gz
+ifndef DO_NOT_SIGN
+DIST_FILES = $(foreach F,$(DIST_FMTS),$(PKGNAME)-$(VERSION).$(F) $(PKGNAME)-$(VERSION).$(F).sig)
+else
+DIST_FILES = $(foreach F,$(DIST_FMTS),$(PKGNAME)-$(VERSION).$(F))
+endif
+DIST_CHECKSUMS_ALL = cksum md2sum md4sum md5sum md6sum sha0sum sha1sum sha224sum  \
+                     sha256sum sha384sum sha512sum sha512-224sum sha512-256sum \
+                     sha3-224sum sha3-256sum sha3-384sum sha3-512sum shake256sum  \
+                     shake512sum rawshake256sum rawshake512sum keccak-224sum  \
+                     keccak-256sum keccak-384sum keccak-512sum keccaksum
+DIST_CHECKSUMS = $(foreach C,$(DIST_CHECKSUMS_ALL),$(shell if command -v $(C) >/dev/null; then echo $(C); fi))
+
+.PHONY: dist
+dist: $(DIST_FILES) dist-checksums
+
+ifndef DO_NOT_SIGN
+.PHONY: dist-checksums
+dist-checksums: $(PKGNAME)-$(VERSION).checksums $(PKGNAME)-$(VERSION).checksums.sig
+
+.PHONY: dist-tar
+dist-tar: $(PKGNAME)-$(VERSION).tar $(PKGNAME)-$(VERSION).tar.sig
+
+.PHONY: dist-xz
+dist-xz: $(PKGNAME)-$(VERSION).tar.xz $(PKGNAME)-$(VERSION).tar.xz.sig
+
+.PHONY: dist-bz2
+dist-bz2: $(PKGNAME)-$(VERSION).tar.bz2 $(PKGNAME)-$(VERSION).tar.bz2.sig
+
+.PHONY: dist-gz
+dist-gz: $(PKGNAME)-$(VERSION).tar.gz $(PKGNAME)-$(VERSION).tar.sig
+else
+.PHONY: dist-checksums
+dist-checksums: $(PKGNAME)-$(VERSION).checksums
+
+.PHONY: dist-tar
+dist-tar: $(PKGNAME)-$(VERSION).tar
+
+.PHONY: dist-xz
+dist-xz: $(PKGNAME)-$(VERSION).tar.xz
+
+.PHONY: dist-bz2
+dist-bz2: $(PKGNAME)-$(VERSION).tar.bz2
+
+.PHONY: dist-gz
+dist-gz: $(PKGNAME)-$(VERSION).tar.gz
+endif
+
+$(PKGNAME)-$(VERSION).tar:
+	@if $(TEST) -f $@; then $(RM) $@; fi
+	git archive --prefix=$(PKGNAME)-$(VERSION)/ --format=tar $(VERSION) -o $@
+
+$(PKGNAME)-$(VERSION).tar.xz: $(PKGNAME)-$(VERSION).tar
+	@if $(TEST) -f $@; then $(RM) $@; fi
+	xz -ke9 $<
+
+$(PKGNAME)-$(VERSION).tar.bz2: $(PKGNAME)-$(VERSION).tar
+	@if $(TEST) -f $@; then $(RM) $@; fi
+	bzip2 -k9 $<
+
+$(PKGNAME)-$(VERSION).tar.gz: $(PKGNAME)-$(VERSION).tar
+	@if $(TEST) -f $@; then $(RM) $@; fi
+	gzip -k9 $<
+
+$(PKGNAME)-$(VERSION).checksums: $(DIST_FILES)
+	@$(ECHO) Generating $@
+	@$(PRINTF) '' > $@
+	@if ! ($(ECHO) ':: sum -r ::' && sum -r $^ && $(ECHO)) >> $@ ; then $(PRINTF) '' > $@; fi
+	@if ! ($(ECHO) ':: sum -s ::' && sum -s $^ && $(ECHO)) >> $@ ; then $(PRINTF) '' > $@; fi
+	@$(foreach C,$(DIST_CHECKSUMS),$(ECHO) ':: $(C) ::' >> $@ && $(C) $^ | grep -v '^--' >> $@ && $(ECHO) >> $@ &&) $(TRUE)
+
+%.sig: %
+	@if $(TEST) -f $@; then $(RM) $@; fi
+	gpg $(GPG_FLAGS) --local-user $(GPG_KEY) --detach-sign --armor --output $@ < $<
 

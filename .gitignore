@@ -19,4 +19,8 @@ _/
 *.pdf
 *.png
 *.pnm
+*.tar
+*.tar.*
+*.checksums
+*.sig
 
