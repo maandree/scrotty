@@ -621,7 +621,7 @@ int main(int argc, char* argv[])
       if      (!strcmp(argv[i], "--help"))       help = 1;
       else if (!strcmp(argv[i], "--version"))    version = 1;
       else if (!strcmp(argv[i], "--copyright"))  copyright = 1;
-      else if (!strcmp(argv[i], "--exec"))       exec = ++i; /* TODO use this */
+      else if (!strcmp(argv[i], "--exec"))       exec = ++i;
       else if (!strcmp(argv[i], "--"))
 	{
 	  dash = i + 1;
