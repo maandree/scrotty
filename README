@@ -1,13 +1,12 @@
 NAME
-	scrotty - Screenshot program for Linux's TTY.
+	scrotty - Framebuffer screenshot program
 
 SYNOPSIS
 	scrotty [OPTION]... [FILENAME_PATTERN] [-- CONVERT_OPTION...]
 
 DESCRIPTION
-	scrotty is a minimalist screenshoter for the Linux VT. It takes
-	a screenshot of your framebuffers (multiple are supported.)
-	X is not supported.
+	scrotty is a minimalist screenshoter for your framebuffers.
+	It takes of your TTY session. X is not supported.
 
 	scrotty is designed after scrot(1), but includes a some
 	improvements. Namely it does not support delaying the screenshot,

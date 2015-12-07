@@ -64,9 +64,9 @@ Texts. A copy of the license is included in the section entitled
 
 @command{scrotty} is a simple command for taking a screenshot
 of your framebuffers. It can be used to take a screenshot of
-your Linux TTY session, but it cannot take a screenshot of
-your X session.@footnote{Unless it is for some reason is
-rendered on the framebuffer.}
+your TTY session, but it cannot take a screenshot of your X
+session.@footnote{Unless it is for some reason is rendered on
+the framebuffer.}
 
 @command{scrotty} is designed after @command{scrot}, but
 includes a some improvements. Namely it does not support

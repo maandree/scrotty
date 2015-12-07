@@ -1,5 +1,6 @@
 /**
  * scrotty — Screenshot program for Linux's TTY
+ * 
  * Copyright © 2014, 2015  Mattias Andrée (maandree@member.fsf.org)
  * 
  * This program is free software: you can redistribute it and/or modify
