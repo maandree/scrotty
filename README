@@ -1,5 +1,5 @@
 NAME
-	scrotty - Framebuffer screenshot program
+	scrotty 1.1-dev - Framebuffer screenshot program
 
 SYNOPSIS
 	scrotty [OPTION]... [FILENAME_PATTERN] [-- CONVERT_OPTION...]
@@ -67,6 +67,12 @@ SEE ALSO
 	scrot(1), convert(1), strftime(3)
 
 	Full documentation available locally via: info '(scrotty)'
+
+	See INSTALL for installation instructions.
+	See DEPENDENCIES for software dependenices.
+	See COPYING for copyright information.
+	See LICENSE for the full license used by the software.
+	See NEWS for significant differences between releases.
 
 LICENSE
 	Copying and distribution of this manual, with or without
