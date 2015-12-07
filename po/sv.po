@@ -1,26 +1,29 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR Mattias Andrée (maandree@member.fsf.org)
+# Swedish translations for scrotty package.
+# Copyright (C) 2015 Mattias Andrée (maandree@member.fsf.org)
 # This file is distributed under the same license as the scrotty package.
 # Mattias Andrée <maandree@member.fsf.org>, 2015.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: scrotty 1.1\n"
-"POT-Creation-Date: 2015-12-07 18:30+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-12-07 18:50+0100\n"
+"PO-Revision-Date: 2015-12-07 18:50+0100\n"
 "Last-Translator: Mattias Andrée <maandree@member.fsf.org>\n"
+"Language-Team: none\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: <stdin>:598
-#, fuzzy, c-format
+#, c-format
 msgid "Saved framebuffer %i to %s,\n"
 msgstr "Bildrutebuffert %i sparad till %s.\n"
 
 #: <stdin>:640
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "SYNOPSIS\n"
 "\t%s [options...] [filename-pattern] [-- options-for-convert...]\n"
@@ -33,15 +36,11 @@ msgid ""
 "\t--exec CMD     Command to run for each saved image.\n"
 "\n"
 "SPECIAL STRINGS\n"
-"\tBoth the --exec and filename-pattern parameters can take format "
-"specifiers\n"
-"\tthat are expanded by scrotty when encountered. There are two types of "
-"format\n"
+"\tBoth the --exec and filename-pattern parameters can take format specifiers\n"
+"\tthat are expanded by scrotty when encountered. There are two types of format\n"
 "\tspecifier. Characters preceded by a '%%' are interpretted by strftime(3).\n"
-"\tSee `man strftime` for examples. These options may be used to refer to "
-"the\n"
-"\tcurrent date and time. The second kind are internal to scrotty and are "
-"prefixed\n"
+"\tSee `man strftime` for examples. These options may be used to refer to the\n"
+"\tcurrent date and time. The second kind are internal to scrotty and are prefixed\n"
 "\tby '$' or '\\'. The following specifiers are recognised:\n"
 "\n"
 "\t\n"
@@ -54,11 +53,9 @@ msgid ""
 "\t$$  expands to a literal '$'\n"
 "\t\\n  expands to a new line\n"
 "\t\\\\  expands to a literal '\\'\n"
-"\t\\   expands to a literal ' ' (the string is a backslash followed by a "
-"space)\n"
+"\t\\   expands to a literal ' ' (the string is a backslash followed by a space)\n"
 "\n"
-"\tA space that is not prefixed by a backslash in --exec is interpreted as "
-"an\n"
+"\tA space that is not prefixed by a backslash in --exec is interpreted as an\n"
 "\targument delimiter. This is the case even at the beginning and end of the\n"
 "\tstring and if a space was the previous character in the string.\n"
 "\n"
@@ -74,13 +71,12 @@ msgstr ""
 "\t--exec KMD     Kommando att köra för varje sparad bild.\n"
 "\n"
 "SÄRSKILDA STRÄNGS\n"
-"\tBåde --exec och filnamnsmönstrets tar formatspecifikationsargument \tsom "
-"ersätts av scrotty. Det finns två typer av formatspecifikationsargument."
-"\tTecken som direkt följer ett '%%' tolkas av strftime(3). See `man "
-"strftime`\n"
-"\tför exempel. Dessa alternativ kan användas för att referera till den "
-"nuvarande \ttiden and datumet. Den andra typer tolkas av scrotty självt och "
-"har ett '$'\teller ett '\\' direkt framför sig. Följande stödjs:\n"
+"\tBåde --exec och filnamnsmönstrets tar formatspecifikationsargument som\n"
+"\tersätts av scrotty. Det finns två typer av formatspecifikationsargument.\n"
+"\tTecken som direkt följer ett '%%' tolkas av strftime(3). See `man strftime`\n"
+"\tför exempel. Dessa alternativ kan användas för att referera till den\n"
+"\tnuvarande tiden and datumet. Den andra typer tolkas av scrotty självt och\n"
+"\thar ett '$' eller ett '\\' direkt framför sig. Följande stödjs:\n"
 "\n"
 "\t\n"
 "\t$i  Bildrutebuffertens nummer\n"
@@ -92,8 +88,7 @@ msgstr ""
 "\t$$  Ersätts med en ordagrann '$'\n"
 "\t\\n  Ersätts med en radbryting\n"
 "\t\\\\  Ersätts med en ordagrann '\\'\n"
-"\t\\   Ersätts med en ordagrann ' ' (strängen som ersätts slutar med ett "
-"mellanrum)\n"
+"\t\\   Ersätts med en ordagrann ' ' (strängen som ersätts slutar med ett mellanrum)\n"
 "\n"
 "\tMellanrum som inte har ett '\\' direkt framförsig i --exec tolkas som\n"
 "\tett argumentskilje. Detta sker även när det förekommer i början och i\n"
@@ -101,7 +96,7 @@ msgstr ""
 "\n"
 
 #: <stdin>:698
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "scrotty -- Screenshot program for Linux's TTY\n"
 "Copyright (C) %s\n"
@@ -136,21 +131,19 @@ msgstr ""
 "med det här programmet. Om inte, se <http://www.gnu.org/licenses/>.\n"
 
 #: <stdin>:763 <stdin>:770
-#, fuzzy, c-format
+#, c-format
 msgid "%s: %s. Type '%s --help' for help.\n"
 msgstr "%s: %s. Kör '%s --help' för hjälp.\n"
 
 #: <stdin>:763
-#, fuzzy
 msgid "Unrecognised option."
 msgstr "Val känns inte igen."
 
 #: <stdin>:770
-#, fuzzy
 msgid "--exec has no argument."
 msgstr "--exec har inget argument."
 
 #: <stdin>:807
-#, fuzzy, c-format
+#, c-format
 msgid "%s: %s: %s\n"
 msgstr "%s: %s: %s\n"

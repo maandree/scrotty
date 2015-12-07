@@ -11,6 +11,7 @@ BUILD DEPENDENCIES:
 	coreutils
 	libc
 	gcc
+	gettext (opt-out, for internationalisation)
 	texinfo (opt-out, for info, pdf, dvi and ps manuals)
 	texlive-plainextra (opt-in, for pdf, dvi and ps manuals)
 

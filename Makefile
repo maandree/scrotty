@@ -145,7 +145,11 @@ update-po: $(foreach L,$(LOCALES),po/$(L).po)
 
 po/%.po: obj/scrotty.pot
 	@mkdir -p po
-	if ! test -e $@; then cp $< $@; else msgmerge -U $@ $<; fi
+	if ! test -e $@; then  \
+	msginit --no-translator --no-wrap -i $< -o $@ -l $*;  \
+	else  \
+	msgmerge --no-wrap -U $@ $<;  \
+	fi
 
 
 .PHONY: install
