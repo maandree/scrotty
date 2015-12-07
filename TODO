@@ -1,2 +1,8 @@
 In Texinfo manual, list stuff supported by strftime.
 
+(maybe) Support for short options.
+
+Use auto-auto-complete.
+
+Add Swedish man page.
+
