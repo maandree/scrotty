@@ -57,7 +57,7 @@ SPECIAL STRINGS
 	previous character in the string.
 
 FUTURE DIRECTIONS
-	Support the TTY of other kernels should be added.
+	Support for TTY:s in other kernels should be added.
 
 RATIONALE
 	Taking screenshots was a pain before this. Screenshots
