@@ -1,0 +1,40 @@
+scrotty NEWS                                          -*- outline -*-
+
+* Noteworthy changes in release 1.1 (TO BE DETERMINED) [stable]
+
+** Installation changes
+
+  The Make rule 'default' has been renamed to 'all', and the
+  Make rule 'all' has been renamed to 'everything'. The Make
+  rule 'install-all' has been renamed to 'install-everything'.
+
+** Improvements
+
+  The option --raw has been added. This option makes scrotty
+  store the images as a portble anymap format image rather
+  than as Portable Network Graphics image. With this change
+  ImageMagick becomes optional, but you have to opt-out if
+  you do not have it.
+
+  Internationalisation support has been added. For the purpose
+  of testing, a complete Swedish translation has been included.
+
+  HTML manual can now be built and installed.
+
+
+* Noteworthy changes in release 1.0.2 (2015-(10)Dec-01) [stable]
+
+** Documentation
+
+  A man page was added.
+
+
+* Noteworthy changes in release 1.0.1 (2015-(04)Apr-06) [stable]
+
+  Nothing noteworthy in this release.
+
+
+* Noteworthy changes in release 1.0 (2014-(10)Oct-28) [stable]
+
+  Initial release.
+

@@ -40,8 +40,38 @@ COMMAND = scrotty
 # The name of the package as it should be installed
 PKGNAME = scrotty
 
+# Programs the makefile uses.
+#  Part of GNU Coreutils:
+MKDIR ?= mkdir
+MV ?= mv
+RM ?= rm
+RMDIR ?= rmdir
+TRUE ?= true
+TEST ?= test
+INSTALL ?= install
+INSTALL_PROGRAM ?= $(INSTALL) -m755
+INSTALL_DATA ?= $(INSTALL) -m644
+INSTALL_DIR ?= $(INSTALL) -dm755
+#  Part of Texinfo:
+MAKEINFO ?= makeinfo
+MAKEINFO_HTML ?= $(MAKEINFO) --html
+#  Part of Texlive-plainextra:
+TEXI2PDF ?= texi2pdf
+TEXI2DVI ?= texi2dvi
+TEXI2PS ?= texi2pdf --ps
+#  Part of GCC:
+CC ?= cc
+CPP ?= cpp
+#  Part of GNU Gettext:
+XGETTEXT ?= xgettext
+MSGFMT ?= msgfmt
+MSGMERGE ?= msgmerge
+MSGINIT ?= msginit
+
+# Additional options for compiling PDF, DVI, and PS manuals.
+TEXINFO_FLAGS =
 # Optimisation settings for C code compilation
-OPTIMISE = -Og -g
+OPTIMISE = -O2
 # Warnings settings for C code compilation
 WARN = -Wall -Wextra -pedantic -Wdouble-promotion -Wformat=2 -Winit-self -Wmissing-include-dirs      \
        -Wtrampolines -Wmissing-prototypes -Wmissing-declarations -Wnested-externs                    \
@@ -63,16 +93,19 @@ ifndef WITHOUT_GETTEXT
 DEFS += -D'USE_GETTEXT=1'
 endif
 
-# List of translations.
+# List of translations
 LOCALES = sv
 
+# Files generated texi2html
+HTML_FILES = GNU-Free-Documentation-License.html index.html Invoking.html Overview.html
 
 
-.PHONY: default
-default: base info locale
 
 .PHONY: all
-all: base doc locale
+all: base info locale
+
+.PHONY: everything
+everything: base doc locale
 
 .PHONY: base
 base: cmd
@@ -81,43 +114,49 @@ base: cmd
 cmd: bin/scrotty
 
 obj/scrotty.o: src/scrotty.c
-	@mkdir -p obj
+	@$(MKDIR) -p obj
 	$(CC) $(STD) $(OPTIMISE) $(WARN) $(DEFS) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
 
 bin/scrotty: obj/scrotty.o
-	@mkdir -p bin
+	@$(MKDIR) -p bin
 	$(CC) $(STD) $(OPTIMISE) $(WARN) $(LDFLAGS) -o $@ $^
 
 .PHONY: doc
-doc: info pdf dvi ps
+doc: info pdf dvi ps html
 
 .PHONY: info
 info: bin/scrotty.info
-bin/%.info: doc/info/%.texinfo doc/info/fdl.texinfo
-	@mkdir -p bin
-	makeinfo $<
-	mv $*.info $@
+bin/%.info: doc/info/%.texinfo doc/info/*.texinfo
+	@$(MKDIR) -p bin
+	$(MAKEINFO) $<
+	$(MV) $*.info $@
 
 .PHONY: pdf
 pdf: bin/scrotty.pdf
-bin/%.pdf: doc/info/%.texinfo doc/info/fdl.texinfo
-	@mkdir -p obj/pdf bin
-	cd obj/pdf && texi2pdf ../../$< < /dev/null
-	mv obj/pdf/$*.pdf $@
+bin/%.pdf: doc/info/%.texinfo doc/info/*.texinfo
+	@$(MKDIR) -p obj/pdf bin
+	cd obj/pdf && $(TEXI2PDF) ../../$< $(TEXINFO_FLAGS) < /dev/null
+	$(MV) obj/pdf/$*.pdf $@
 
 .PHONY: dvi
 dvi: bin/scrotty.dvi
-bin/%.dvi: doc/info/%.texinfo doc/info/fdl.texinfo
-	@mkdir -p obj/dvi bin
-	cd obj/dvi && texi2dvi ../../$< < /dev/null
-	mv obj/dvi/$*.dvi $@
+bin/%.dvi: doc/info/%.texinfo doc/info/*.texinfo
+	@$(MKDIR) -p obj/dvi bin
+	cd obj/dvi && $(TEXI2DVI) ../../$< $(TEXINFO_FLAGS) < /dev/null
+	$(MV) obj/dvi/$*.dvi $@
 
 .PHONY: ps
 ps: bin/scrotty.ps
-bin/%.ps: doc/info/%.texinfo doc/info/fdl.texinfo
-	@mkdir -p obj/ps bin
-	cd obj/ps && texi2pdf --ps ../../$< < /dev/null
-	mv obj/ps/$*.ps $@
+bin/%.ps: doc/info/%.texinfo doc/info/*.texinfo
+	@$(MKDIR) -p obj/ps bin
+	cd obj/ps && $(TEXI2PS) ../../$< $(TEXINFO_FLAGS) < /dev/null
+	$(MV) obj/ps/$*.ps $@
+
+.PHONY: html
+html: bin/html/scrotty/index.html
+bin/html/scrotty/index.html: doc/info/scrotty.texinfo doc/info/*.texinfo
+	@$(MKDIR) -p bin/html
+	cd bin/html && $(MAKEINFO_HTML) ../../$< < /dev/null
 
 ifdef WITHOUT_GETTEXT
 .PHONY: locale
@@ -128,14 +167,14 @@ locale: $(foreach L,$(LOCALES),bin/mo/$(L)/messages.mo)
 endif
 
 bin/mo/%/messages.mo: po/%.po
-	@mkdir -p bin/mo/$*
-	cd bin/mo/$* && msgfmt ../../../$<
+	@$(MKDIR) -p bin/mo/$*
+	cd bin/mo/$* && $(MSGFMT) ../../../$<
 
 
 obj/scrotty.pot: src/scrotty.c
-	@mkdir -p obj
-	cpp -DUSE_GETTEXT=1 < src/scrotty.c |  \
-	xgettext -o "$@" -Lc --from-code utf-8 --package-name scrotty  \
+	@$(MKDIR) -p obj
+	$(CPP) -DUSE_GETTEXT=1 < src/scrotty.c |  \
+	$(XGETTEXT) -o "$@" -Lc --from-code utf-8 --package-name scrotty  \
 	--package-version 1.1 --no-wrap --force-po  \
 	--copyright-holder 'Mattias Andrée (maandree@member.fsf.org)' -
 
@@ -144,68 +183,87 @@ obj/scrotty.pot: src/scrotty.c
 update-po: $(foreach L,$(LOCALES),po/$(L).po)
 
 po/%.po: obj/scrotty.pot
-	@mkdir -p po
-	if ! test -e $@; then  \
-	msginit --no-translator --no-wrap -i $< -o $@ -l $*;  \
+	@$(MKDIR) -p po
+	if ! $(TEST) -e $@; then  \
+	$(MSGINIT) --no-translator --no-wrap -i $< -o $@ -l $*;  \
 	else  \
-	msgmerge --no-wrap -U $@ $<;  \
+	$(MSGMERGE) --no-wrap -U $@ $<;  \
 	fi
 
 
 .PHONY: install
 install: install-base install-info install-man install-locale
 
-.PHONY: install-all
-install-all: install-base install-doc install-locale
+.PHONY: install-everything
+install-everything: install-base install-doc install-locale
 
 .PHONY: install-base
 install-base: install-cmd install-copyright
 
+.PHONY: install-strip
+install-strip: install-base-strip install-info install-man install-locale
+
+.PHONY: install-everything-strip
+install-everything-strip: install-base-strip install-doc install-locale
+
+.PHONY: install-base-strip
+install-base-strip: install-cmd-strip install-copyright
+
 .PHONY: install-cmd
 install-cmd: bin/scrotty
-	install -dm755 -- "$(DESTDIR)$(BINDIR)"
-	install -m755 $< -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
+	$(INSTALL_DIR) -- "$(DESTDIR)$(BINDIR)"
+	$(INSTALL_PROGRAM) $< -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
+
+.PHONY: install-cmd-strip
+install-cmd-strip: bin/scrotty
+	$(INSTALL_DIR) -- "$(DESTDIR)$(BINDIR)"
+	$(INSTALL_PROGRAM) -s $< -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
 
 .PHONY: install-copyright
 install-copyright: install-copying install-license
 
 .PHONY: install-copying
 install-copying:
-	install -dm755 -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
-	install -m644 COPYING -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/COPYING"
+	$(INSTALL_DIR) -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	$(INSTALL_DATA) COPYING -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/COPYING"
 
 .PHONY: install-license
 install-license:
-	install -dm755 -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
-	install -m644 LICENSE -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/LICENSE"
+	$(INSTALL_DIR) -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	$(INSTALL_DATA) LICENSE -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/LICENSE"
 
 .PHONY: install-doc
-install-doc: install-info install-pdf install-ps install-dvi install-man
+install-doc: install-info install-pdf install-ps install-dvi install-html install-man
 
 .PHONY: install-info
 install-info: bin/scrotty.info
-	install -dm755 -- "$(DESTDIR)$(INFODIR)"
-	install -m644 $< -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
+	$(INSTALL_DIR) -- "$(DESTDIR)$(INFODIR)"
+	$(INSTALL_DATA) $< -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
 
 .PHONY: install-pdf
 install-pdf: bin/scrotty.pdf
-	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
-	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
+	$(INSTALL_DIR) -- "$(DESTDIR)$(DOCDIR)"
+	$(INSTALL_DATA) $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
 
 .PHONY: install-ps
 install-ps: bin/scrotty.ps
-	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
-	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
+	$(INSTALL_DIR) -- "$(DESTDIR)$(DOCDIR)"
+	$(INSTALL_DATA) $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
 
 .PHONY: install-dvi
 install-dvi: bin/scrotty.dvi
-	install -dm755 -- "$(DESTDIR)$(DOCDIR)"
-	install -m644 $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
+	$(INSTALL_DIR) -- "$(DESTDIR)$(DOCDIR)"
+	$(INSTALL_DATA) $< -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
+
+.PHONY: install-html
+install-html: $(foreach F,$(HTML_FILES),bin/html/scrotty/$(F))
+	$(INSTALL_DIR) -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME)/html"
+	$(INSTALL_DATA) $^ -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME)/html/"
 
 .PHONY: install-man
 install-man: doc/man/scrotty.1
-	install -dm755 -- "$(DESTDIR)$(MAN1DIR)"
-	install -m644 $< -- "$(DESTDIR)$(MAN1DIR)/$(COMMAND).1"
+	$(INSTALL_DIR) -- "$(DESTDIR)$(MAN1DIR)"
+	$(INSTALL_DATA) $< -- "$(DESTDIR)$(MAN1DIR)/$(COMMAND).1"
 
 ifdef WITHOUT_GETTEXT
 .PHONY: install-locale
@@ -213,26 +271,36 @@ install-locale:
 else
 .PHONY: install-locale
 install-locale:
-	install -dm755 -- $(foreach L,$(LOCALES),"$(DESTDIR)$(LOCALEDIR)/$(L)/LC_MESSAGES")
-	$(foreach L,$(LOCALES),install -m644 bin/mo/$(L)/messages.mo -- "$(DESTDIR)$(LOCALEDIR)/$(L)/LC_MESSAGES/$(PKGNAME).mo" &&) true
+	$(INSTALL) -dm755 -- $(foreach L,$(LOCALES),"$(DESTDIR)$(LOCALEDIR)/$(L)/LC_MESSAGES")
+	$(foreach L,$(LOCALES),$(INSTALL_DATA) bin/mo/$(L)/messages.mo -- "$(DESTDIR)$(LOCALEDIR)/$(L)/LC_MESSAGES/$(PKGNAME).mo" &&) $(TRUE)
 endif
 
 
 .PHONY: uninstall
 uninstall:
-	-rm -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
-	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/COPYING"
-	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/LICENSE"
-	-rmdir -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
-	-rm -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
-	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
-	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
-	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
-	-rm -- "$(DESTDIR)$(MAN1DIR)/$(COMMAND).1"
-	-rm -- $(foreach L,$(LOCALES),"$(DESTDIR)$(LOCALEDIR)/$(L)/LC_MESSAGES/$(PKGNAME).mo")
+	-$(RM) -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
+	-$(RM) -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/COPYING"
+	-$(RM) -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/LICENSE"
+	-$(RMDIR) -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	-$(RM) -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
+	-$(RM) -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).pdf"
+	-$(RM) -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
+	-$(RM) -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
+	-$(RM) -- $(foreach F,$(HTML_FILES),"$(DESTDIR)$(DOCDIR)/$(PKGNAME)/html/$(F)")
+	-$(RM) -- "$(DESTDIR)$(MAN1DIR)/$(COMMAND).1"
+	-$(RM) -- $(foreach L,$(LOCALES),"$(DESTDIR)$(LOCALEDIR)/$(L)/LC_MESSAGES/$(PKGNAME).mo")
 
 
 .PHONY: clean
 clean:
-	-rm -r bin obj
+	-$(RM) -r bin obj
+
+.PHONY: distclean
+distclean: clean
+
+.PHONY: mostlyclean
+mostlyclean: clean
+
+.PHONY: maintainer-clean
+maintainer-clean: clean
 

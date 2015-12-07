@@ -682,14 +682,22 @@ print_help(void)
 static int
 print_version (void)
 {
-  return printf ("%s %s\n", PROGRAM_NAME, PROGRAM_VERSION) < 0 ? -1 : 0;
+  return printf (_("%s\n"
+		   "Copyright (C) %s.\n"
+		   "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\n"
+		   "This is free software: you are free to change and redistribute it.\n"
+		   "There is NO WARRANTY, to the extent permitted by law.\n"
+		   "\n"
+		   "Written by Mattias Andrée.\n"),
+		 PROGRAM_NAME " " PROGRAM_VERSION,
+		 "2014, 2015 Mattias Andrée") < 0 ? -1 : 0;
 }
 
 
 /**
- * Print copyright information
+ * Print copyright information.
  * 
- * @return  Zero on success, -1 on error
+ * @return  Zero on success, -1 on error.
  */
 static int
 print_copyright (void)
