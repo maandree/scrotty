@@ -15,7 +15,7 @@ BUILD DEPENDENCIES:
 	texinfo (opt-out, for info, pdf, dvi, ps, and html manuals)
 	texlive-plainextra (opt-in, for pdf, dvi, and ps manuals)
 
-	Your combination of libc and must make alloca available.
+	Your combination of libc and cc must make alloca available.
 
 
 INSTALL DEPENDENCIES:
