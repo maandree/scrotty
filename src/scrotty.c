@@ -23,6 +23,7 @@
 #endif
 
 
+#define _POSIX_SOURCE
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
@@ -416,9 +417,9 @@ static int evaluate (char *restrict buf, size_t n, const char *restrict pattern,
   ssize_t j = 0;
   int percent = 0, backslash = 0, dollar = 0, r;
   char c;
-  char* fmt;
+  char *fmt;
   time_t t;
-  struct tm tm;
+  struct tm *tm;
   
   /* Expand '$' and '\'. */
   while ((c = *pattern++))
@@ -468,12 +469,14 @@ static int evaluate (char *restrict buf, size_t n, const char *restrict pattern,
   
   /* Expand '%'. */
   t = time (NULL);
-  localtime_r (&t, &tm);
+  tm = localtime (&t);
+  if (tm == NULL)
+    goto fail;
 #ifdef __GNUC__
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-  if (strftime (buf, n, fmt, &tm) == 0)
+  if (strftime (buf, n, fmt, tm) == 0)
     goto enametoolong; /* No errors are defined for `strftime`. */
 #ifdef __GNUC__
 # pragma GCC diagnostic pop
@@ -483,6 +486,9 @@ static int evaluate (char *restrict buf, size_t n, const char *restrict pattern,
   
  enametoolong:
   return errno = ENAMETOOLONG, -1;
+  
+ fail:
+  return -1;
   
 #undef P
 }

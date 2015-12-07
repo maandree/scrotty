@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: scrotty 1.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-07 20:12+0100\n"
+"POT-Creation-Date: 2015-12-07 21:59+0100\n"
 "PO-Revision-Date: 2015-12-07 18:50+0100\n"
 "Last-Translator: Mattias Andrée <maandree@member.fsf.org>\n"
 "Language-Team: none\n"
@@ -17,12 +17,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: <stdin>:598
+#: src/scrotty.c:604
 #, c-format
 msgid "Saved framebuffer %i to %s,\n"
 msgstr "Bildrutebuffert %i sparad till %s.\n"
 
-#: <stdin>:640
+#: src/scrotty.c:646
 #, c-format
 msgid ""
 "SYNOPSIS\n"
@@ -93,7 +93,7 @@ msgstr ""
 "\tslutet av strängen, och om ett sådant även förekom direkt framför.\n"
 "\n"
 
-#: <stdin>:685
+#: src/scrotty.c:691
 #, fuzzy, c-format
 msgid ""
 "%s\n"
@@ -112,7 +112,7 @@ msgstr ""
 "\n"
 "Skriven av Mattias Andrée.\n"
 
-#: <stdin>:705
+#: src/scrotty.c:711
 #, c-format
 msgid ""
 "scrotty -- Screenshot program for Linux's TTY\n"
@@ -147,20 +147,20 @@ msgstr ""
 "Du skall ha fått en kopia av GNU General Public License tillsammans\n"
 "med det här programmet. Om inte, se <http://www.gnu.org/licenses/>.\n"
 
-#: <stdin>:767 <stdin>:774
+#: src/scrotty.c:773 src/scrotty.c:780
 #, c-format
 msgid "%s: %s. Type '%s --help' for help.\n"
 msgstr "%s: %s. Kör '%s --help' för hjälp.\n"
 
-#: <stdin>:767
+#: src/scrotty.c:773
 msgid "Unrecognised option."
 msgstr "Val känns inte igen."
 
-#: <stdin>:774
+#: src/scrotty.c:780
 msgid "--exec has no argument."
 msgstr "--exec har inget argument."
 
-#: <stdin>:811
+#: src/scrotty.c:817
 #, c-format
 msgid "%s: %s: %s\n"
 msgstr "%s: %s: %s\n"

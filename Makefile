@@ -85,7 +85,7 @@ WARN = -Wall -Wextra -pedantic -Wdouble-promotion -Wformat=2 -Winit-self -Wmissi
        -Wstrict-aliasing=1 -fstrict-overflow -Wfloat-equal -Wpadded -Waggregate-return               \
        -Wtraditional-conversion
 # The C standard for C code compilation
-STD = -std=gnu99
+STD = -std=c99
 # CPP flags
 DEFS = -D'DEVDIR="$(DEVDIR)"' -D'SYSDIR="$(SYSDIR)"' -D'PACKAGE="$(PKGNAME)"'  \
        -D'LOCALEDIR="$(LOCALEDIR)"' -D'PROGRAM_VERSION="$(VERSION)"'
@@ -173,7 +173,7 @@ bin/mo/%/messages.mo: po/%.po
 
 obj/scrotty.pot: src/scrotty.c
 	@$(MKDIR) -p obj
-	$(CPP) -DUSE_GETTEXT=1 < src/scrotty.c |  \
+	$(CPP) -DUSE_GETTEXT=1 src/scrotty.c |  \
 	$(XGETTEXT) -o "$@" -Lc --from-code utf-8 --package-name scrotty  \
 	--package-version 1.1 --no-wrap --force-po  \
 	--copyright-holder 'Mattias Andrée (maandree@member.fsf.org)' -
