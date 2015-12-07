@@ -97,7 +97,7 @@ bin/%.pdf: doc/info/%.texinfo doc/info/fdl.texinfo
 dvi: bin/scrotty.dvi
 bin/%.dvi: doc/info/%.texinfo doc/info/fdl.texinfo
 	@mkdir -p obj/dvi bin
-	cd obj/dvi && $(TEXI2DVI) ../../$< < /dev/null
+	cd obj/dvi && texi2dvi ../../$< < /dev/null
 	mv obj/dvi/$*.dvi $@
 
 .PHONY: ps
