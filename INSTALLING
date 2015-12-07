@@ -1,0 +1,105 @@
+For most users the following should be sufficient:
+
+	make
+	make install DESTDIR="pkg"  # install to ./pkg temporarily instead
+	                            # of to /, installed files can then be
+	                            # moved by root.
+
+Note however, `make install` will not run `install-info'
+to add the info manual to `info '(dir)'`. Distributors
+should postinstall and preuninstall commands:
+
+	infodir="usr/share/info"
+	
+	post_install() {
+	  install-info -- "${infodir}/scrotty.info" "${infodir}/dir"
+	}
+	
+	post_upgrade() {
+	  post_install "$1"
+	}
+	
+	pre_uninstall() {
+	  install-info --delete -- "${infodir}/scrotty.info" "${infodir}/dir"
+	}
+
+If you want to install absolutely everything, you can
+instead use the commands below:
+
+	make everything
+	make install-everything DESTDIR="pkg"
+
+Or if you only want to absolute basics:
+
+	make base
+	make install-base DESTDIR="pkg"
+
+
+────────────────────────────────────────────────────────────────────────────────
+INTERNATIONALISATION
+────────────────────────────────────────────────────────────────────────────────
+
+If you want to do not want internationalisation build and install
+with WITHOUT_GETTEXT=1. For example:
+
+	make base WITHOUT_GETTEXT=1
+	make install-base WITHOUT_GETTEXT=1 DESTDIR="pkg"
+
+You can also chose to restrict the locales to install:
+
+	make all LOCALES=sv
+	make install LOCALES=sv DESTDIR="pkg"
+
+
+────────────────────────────────────────────────────────────────────────────────
+CUSTOMISED COMPILATION
+────────────────────────────────────────────────────────────────────────────────
+
+If you do not have GCC, you may want to set WARN to an empty string:
+
+	make WARN=
+
+The makefile is configured to compile the C code with -O2, you can
+change this by setting OPTIMISE:
+
+	make OPTIMISE="-Og -g"
+
+If you want to build the package with another prefix the /usr, set
+PREFIX:
+
+	make PREFIX=/usr/local
+
+See the beginning of the Makefile for further file system hierarchy
+customisations. These changes, including PREFIX, should be used both
+when compiling and installing.
+
+
+────────────────────────────────────────────────────────────────────────────────
+CUSTOMISED INSTALLATION
+────────────────────────────────────────────────────────────────────────────────
+
+You can select freely what parts of the package to install and not
+to install. This rules are available:
+
+┌─────────────┬─────────────────────┬────────────────────────────────────────────┐
+│ COMPILATION │ INSTALLATION        │ DESCRIPTION                                │
+├─────────────┼─────────────────────┼────────────────────────────────────────────┤
+│ base        │ install-base        │ Install be basics:                         │
+│   cmd       │   install-cmd       │   Install the scrotty command.             │
+│             │   install-copyright │   Install legal documents:                 │
+│             │     install-copying │     Install copyright notice.              │
+│             │     install-license │     Install the GNU GPL version 3.         │
+│ doc         │ install-doc         │ Include all manuals:                       │
+│   info      │   install-info      │   Include info manual. (Texinfo)           │
+│   dvi       │   install-dvi       │   Include DVI manual. (Texinfo)            │
+│   pdf       │   install-pdf       │   Include PDF manual. (Texinfo)            │
+│   ps        │   install-ps        │   Include PostScript manual. (Texinfo)     │
+│   html      │   install-html      │   Include multifile HTML manual. (Texinfo) │
+│             │   install-man       │   Include man page.                        │
+│ locale      │ install-locale      │ Include locales.                           │
+└─────────────┴─────────────────────┴────────────────────────────────────────────┘
+
+install, install-everything, install-base, and install-cmd, have alternatives
+that installs a stripped binary: install-strip, install-everything-strip,
+install-base-strip, and install-cmd-strip, respectively.
+
