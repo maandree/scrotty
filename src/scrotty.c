@@ -237,6 +237,7 @@ static int save(const char* fbpath, const char* imgpath, long width, long height
   if (save_pnm(fbpath, width, height, fd) < 0)
     return saved_errno = errno, close(fd), errno = saved_errno, -1;
   
+  close(fd);
   return 0;
 }
 
