@@ -53,6 +53,9 @@ SPECIAL STRINGS
 	the beginning and end of the string and if a space was the
 	previous character in the string.
 
+FUTURE DIRECTIONS
+	Support the TTY of other kernels should be added.
+
 RATIONALE
 	Taking screenshots was a pain before this. Screenshots
 	are useful if you want to remember something or send an
