@@ -4,6 +4,9 @@
 # without any warranty.
 
 
+# The version of the package
+VERSION = 1.1
+
 # The package path prefix, if you want to install to another root, set DESTDIR to that root
 PREFIX = /usr
 # The command path excluding prefix
@@ -22,6 +25,8 @@ INFODIR = $(DATADIR)/info
 MANDIR = $(DATADIR)/man
 # The man page section 1 path including prefix
 MAN1DIR = $(MANDIR)/man1
+# The locale path including prefix
+LOCALEDIR = $(DATADIR)/locale
 # The license base path including prefix
 LICENSEDIR = $(DATADIR)/licenses
 
@@ -52,15 +57,22 @@ WARN = -Wall -Wextra -pedantic -Wdouble-promotion -Wformat=2 -Winit-self -Wmissi
 # The C standard for C code compilation
 STD = -std=gnu99
 # CPP flags
-DEFS = -D'DEVDIR="$(DEVDIR)"' -D'SYSDIR="$(SYSDIR)"'
+DEFS = -D'DEVDIR="$(DEVDIR)"' -D'SYSDIR="$(SYSDIR)"' -D'PACKAGE="$(PKGNAME)"'  \
+       -D'LOCALEDIR="$(LOCALEDIR)"' -D'PROGRAM_VERSION="$(VERSION)"'
+ifndef WITHOUT_GETTEXT
+DEFS += -D'USE_GETTEXT=1'
+endif
+
+# List of translations.
+LOCALES = sv
 
 
 
 .PHONY: default
-default: base info
+default: base info locale
 
 .PHONY: all
-all: base doc
+all: base doc locale
 
 .PHONY: base
 base: cmd
@@ -107,12 +119,40 @@ bin/%.ps: doc/info/%.texinfo doc/info/fdl.texinfo
 	cd obj/ps && texi2pdf --ps ../../$< < /dev/null
 	mv obj/ps/$*.ps $@
 
+ifdef WITHOUT_GETTEXT
+.PHONY: locale
+locale:
+else
+.PHONY: locale
+locale: $(foreach L,$(LOCALES),bin/mo/$(L)/messages.mo)
+endif
+
+bin/mo/%/messages.mo: po/%.po
+	@mkdir -p bin/mo/$*
+	cd bin/mo/$* && msgfmt ../../../$<
+
+
+obj/scrotty.pot: src/scrotty.c
+	@mkdir -p obj
+	cpp -DUSE_GETTEXT=1 < src/scrotty.c |  \
+	xgettext -o "$@" -Lc --from-code utf-8 --package-name scrotty  \
+	--package-version 1.1 --no-wrap --force-po  \
+	--copyright-holder 'Mattias Andrée (maandree@member.fsf.org)' -
+
+# Developers: run this to update .po files with new messages.
+.PHONY: update-po
+update-po: $(foreach L,$(LOCALES),po/$(L).po)
+
+po/%.po: obj/scrotty.pot
+	@mkdir -p po
+	if ! test -e $@; then cp $< $@; else msgmerge -U $@ $<; fi
+
 
 .PHONY: install
-install: install-base install-info install-man
+install: install-base install-info install-man install-locale
 
 .PHONY: install-all
-install-all: install-base install-doc
+install-all: install-base install-doc install-locale
 
 .PHONY: install-base
 install-base: install-cmd install-copyright
@@ -163,6 +203,16 @@ install-man: doc/man/scrotty.1
 	install -dm755 -- "$(DESTDIR)$(MAN1DIR)"
 	install -m644 $< -- "$(DESTDIR)$(MAN1DIR)/$(COMMAND).1"
 
+ifdef WITHOUT_GETTEXT
+.PHONY: install-locale
+install-locale:
+else
+.PHONY: install-locale
+install-locale:
+	install -dm755 -- $(foreach L,$(LOCALES),"$(DESTDIR)$(LOCALEDIR)/$(L)/LC_MESSAGES")
+	$(foreach L,$(LOCALES),install -m644 bin/mo/$(L)/messages.mo -- "$(DESTDIR)$(LOCALEDIR)/$(L)/LC_MESSAGES/$(PKGNAME).mo" &&) true
+endif
+
 
 .PHONY: uninstall
 uninstall:
@@ -175,6 +225,7 @@ uninstall:
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).ps"
 	-rm -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
 	-rm -- "$(DESTDIR)$(MAN1DIR)/$(COMMAND).1"
+	-rm -- $(foreach L,$(LOCALES),"$(DESTDIR)$(LOCALEDIR)/$(L)/LC_MESSAGES/$(PKGNAME).mo")
 
 
 .PHONY: clean

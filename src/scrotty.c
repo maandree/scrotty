@@ -19,7 +19,7 @@
 # define PROGRAM_NAME  "scrotty"
 #endif
 #ifndef PROGRAM_VERSION
-# define PROGRAM_VERSION  "1.0"
+# define PROGRAM_VERSION  "1.1"
 #endif
 
 
@@ -36,6 +36,9 @@
 #include <stdio.h>
 #include <alloca.h>
 #include <time.h>
+#ifdef USE_GETTEXT
+# include <libintl.h>
+#endif
 
 
 #ifndef PATH_MAX
@@ -46,6 +49,14 @@
 #endif
 #ifndef SYSDIR
 # define SYSDIR  "/sys"
+#endif
+
+
+
+#ifdef USE_GETTEXT
+# define _(STR)  gettext (STR)
+#else
+# define _(STR)  STR
 #endif
 
 
@@ -584,7 +595,7 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
   /* Take a screenshot of the current framebuffer. */
   if (save (fbpath, imgpath, width, height) < 0)
     goto fail;
-  fprintf (stderr, "Saved framebuffer %i to %s\n", fbno, imgpath);
+  fprintf (stderr, _("Saved framebuffer %i to %s,\n"), fbno, imgpath);
   
   /* Should we run a command over the image? */
   if (execpattern == NULL)
@@ -626,40 +637,40 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
 static int
 print_help(void)
 {
-  return printf ("SYNOPSIS\n"
-		 "\t%s [options...] [filename-pattern] [-- options-for-convert...]\n"
-		 "\n"
-		 "OPTIONS\n"
-		 "\t--help         Print usage information.\n"
-		 "\t--version      Print program name and version.\n"
-		 "\t--copyright    Print copyright information.\n"
-		 "\t--raw          Save in PNM rather than in PNG.\n"
-		 "\t--exec CMD     Command to run for each saved image.\n"
-		 "\n"
-		 "SPECIAL STRINGS\n"
-		 "\tBoth the --exec and filename-pattern parameters can take format specifiers\n"
-		 "\tthat are expanded by scrotty when encountered. There are two types of format\n"
-		 "\tspecifier. Characters preceded by a '%%' are interpretted by strftime(3).\n"
-		 "\tSee `man strftime` for examples. These options may be used to refer to the\n"
-		 "\tcurrent date and time. The second kind are internal to scrotty and are prefixed\n"
-		 "\tby '$' or '\\'. The following specifiers are recognised:\n"
-		 "\n"
-		 "\t\n"
-		 "\t$i  framebuffer index\n"
-		 "\t$f  image filename/pathname (ignored when used in filename-pattern)\n"
-		 "\t$n  image filename          (ignored when used in filename-pattern)\n"
-		 "\t$p  image width multiplied by image height\n"
-		 "\t$w  image width\n"
-		 "\t$h  image height\n"
-		 "\t$$  expands to a literal '$'\n"
-		 "\t\\n  expands to a new line\n"
-		 "\t\\\\  expands to a literal '\\'\n"
-		 "\t\\   expands to a literal ' ' (the string is a backslash followed by a space)\n"
-		 "\n"
-		 "\tA space that is not prefixed by a backslash in --exec is interpreted as an\n"
-		 "\targument delimiter. This is the case even at the beginning and end of the\n"
-		 "\tstring and if a space was the previous character in the string.\n"
-		 "\n",
+  return printf (_("SYNOPSIS\n"
+		   "\t%s [options...] [filename-pattern] [-- options-for-convert...]\n"
+		   "\n"
+		   "OPTIONS\n"
+		   "\t--help         Print usage information.\n"
+		   "\t--version      Print program name and version.\n"
+		   "\t--copyright    Print copyright information.\n"
+		   "\t--raw          Save in PNM rather than in PNG.\n"
+		   "\t--exec CMD     Command to run for each saved image.\n"
+		   "\n"
+		   "SPECIAL STRINGS\n"
+		   "\tBoth the --exec and filename-pattern parameters can take format specifiers\n"
+		   "\tthat are expanded by scrotty when encountered. There are two types of format\n"
+		   "\tspecifier. Characters preceded by a '%%' are interpretted by strftime(3).\n"
+		   "\tSee `man strftime` for examples. These options may be used to refer to the\n"
+		   "\tcurrent date and time. The second kind are internal to scrotty and are prefixed\n"
+		   "\tby '$' or '\\'. The following specifiers are recognised:\n"
+		   "\n"
+		   "\t\n"
+		   "\t$i  framebuffer index\n"
+		   "\t$f  image filename/pathname (ignored when used in filename-pattern)\n"
+		   "\t$n  image filename          (ignored when used in filename-pattern)\n"
+		   "\t$p  image width multiplied by image height\n"
+		   "\t$w  image width\n"
+		   "\t$h  image height\n"
+		   "\t$$  expands to a literal '$'\n"
+		   "\t\\n  expands to a new line\n"
+		   "\t\\\\  expands to a literal '\\'\n"
+		   "\t\\   expands to a literal ' ' (the string is a backslash followed by a space)\n"
+		   "\n"
+		   "\tA space that is not prefixed by a backslash in --exec is interpreted as an\n"
+		   "\targument delimiter. This is the case even at the beginning and end of the\n"
+		   "\tstring and if a space was the previous character in the string.\n"
+		   "\n"),
 		 execname) < 0 ? -1 : 0;
 }
 
@@ -684,21 +695,22 @@ print_version (void)
 static int
 print_copyright (void)
 {
-  return printf ("scrotty -- Screenshot program for Linux's TTY\n"
-		 "Copyright (C) 2014, 2015  Mattias Andrée (maandree@member.fsf.org)\n"
-		 "\n"
-		 "This program is free software: you can redistribute it and/or modify\n"
-		 "it under the terms of the GNU General Public License as published by\n"
-		 "the Free Software Foundation, either version 3 of the License, or\n"
-		 "(at your option) any later version.\n"
-		 "\n"
-		 "This program is distributed in the hope that it will be useful,\n"
-		 "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-		 "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
-		 "GNU General Public License for more details.\n"
-		 "\n"
-		 "You should have received a copy of the GNU General Public License\n"
-		 "along with this program.  If not, see <http://www.gnu.org/licenses/>.\n"
+  return printf (_("scrotty -- Screenshot program for Linux's TTY\n"
+		   "Copyright (C) %s\n"
+		   "\n"
+		   "This program is free software: you can redistribute it and/or modify\n"
+		   "it under the terms of the GNU General Public License as published by\n"
+		   "the Free Software Foundation, either version 3 of the License, or\n"
+		   "(at your option) any later version.\n"
+		   "\n"
+		   "This program is distributed in the hope that it will be useful,\n"
+		   "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+		   "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+		   "GNU General Public License for more details.\n"
+		   "\n"
+		   "You should have received a copy of the GNU General Public License\n"
+		   "along with this program.  If not, see <http://www.gnu.org/licenses/>.\n"),
+		 "2014, 2015  Mattias Andrée (maandree@member.fsf.org)"
 		 ) < 0 ? -1 : 0;
 }
 
@@ -710,11 +722,11 @@ print_copyright (void)
  * @param   argv  Command line arguments
  * @return        Zero on and only on success
  */
-int main
-(int argc, char *argv[])
+int
+main (int argc, char *argv[])
 {
 #define EXIT_USAGE(MSG)  \
-  return fprintf (stderr, "%s: %s. Type `%s --help` for help.\n", execname, MSG, execname), 1
+  return fprintf (stderr, _("%s: %s. Type '%s --help' for help.\n"), execname, MSG, execname), 1
   
   int fbno, r, i, dash = argc, exec = -1, help = 0;
   int raw = 0, version = 0, copyright = 0, filepattern = -1;
@@ -723,6 +735,13 @@ int main
   static char convert_args_2[PATH_MAX];
   
   execname = argc ? *argv : "scrotty";
+  
+  /* Set up for internationalisation. */
+#if defined(USE_GETTEXT) && defined(PACKAGE) && defined(LOCALEDIR)
+  setlocale (LC_ALL, "");
+  bindtextdomain (PACKAGE, LOCALEDIR);
+  textdomain (PACKAGE);
+#endif
   
   /* Parse command line. */
   for (i = 1; i < argc; i++)
@@ -738,14 +757,14 @@ int main
 	  break;
 	}
       else if ((argv[i][0] == '-') || (filepattern != -1))
-	EXIT_USAGE ("Unrecognised option.");
+	EXIT_USAGE (_("Unrecognised option."));
       else
 	filepattern = i;
     }
   
   /* Check that --exec is valid. */
   if (exec == argc)
-    EXIT_USAGE ("--exec has no argument.");
+    EXIT_USAGE (_("--exec has no argument."));
   
   /* Was --help, --version, or --copyright used? */
   if (help)       return -(print_help ());
@@ -782,7 +801,7 @@ int main
   if (failure_file == NULL)
     perror (execname);
   else
-    fprintf (stderr, "%s: %s: %s\n",
+    fprintf (stderr, _("%s: %s: %s\n"),
 	     execname, strerror (errno), failure_file);
   return 1;
   
