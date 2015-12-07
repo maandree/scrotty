@@ -10,7 +10,7 @@ BUILD DEPENDENCIES:
 	make
 	coreutils
 	libc
-	gcc
+	gcc (any cc can be used if WARN in Makefile is edited)
 	gettext (opt-out, for internationalisation)
 	texinfo (opt-out, for info, pdf, dvi, ps, and html manuals)
 	texlive-plainextra (opt-in, for pdf, dvi, and ps manuals)
