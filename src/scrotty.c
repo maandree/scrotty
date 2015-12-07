@@ -655,7 +655,6 @@ print_help(void)
 		   "\tcurrent date and time. The second kind are internal to scrotty and are prefixed\n"
 		   "\tby '$' or '\\'. The following specifiers are recognised:\n"
 		   "\n"
-		   "\t\n"
 		   "\t$i  framebuffer index\n"
 		   "\t$f  image filename/pathname (ignored when used in filename-pattern)\n"
 		   "\t$n  image filename          (ignored when used in filename-pattern)\n"
