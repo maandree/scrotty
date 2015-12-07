@@ -124,7 +124,7 @@ Both the @option{--exec} and filename pattern
 parameters can take format specifiers that are
 expanded by @command{scrotty} when encountered.
 There are two types of format specifier.
-Characters preceded by a `%' are interpretted
+Characters preceded by a `%' are interpreted
 by @code{strftime}. See @command{man strftime}
 for examples. These options may be used to refer
 to the current date and time. The second kind are
