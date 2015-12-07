@@ -50,6 +50,22 @@
 
 
 
+/**
+ * Stores a filename to `failure_file` and goes to the label `fail`.
+ * 
+ * @param  PATH:char *  The file that could not be used.
+ *                      Must be accessible by `main`.
+ */
+#define FILE_FAILURE(PATH)	\
+  do				\
+    {				\
+      failure_file = PATH;	\
+      goto fail;		\
+    }				\
+  while (0)
+
+
+
 #define LIST_0_9(P)  P"0\n", P"1\n", P"2\n", P"3\n", P"4\n", P"5\n", P"6\n", P"7\n", P"8\n", P"9\n"
 
 /**
@@ -84,6 +100,13 @@ static const char *execname;
  * `NULL` is `convert` shall not be used.
  */
 static char **convert_args = NULL;
+
+/**
+ * If a function fails when it tries to
+ * open a file, it will set this variable
+ * point to the pathname of that file.
+ */
+static const char *failure_file = NULL;
 
 
 /**
@@ -254,7 +277,7 @@ save (const char *fbpath, const char *imgpath, long width, long height)
   /* Open output file. */
   if (fd = open (imgpath, O_WRONLY | O_CREAT | O_TRUNC,
 		 S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH), fd == -1)
-    goto fail;
+    FILE_FAILURE (imgpath);
   
   /* Save image. */
   if (save_pnm (fbpath, width, height, fd) < 0)
@@ -287,7 +310,7 @@ save (const char *fbpath, const char *imgpath, long width, long height)
 static int
 measure (int fbno, long *width, long *height)
 {
-  char buf[PATH_MAX];
+  static char buf[PATH_MAX];
   char *delim;
   int sizefd = -1;
   ssize_t got;
@@ -297,7 +320,7 @@ measure (int fbno, long *width, long *height)
   sprintf (buf, SYSDIR "/class/graphics/fb%i/virtual_size", fbno);
   sizefd = open (buf, O_RDONLY);
   if (sizefd == -1)
-    goto fail;
+    FILE_FAILURE (buf);
   
   /* Get the dimensions of the framebuffer. */
   got = read (sizefd, buf, sizeof (buf) / sizeof (char) - 1);
@@ -504,7 +527,7 @@ exec_image (char *flatten_args)
   /* Parent process: */
   
   /* Wait for child to exit. */
-  if (waitpid(pid, &status, 0) < 0)
+  if (waitpid (pid, &status, 0) < 0)
     return -1;
   
   /* Return successfully if and only if `the child` did. */
@@ -525,8 +548,8 @@ exec_image (char *flatten_args)
 static int
 save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
 {
+  static char imgpath[PATH_MAX];
   char fbpath[PATH_MAX];
-  char imgpath[PATH_MAX];
   char *execargs = NULL;
   void *new;
   long width, height;
@@ -756,7 +779,12 @@ int main
   return 0;
   
  fail:
-  return perror (execname), 1;
+  if (failure_file == NULL)
+    perror (execname);
+  else
+    fprintf (stderr, "%s: %s: %s\n",
+	     execname, strerror (errno), failure_file);
+  return 1;
   
 #undef EXIT_USAGE
 }
