@@ -17,4 +17,6 @@ _/
 *.dvi
 *.ps
 *.pdf
+*.png
+*.pnm
 

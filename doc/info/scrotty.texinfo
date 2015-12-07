@@ -93,6 +93,20 @@ Print usage information and exit.
 Print program name and version and exit.
 @item --copyright
 Print copyright information and exit.
+@item --raw
+Save the images in portable anymap format
+(PNM), rather than in Portable Network
+Graphics (PNG). If this option is used,
+and no arguments for @command{convert}
+is specified, @command{convert} will not
+be used, and there will be not requirement
+to have ImageMagick installed.
+
+PNM images are highly compressable with
+@command{bzip2}. Compressed images are
+comparable in size with PNG,@footnote{Usually
+a few bytes in difference.} and can in
+fact be smaller.
 @item --exec CMD
 Run a command for each saved image.
 @end table

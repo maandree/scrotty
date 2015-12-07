@@ -1,6 +1,6 @@
 /**
  * scrotty — Screenshot program for Linux's TTY
- * Copyright © 2014  Mattias Andrée (maandree@member.fsf.org)
+ * Copyright © 2014, 2015  Mattias Andrée (maandree@member.fsf.org)
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,12 +81,14 @@ static const char* execname;
 /**
  * Arguments for `convert`,
  * the output file should be printed into `convert_args[2]`.
+ * `NULL` is `convert` shall not be used.
  */
-static char** convert_args;
+static char** convert_args = NULL;
 
 
 /**
- * Create an PNM-file that is sent to `convert` for convertion to a compressed format
+ * Create an PNM-file that is sent to `convert` for convertion
+ * to a compressed format, or directly to a file
  * 
  * @param   fbname  The framebuffer device
  * @param   width   The width of the image
@@ -170,7 +172,10 @@ static int save(const char* fbpath, const char* imgpath, long width, long height
 {
   int pipe_rw[2];
   pid_t pid, reaped;
-  int saved_errno, status;
+  int saved_errno, status, fd;
+  
+  if (convert_args == NULL)
+    goto no_convert;
   
   /* Create a pipe that for sending data into the `convert` program. */
   if (pipe(pipe_rw) < 0)
@@ -218,6 +223,21 @@ static int save(const char* fbpath, const char* imgpath, long width, long height
   
   /* Return successfully if and only if `convert` did. */
   return status == 0 ? 0 : -1;
+  
+  
+  /* `convert` shall not be used: */
+  
+ no_convert:
+  /* Open output file. */
+  if (fd = open(imgpath, O_WRONLY | O_CREAT | O_TRUNC,
+		S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH), fd == -1)
+    return -1;
+  
+  /* Save image. */
+  if (save_pnm(fbpath, width, height, fd) < 0)
+    return saved_errno = errno, close(fd), errno = saved_errno, -1;
+  
+  return 0;
 }
 
 
@@ -443,10 +463,13 @@ static int exec_image(char* flatten_args)
  * Take a screenshot of a framebuffer
  * 
  * @param   fbno         The number of the framebuffer
+ * @param   raw          Save in PNM rather than in PNG?
  * @param   filepattern  The pattern for the filename, `NULL` for default
+ * @param   execpattern  The pattern for the command to run to
+ *                       process the image, `NULL` for default
  * @return               Zero on success, -1 on error, 1 if the framebuffer does not exist
  */
-static int save_fb(int fbno, const char* filepattern, const char* execpattern)
+static int save_fb(int fbno, int raw, const char* filepattern, const char* execpattern)
 {
   char fbpath[PATH_MAX];
   char imgpath[PATH_MAX];
@@ -468,11 +491,11 @@ static int save_fb(int fbno, const char* filepattern, const char* execpattern)
   /* Get output pathname. */
   if (filepattern == NULL)
     {
-      sprintf(imgpath, "fb%i.png", fbno);
+      sprintf(imgpath, "fb%i.%s", fbno, (raw ? "pnm" : "png"));
       if (access(imgpath, F_OK) == 0)
 	for (i = 2;; i++)
 	  {
-	    sprintf(imgpath, "fb%i.png.%i", fbno, i);
+	    sprintf(imgpath, "fb%i.%s.%i", fbno, (raw ? "pnm" : "png"), i);
 	    if (access(imgpath, F_OK))
 	      break;
 	  }
@@ -528,6 +551,7 @@ static int print_help(void)
   p("\t--help         Print usage information.\n");
   p("\t--version      Print program name and version.\n");
   p("\t--copyright    Print copyright information.\n");
+  p("\t--raw          Save in PNM rather than in PNG.\n");
   p("\t--exec CMD     Command to run for each saved image.\n");
   p("\n");
   p("SPECIAL STRINGS\n");
@@ -578,7 +602,7 @@ static int print_version(void)
 static int print_copyright(void)
 {
   p("scrotty -- Screenshot program for Linux's TTY\n");
-  p("Copyright (C) 2014  Mattias Andrée (maandree@member.fsf.org)\n");
+  p("Copyright (C) 2014, 2015  Mattias Andrée (maandree@member.fsf.org)\n");
   p("\n");
   p("This program is free software: you can redistribute it and/or modify\n");
   p("it under the terms of the GNU General Public License as published by\n");
@@ -608,7 +632,8 @@ static int print_copyright(void)
  */
 int main(int argc, char* argv[])
 {
-  int fbno, r, i, dash = argc, exec = -1, help = 0, version = 0, copyright = 0, filepattern = -1;
+  int fbno, r, i, dash = argc, exec = -1, help = 0;
+  int raw = 0, version = 0, copyright = 0, filepattern = -1;
   static char convert_args_0[] = "convert";
   static char convert_args_1[] = DEVDIR "/stdin";
   static char convert_args_2[PATH_MAX];
@@ -621,6 +646,7 @@ int main(int argc, char* argv[])
       if      (!strcmp(argv[i], "--help"))       help = 1;
       else if (!strcmp(argv[i], "--version"))    version = 1;
       else if (!strcmp(argv[i], "--copyright"))  copyright = 1;
+      else if (!strcmp(argv[i], "--raw"))        raw = 1;
       else if (!strcmp(argv[i], "--exec"))       exec = ++i;
       else if (!strcmp(argv[i], "--"))
 	{
@@ -643,18 +669,23 @@ int main(int argc, char* argv[])
   if (copyright)  return -(print_copyright());
   
   /* Create arguments for `convert`. */
-  convert_args = alloca((size_t)(4 + (argc - dash)) * sizeof(char*));
-  convert_args[0] = convert_args_0;
-  convert_args[1] = convert_args_1;
-  convert_args[2] = convert_args_2;
-  for (i = dash; i < argc; i++)
-    convert_args[i - dash + 2] = argv[i];
-  convert_args[3 + (argc - dash)] = NULL;
+  if ((!raw) || (dash < argc))
+    {
+      convert_args = alloca((size_t)(4 + (argc - dash)) * sizeof(char*));
+      convert_args[0] = convert_args_0;
+      convert_args[1] = convert_args_1;
+      convert_args[2] = convert_args_2;
+      for (i = dash; i < argc; i++)
+	convert_args[i - dash + 2] = argv[i];
+      convert_args[3 + (argc - dash)] = NULL;
+    }
   
   /* Take a screenshot of each framebuffer. */
   for (fbno = 0;; fbno++)
     {
-      r = save_fb(fbno, filepattern < 0 ? NULL : argv[filepattern], exec < 0 ? NULL : argv[exec]);
+      r = save_fb(fbno, raw,
+		  (filepattern < 0 ? NULL : argv[filepattern]),
+		  (exec < 0 ? NULL : argv[exec]));
       if (r < 0)  return perror(execname), 1;
       if (r > 0)  break;
     }

@@ -2,7 +2,7 @@ RUNTIME DEPENDENCIES:
 
 	linux
 	libc
-	imagemagick
+	imagemagick (opt-out)
 
 
 BUILD DEPENDENCIES:
