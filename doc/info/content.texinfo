@@ -1,8 +1,10 @@
 @c  This file includes everything after the titlepage.
 
 
+@ifnothtml
 @c @shortcontents  @c (if the table of content gets too large.)
 @contents
+@end ifnothtml
 
 
 @menu
