@@ -102,7 +102,8 @@ LOCALES = sv
 MAN_LOCALES = sv
 
 # Files generated texi2html
-HTML_FILES = GNU-Free-Documentation-License.html index.html Invoking.html Overview.html
+HTML_FILES = Free-Software-Needs-Free-Documentation.html  GNU-Free-Documentation-License.html  \
+             GNU-General-Public-License.html  index.html  Invoking.html  Overview.html  strftime.html
 
 
 
