@@ -98,6 +98,9 @@ endif
 # List of translations
 LOCALES = sv
 
+# List of man page translations
+MAN_LOCALES = sv
+
 # Files generated texi2html
 HTML_FILES = GNU-Free-Documentation-License.html index.html Invoking.html Overview.html
 
@@ -270,9 +273,17 @@ install-html: $(foreach F,$(HTML_FILES),bin/html/scrotty/$(F))
 	$(INSTALL_DATA) $^ -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME)/html/"
 
 .PHONY: install-man
-install-man: doc/man/scrotty.1
+install-man: install-man-untranslated install-man-locale
+
+.PHONY: install-man-untranslated
+install-man-untranslated:
 	$(INSTALL_DIR) -- "$(DESTDIR)$(MAN1DIR)"
-	$(INSTALL_DATA) $< -- "$(DESTDIR)$(MAN1DIR)/$(COMMAND).1"
+	$(INSTALL_DATA) doc/man/scrotty.1 -- "$(DESTDIR)$(MAN1DIR)/$(COMMAND).1"
+
+.PHONY: install-man-locale
+install-man-locale:
+	$(foreach L,$(MAN_LOCALES),$(INSTALL_DIR) -- "$(DESTDIR)$(MANDIR)/$(L)/man1" &&) true
+	$(foreach L,$(MAN_LOCALES),$(INSTALL_DATA) doc/man/scrotty.$(L).1 -- "$(DESTDIR)$(MANDIR)/$(L)/man1/$(COMMAND).1" &&) true
 
 ifdef WITHOUT_GETTEXT
 .PHONY: install-locale
@@ -297,6 +308,7 @@ uninstall:
 	-$(RM) -- "$(DESTDIR)$(DOCDIR)/$(PKGNAME).dvi"
 	-$(RM) -- $(foreach F,$(HTML_FILES),"$(DESTDIR)$(DOCDIR)/$(PKGNAME)/html/$(F)")
 	-$(RM) -- "$(DESTDIR)$(MAN1DIR)/$(COMMAND).1"
+	-$(RM) -- $(foreach L,$(MAN_LOCALES),"$(DESTDIR)$(MANDIR)/$(L)/man1/$(COMMAND).1")
 	-$(RM) -- $(foreach L,$(LOCALES),"$(DESTDIR)$(LOCALEDIR)/$(L)/LC_MESSAGES/$(PKGNAME).mo")
 
 

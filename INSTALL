@@ -50,6 +50,11 @@ You can also chose to restrict the locales to install:
 	make all LOCALES=sv
 	make install LOCALES=sv DESTDIR="pkg"
 
+You can select which translations of the man page you want to
+install too:
+
+	make install MAN_LOCALES=sv DESTDIR="pkg"
+
 
 ────────────────────────────────────────────────────────────────────────────────
 CUSTOMISED COMPILATION
@@ -95,11 +100,15 @@ to install. This rules are available:
 │   pdf       │   install-pdf       │   Include PDF manual. (Texinfo)            │
 │   ps        │   install-ps        │   Include PostScript manual. (Texinfo)     │
 │   html      │   install-html      │   Include multifile HTML manual. (Texinfo) │
-│             │   install-man       │   Include man page.                        │
+│             │   install-man       │   Include man pages.                       │
 │ locale      │ install-locale      │ Include locales.                           │
 └─────────────┴─────────────────────┴────────────────────────────────────────────┘
 
 install, install-everything, install-base, and install-cmd, have alternatives
 that installs a stripped binary: install-strip, install-everything-strip,
 install-base-strip, and install-cmd-strip, respectively.
+
+The untranslated man page is installed via the rule install-man-untranslated.
+Additional translations are installed via the rule install-man-locale, which
+installes the locales listed in MAN_LOCALES.
 

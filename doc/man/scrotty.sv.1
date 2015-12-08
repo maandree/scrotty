@@ -1,0 +1,115 @@
+.\" -*- nroff -*-
+.TH SCROTTY 1 SCROTTY "" "Generel Kommandomanual"
+.SH NAMN
+scrotty \- Bildrutebuffertskärmsdumpsprogram
+.SH ÖVERSIKT
+.B scrotty
+.RI [ ALTERNATIV ]...\ [ FILNAMNSMÖNSTER ]
+[\-\-
+.IR ALTERNATIV_FÖR_CONVERT ...]
+.SH BESKRIVNING
+.B scrotty
+är ett minimalistiskt skärmsdumpsprogram för dina
+bildrutebuffertar. Den tar en skärmdump av din TTY.
+Det finns inget stöd för
+.BR X .
+.PP
+.B scrotty
+är designad efter sitt namne,
+.BR scrot (1),
+men har en del förbättringar: inget stöd för fördröjda
+skrämdumpar, val av bildkvalitet eller stöd för att skapa
+miniatyrer, men det finns stöd för att specifiera valfria
+alternativ för
+.BR convert (1),
+som används för att spara bilden.
+.SH ALTERNATIV
+.TP
+.B \-\-help
+Skriv ut burksanvisningar.
+.TP
+.B \-\-version
+Skriv ut programmets namn och version.
+.TP
+.B \-\-copyright
+Skriv ut upphovsrätts information.
+.TP
+.B \-\-raw
+Spara som PNM-bild snarare än som PNG-bild.
+.TP
+.BR \-\-exec \ \fIKMD\fP
+Kommando att köra för varje sparad bild.
+.SH "SÄRSKILDA STRÄNGAR"
+Både
+.B \-\-exec
+and
+.I FILENAME_PATTERN
+ och filnamnsmönstrets tar formatspecifikationsargument
+som ersätts av
+.BR scrotty .
+Det finns två typer av formatspecifikationsargument.
+Tecken som direkt följer ett \(aq%\(aq tolkas av
+.BR strftime (3).
+Dessa alternativ kan användas för att referera till de
+nuvarande tiden and datumet. Den andra typer tolkas av
+.B scrotty
+självt och tar ett  \(aq$\(aq eller ett \(aq\\\(aq direkt
+framför sig. Följande stödjs:
+.PP
+$i      Bildrutebuffertens nummer
+.br
+$f      bildens filename/sökvägsnamn (ignoreras i FILNAMNSMÖNSTER)
+.br
+$n      bildens filename             (ignoreras i FILNAMNSMÖNSTER)
+.br
+$p      bildens brädd multiplicerat med dess höjd
+.br
+$w      bildens brädd
+.br
+$h      bildens höjd
+.br
+$$      ersätts med en ordagrann \(aq$\(aq
+.br
+\\n      ersätts med en radbryting
+.br
+\\\\      ersätts med en ordagrann \(aq\\\(aq
+.br
+\\       ersätts med en ordagrann \(aq \(aq (snedsträck, mellanrum)
+.PP
+Mellanrum som inte har ett \(aq\\\(aq direkt framförsig i
+.B \-\-exec
+tolkas som ett argumentskilje. Detta sker även när det
+förekommer i början och i slutet av strängen, och om ett
+sådant även förekom direkt framför.
+.SH "FRAMTIDA INRIKTNING"
+Stöd för flera kärnors TTY:er skall tilläggas.
+.SH "LOGISK GRUND"
+At ta en skärmdump var en pina innan detta. Skärmdumpar
+är användbara om du vill komma ihåg någonting eller om
+du vill skicka en bild på hur någonting ser hur.
+.SH "SE ÄVEN"
+.BR scrot (1),
+.BR convert (1),
+.BR strftime (3)
+.PP
+Full dokumentation finns tillgängligt lokalt via: info \(aq(scrotty)\(aq
+.SH FÖRFATTARE
+Huvudskliga författare, Mattias Andrée.  Se filen COPYING för en
+fullständig författarlista.
+.SH UPPHOVSRÄTT
+Copyright \(co 2014, 2015  Mattias Andrée
+.br
+Licens GPLv3+: GNU GPL version 3 eller nyare <http://gnu.org/licenses/gpl.html>.
+.br
+Detta är fri mjukvara: du är fri att ändra av vidaredistribuera den.
+.br
+Det finns INGA GARANTIER, i den mån som lagen tillåter.
+.SH 
+.PP
+Kopiering och distribution av denna manual, med eller utan förändringar,
+är tillåtet i valfritt media utan avgift förutsatt att upphovsrättsnotisen
+och denna notis bevaras. Denna fil erbjuds som-den-är, utan någon garanti.
+.SH FEL
+Vänligen rapportera fel till <https://github.com/maandree/scrotty/issues>
+eller till <maandree@member.fsf.org>.
+

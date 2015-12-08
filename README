@@ -6,7 +6,7 @@ SYNOPSIS
 
 DESCRIPTION
 	scrotty is a minimalist screenshoter for your framebuffers.
-	It takes of your TTY session. X is not supported.
+	It takes a screenshot of your TTY session. X is not supported.
 
 	scrotty is designed after scrot(1), but includes a some
 	improvements. Namely it does not support delaying the screenshot,
