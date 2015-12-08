@@ -34,7 +34,8 @@ GPG_KEY ?=
 # The packages and there detached signatures (if any.)
 ifndef DO_NOT_SIGN
 __DIST_FILES = $(foreach F,$(DIST_FORMATS),$(_PROJECT)-$(_VERSION).$(F) $(_PROJECT)-$(_VERSION).$(F).sig)
-else
+endif
+ifdef DO_NOT_SIGN
 __DIST_FILES = $(foreach F,$(DIST_FORMATS),$(_PROJECT)-$(_VERSION).$(F))
 endif
 
@@ -84,7 +85,8 @@ dist-bz2: $(_PROJECT)-$(_VERSION).tar.bz2 $(_PROJECT)-$(_VERSION).tar.bz2.sig
 # Generate gzip-copressed tarball and signature of it.
 .PHONY: dist-gz
 dist-gz: $(_PROJECT)-$(_VERSION).tar.gz $(_PROJECT)-$(_VERSION).tar.sig
-else
+endif
+ifdef DO_NOT_SIGN
 # Generate checksums, but no signature.
 .PHONY: dist-checksums
 dist-checksums: $(_PROJECT)-$(_VERSION).checksums

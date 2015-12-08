@@ -62,7 +62,8 @@ endif
 # Optimisation settings for C code compilation.
 ifdef DEBUG
 OPTIMISE = -Og -g
-else
+endif
+ifndef DEBUG
 ifndef OPTIMISE
 OPTIMISE = -O2
 endif
@@ -84,7 +85,8 @@ WARN = -Wall -Wextra $(_PEDANTIC) -Wdouble-promotion -Wformat=2 -Winit-self -Wmi
        -Wsign-conversion -Wstrict-overflow=5 -Wconversion -Wsuggest-attribute=pure -Wswitch-default  \
        -Wstrict-aliasing=1 -fstrict-overflow -Wfloat-equal -Wpadded -Waggregate-return               \
        -Wtraditional-conversion
-else
+endif
+ifndef __USING_GCC
 WARN = -Wall -Wextra $(_PEDANTIC)
 endif
 
@@ -110,11 +112,13 @@ __H =
 ifdef _HEADER_DIRLEVELS
 ifeq ($(_HEADER_DIRLEVELS),1)
 __H += src/*.h
-else
+endif
+ifneq ($(_HEADER_DIRLEVELS),1)
 ifeq ($(_HEADER_DIRLEVELS),2)
 __H += src/*.h
 __H += src/*/*.h
-else
+endif
+ifneq ($(_HEADER_DIRLEVELS),2)
 ifneq ($(_HEADER_DIRLEVELS),0)
 __H += $(foreach W,$(shell $(SEQ) $(_HEADER_DIRLEVELS) | while read n; do $(ECHO) $$($(SEQ) $$n)" " | $(SED) 's/[^ ]* /\/\*/g'; done | $(XARGS) $(ECHO)),src$(W).h)
 endif
@@ -156,7 +160,8 @@ install-cmd-c: $(foreach B,$(_BIN),bin/$(B))
 	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$(BINDIR)"
 ifdef COMMAND
 	$(Q)$(INSTALL_PROGRAM) $(__STRIP) $^ -- "$(DESTDIR)$(BINDIR)"
-else
+endif
+ifndef COMMAND
 	$(Q)$(INSTALL_PROGRAM) $(__STRIP) $^ -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
 endif
 	@$(ECHO_EMPTY)
@@ -168,7 +173,8 @@ endif
 uninstall-cmd-c:
 ifdef COMMAND
 	-$(Q)$(RM) -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
-else
+endif
+ifndef COMMAND
 	-$(Q)$(RM) -- $(foreach B,$(_BIN),"$(DESTDIR)$(BINDIR)/$(B)")
 endif
 

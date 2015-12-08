@@ -65,11 +65,13 @@ __TEXI_SRC =
 ifdef _TEXINFO_DIRLEVELS
 ifeq ($(_TEXINFO_DIRLEVELS),1)
 __TEXI_SRC += doc/info/*.texinfo
-else
+endif
+ifneq ($(_TEXINFO_DIRLEVELS),1)
 ifeq ($(_TEXINFO_DIRLEVELS),2)
 __TEXI_SRC += doc/info/*.texinfo
 __TEXI_SRC += doc/info/*/*.texinfo
-else
+endif
+ifneq ($(_TEXINFO_DIRLEVELS),2)
 __TEXI_SRC += $(foreach W,$(shell $(SEQ) $(_TEXINFO_DIRLEVELS) | while read n; do $(ECHO) $$($(SEQ) $$n)" " | $(SED) 's/[^ ]* /\/\*/g'; done | $(XARGS) $(ECHO)),doc/info$(W).texinfo)
 endif
 endif

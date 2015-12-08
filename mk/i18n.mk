@@ -39,7 +39,8 @@ uninstall: uninstall-locale
 ifdef WITHOUT_GETTEXT
 .PHONY: locale
 locale:
-else
+endif
+ifndef WITHOUT_GETTEXT
 .PHONY: locale
 locale: $(foreach L,$(LOCALES),bin/mo/$(L)/messages.mo)
 endif
@@ -84,7 +85,8 @@ bin/mo/%/messages.mo: po/%.po
 ifdef WITHOUT_GETTEXT
 .PHONY: install-locale
 install-locale:
-else
+endif
+ifndef WITHOUT_GETTEXT
 .PHONY: install-locale
 install-locale: $(foreach L,$(LOCALES),bin/mo/$(L)/messages.mo)
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"

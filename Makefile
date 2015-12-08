@@ -25,6 +25,9 @@ TEXINFO_FLAGS =
 # List of translations.
 LOCALES = sv
 
+# Ucomment to remove internationalisation support.
+#WITHOUT_GETTEXT = yes
+
 # List of man page translations.
 MAN_LOCALES = sv
 
