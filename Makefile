@@ -193,6 +193,7 @@ po/%.po: obj/scrotty.pot
 	else  \
 	$(MSGMERGE) --no-wrap -U $@ $<;  \
 	fi
+	@touch $@
 
 .PHONY: TAGS
 TAGS:
