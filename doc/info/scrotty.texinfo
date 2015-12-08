@@ -54,6 +54,7 @@ Texts. A copy of the license is included in the section entitled
 @menu
 * Overview::                        Brief overview of @command{scrotty}.
 * Invoking::                        Invocation of @command{scrotty}.
+* strftime::                        Syntax support via @code{strftime}.
 * GNU Free Documentation License::  Copying and sharing this manual.
 @end menu
 
@@ -64,20 +65,20 @@ Texts. A copy of the license is included in the section entitled
 
 @command{scrotty} is a simple command for taking a screenshot
 of your framebuffers. It can be used to take a screenshot of
-your TTY session, but it cannot take a screenshot of your X
-session.@footnote{Unless it is for some reason is rendered on
-the framebuffer.}
+your @sc{TTY} session, but it cannot take a screenshot of your
+@sc{X} session.@footnote{Unless it is for some reason is
+rendered on the framebuffer.}
 
 @command{scrotty} is designed after @command{scrot}, but
 includes a some improvements. Namely it does not support
 delaying the screenshot, selecting image quality or creating
 thumbnails, but it has support for adding arbitrary arguments
-to @command{convert} (from the ImageMagick project), which is
-used to save the image.
+to @command{convert} (from the ImageMagick project), which
+is used to save the image.
 
 @command{scrotty} reads the data stored in the framebuffers,
-convert it the PNM images and pipes it to @command{convert}
-to create PNG images.
+convert it the @sc{PNM} images and pipes it to @command{convert}
+to create @sc{PNG} images.
 
 
 
@@ -103,10 +104,9 @@ be used, and there will be not requirement
 to have ImageMagick installed.
 
 PNM images are highly compressable with
-@command{bzip2}. Compressed images are
-comparable in size with PNG,@footnote{Usually
-a few bytes in difference.} and can in
-fact be smaller.
+@command{bzip2}. Compressed images are comparable
+in size with @sc{PNG},@footnote{Usually a few
+bytes in difference.} and can in fact be smaller.
 @item --exec CMD
 Run a command for each saved image.
 @end table
@@ -125,7 +125,8 @@ parameters can take format specifiers that are
 expanded by @command{scrotty} when encountered.
 There are two types of format specifier.
 Characters preceded by a `%' are interpreted
-by @code{strftime}. See @command{man strftime}
+by @code{strftime}. See @ref{strftime} or the
+manual for your implemenation of @command{strftime}
 for examples. These options may be used to refer
 to the current date and time. The second kind are
 internal to scrotty and are prefixed by `$' or
@@ -167,6 +168,169 @@ For example,
 create a file called something like @file{2014-10-28_1792x1344.0.png}
 for your first framebuffer and @file{2014-10-28_1792x1344.1.png} for
 your second framebuffer, and copies the saved images to @file{~/.backups/shots/}.
+
+
+
+@node strftime
+@chapter @code{strftime}
+
+@command{scrotty} uses @code{strftime}, which
+implemented by the @sc{C} standard library (the
+@sc{GNU} @sc{C} Library for most @sc{GNU}/Linux
+user,) for formatting the filename or commands
+with information about the current date and time.
+If you are using the @sc{GNU} @sc{C} Library,
+full documentation is available in
+@ref{Formatting Calendar Time, Formatting Calendar Time, Formatting Calendar Time, libc, GNU C Library Application Fundamentals}.
+
+Assuming your have a @sc{POSIX}-compliant
+implementation of @code{strftime}, at least the
+following formatters are supported:
+
+@table @code
+@item %a
+The name of weekday in your locale, abbreviated.
+For example `Tue'.
+@item %A
+The name of weekday in your locale. For example
+`Tuesday'.
+@item %b
+@itemx %h
+The name of month in your locale, abbreviated.
+For example `Dec'.
+@item %B
+The name of month in your locale. For example
+`December.
+@item %c
+Your locale's representation for the date and
+time. For example `Tue 08 Dec 2015 09:40:34 CET'.
+@item %C
+The ``century'', or more precisely the year
+divided by 100 and trucated to an integer.
+Between year 2000 and 2099, inclusively, this
+will be `20'.
+@item %d
+The day of the month in two digits. For example,
+`08' during 8 of December.
+@item %D
+Equivalent to @code{%m/%d/%y}. For example
+@code{12/08/15} for 8 of December 2015.
+
+Be aware, this not what expect in most of the
+World, and its requires specialised sorting
+algorithms to be sorted properly. Be also
+aware, that this contains forward slashes, which
+is used as the file delimiter. This is a poor
+idea to use this for the filename. @code{%F}
+is a better choice.
+@item %e
+The day of the month. If only one digit is
+required, it is preceded by a space. For
+example, ` 8' during 8 of December.
+@item %F
+Equivalent to @code{%+4Y-%m-%d}. For example
+@code{2015-12-08} for 8 of December 2015.
+@item %g
+The last 2 digits of the week-based year.
+@item %G
+The week-based year.
+@item %H
+The hour in 24-hour clock format, 2 digits.
+@item %-H
+The hour in 24-hour clock format, as few digits as possible.
+@item %I
+The hour in 12-hour clock format, 2 digits.
+@item %-I
+The hour in 12-hour clock format, as few digits as possible.
+@item %j
+The day of the year in 3 digits.
+For example @code{342} for 8 of December 2015.
+@item %-j
+The day of the year in as few digits as possible.
+@item %m
+The month in 2 digits.
+For example @code{12} for 8 of December 2015.
+@item %-m
+The month in as few digits as possible.
+@item %M
+The minute in 2 digits.
+@item %n
+A new line.
+@item %p
+The locale's repesentation for either ante
+meridiem or post meridiem.
+@item %r
+The time in 12-hour notation. The behaviour
+is not completely specified. You will have
+to try it out. It will probably include
+the second and the timezone.
+@item %R
+The time, in minute resolution, in 24-hour
+notation.@footnote{Yes, this is barely similar to
+@code{%r}.}
+@item %S
+The second, in too digits. Currently leap-seconds
+are not supported, and @sc{POSIX} does not specify
+that double positive leap-seconds are
+possible@footnote{Probably because they are avoided.}.
+@item %t
+A tab space.
+@item %T
+Equivalent to @code{%H:%M:%S}.
+@item %u
+The weekday as a number, starting with Monday as 1.
+@item %U
+The week number of the year, 2 digits.
+The first Sunday of January is the first day of
+week 1. Week 0 is possible.
+@item %-U
+Equivalent to @code{-U}, except in as few digits
+as possible.
+@item %V
+The week number of the year, 2 digits.
+IF week containing 1 of January has at least four
+days in the new year, it is week 1. Week 0 is
+impossible.
+@item %-V
+Equivalent to @code{-V}, except in as few digits
+as possible.
+@item %w
+The weekday as a number, starting with Sunday as 0.
+@item %W
+The week number of the year, 2 digits.
+The first Monday of January is the first day of
+week 1. Week 0 is possible.
+@item %-W
+Equivalent to @code{-W}, except in as few digits
+as possible.
+@item %x
+The locale's representation of the date. This
+may be equivalent or similar to @code{%F} and
+thus a poor idea to use, if so.
+@item %X
+The locale's representation of the time.
+@item %y
+The last two digits in the year. (And at least two digits.)
+@item %Y
+The year with as many digits as necessary.
+@item %z
+The offset of the timezone from UTC. Either
+@code{+hhmm} or @code{-hhmm} (starts with a hyphen.)
+@item %Z
+The name of the timezone, abbreviation.
+@item %%
+A literal `%'.
+@end table
+
+Note, this is not all that @sc{POSIX} specifies,
+but it is the basics. @sc{POSIX} does not specify
+any support for 6-hour clocks, for Saturday as the
+first day of the week (or Tuesay through Friday,) or
+Sunday to be represented by 1 or Monday as 0. If you
+need any of these, you should look into the
+specifications for your @sc{C} standard libraries
+implementation of @code{strftime}, which may or may
+nor support this.
 
 
 

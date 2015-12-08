@@ -21,6 +21,8 @@ scrotty NEWS                                          -*- outline -*-
 
   HTML manual can now be built and installed.
 
+  The Texinfo manual lists the basics of strftime(3P).
+
 ** Translations
 
   The program and the man page has been translated to Swedish.
