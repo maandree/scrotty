@@ -1,0 +1,20 @@
+@node Overview
+@chapter Overview
+
+@command{scrotty} is a simple command for taking a screenshot
+of your framebuffers. It can be used to take a screenshot of
+your @sc{TTY} session, but it cannot take a screenshot of your
+@sc{X} session.@footnote{Unless it is for some reason is
+rendered on the framebuffer.}
+
+@command{scrotty} is designed after @command{scrot}, but
+includes a some improvements. Namely it does not support
+delaying the screenshot, selecting image quality or creating
+thumbnails, but it has support for adding arbitrary arguments
+to @command{convert} (from the ImageMagick project), which
+is used to save the image.
+
+@command{scrotty} reads the data stored in the framebuffers,
+convert it the @sc{PNM} images and pipes it to @command{convert}
+to create @sc{PNG} images.
+

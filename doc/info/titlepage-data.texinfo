@@ -1,0 +1,24 @@
+@c  The title and the subtitle of the manual.
+@set title scrotty
+@set subtitle Take a screenshot of the framebuffer
+
+@c  The full name of the documented program or package.
+@set programname @command{scrotty}
+@set programnamewiththe @command{scrotty}
+
+
+@c  Authors of the manual. Included at the bottom
+@c  of the titlepage on TeX processed output.
+@macro authors{}
+@author by Mattias Andrée (maandree)
+@end macro
+
+
+@c  Dedication for TeX processed output.
+@set HAVE_DEDICATION
+@macro dedication{}
+@center `I don't know how to make a screenshot, because I normally use my computer in
+@center text-mode. I have @sc{X} and @sc{GNOME} installed, but I use them only occasionally.' --- rms
+@end macro
+@c  (I don't use dedications, I use quotes.)
+

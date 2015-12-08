@@ -1,0 +1,87 @@
+@node Invoking
+@chapter Invoking
+
+@command{scrotty} recognises four options:
+
+@table @option
+@item --help
+Print usage information and exit.
+@item --version
+Print program name and version and exit.
+@item --copyright
+Print copyright information and exit.
+@item --raw
+Save the images in portable anymap format
+(PNM), rather than in Portable Network
+Graphics (PNG). If this option is used,
+and no arguments for @command{convert}
+is specified, @command{convert} will not
+be used, and there will be not requirement
+to have ImageMagick installed.
+
+PNM images are highly compressable with
+@command{bzip2}. Compressed images are comparable
+in size with @sc{PNG},@footnote{Usually a few
+bytes in difference.} and can in fact be smaller.
+@item --exec CMD
+Run a command for each saved image.
+@end table
+
+In addition to these options, a filename
+pattern, that does not start with a dash,
+can be added. This filename pattern selects
+with what filename the image should be saved.
+
+Further, it is possible add @option{--}
+followed by additional options to add when
+@command{scrotty} spawns @command{convert}.
+
+Both the @option{--exec} and filename pattern
+parameters can take format specifiers that are
+expanded by @command{scrotty} when encountered.
+There are two types of format specifier.
+Characters preceded by a `%' are interpreted
+by @code{strftime}. See @ref{strftime} or the
+manual for your implemenation of @command{strftime}
+for examples. These options may be used to refer
+to the current date and time. The second kind are
+internal to scrotty and are prefixed by `$' or
+`\'. The following specifiers are recognised:
+
+@table @asis
+@item `@code{$i}'
+Framebuffer index.
+@item `@code{$f}'
+Image filename/pathname.
+Ignored in the filename pattern.
+@item `@code{$n}'
+Image filename.
+Ignored in the filename pattern.
+@item `@code{$p}'
+Image width multiplied by image height.
+@item `@code{$w}'
+Image width.
+@item `@code{$h}'
+Image height.
+@item `@code{$$}'
+Expands to a literal `$'.
+@item `@code{\n}'
+Expands to new line.
+@item `@code{\\}'
+Expands to a literal `\'.
+@item `@code{\ }'
+Expands to a literal ` '.                                           
+@end table
+
+A space that is not prefixed by a backslash in
+@option{--exec} is interpreted as an argument
+delimiter. This is the case even at the beginning
+and end of the string and if a space was the
+previous character in the string.
+
+For example,
+@command{scrotty `%Y-%m-%d_$wx$h.$i.png` --exec 'cp $f ~/.backups/shots/'}
+create a file called something like @file{2014-10-28_1792x1344.0.png}
+for your first framebuffer and @file{2014-10-28_1792x1344.1.png} for
+your second framebuffer, and copies the saved images to @file{~/.backups/shots/}.
+

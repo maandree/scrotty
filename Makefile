@@ -131,35 +131,35 @@ doc: info pdf dvi ps html
 
 .PHONY: info
 info: bin/scrotty.info
-bin/%.info: doc/info/%.texinfo doc/info/*.texinfo
+bin/%.info: doc/info/%.texinfo doc/info/*.texinfo doc/info/*/*.texinfo
 	@$(MKDIR) -p bin
 	$(MAKEINFO) $<
 	$(MV) $*.info $@
 
 .PHONY: pdf
 pdf: bin/scrotty.pdf
-bin/%.pdf: doc/info/%.texinfo doc/info/*.texinfo
+bin/%.pdf: doc/info/%.texinfo doc/info/*.texinfo doc/info/*/*.texinfo
 	@$(MKDIR) -p obj/pdf bin
 	cd obj/pdf && $(TEXI2PDF) ../../$< $(TEXINFO_FLAGS) < /dev/null
 	$(MV) obj/pdf/$*.pdf $@
 
 .PHONY: dvi
 dvi: bin/scrotty.dvi
-bin/%.dvi: doc/info/%.texinfo doc/info/*.texinfo
+bin/%.dvi: doc/info/%.texinfo doc/info/*.texinfo doc/info/*/*.texinfo
 	@$(MKDIR) -p obj/dvi bin
 	cd obj/dvi && $(TEXI2DVI) ../../$< $(TEXINFO_FLAGS) < /dev/null
 	$(MV) obj/dvi/$*.dvi $@
 
 .PHONY: ps
 ps: bin/scrotty.ps
-bin/%.ps: doc/info/%.texinfo doc/info/*.texinfo
+bin/%.ps: doc/info/%.texinfo doc/info/*.texinfo doc/info/*/*.texinfo
 	@$(MKDIR) -p obj/ps bin
 	cd obj/ps && $(TEXI2PS) ../../$< $(TEXINFO_FLAGS) < /dev/null
 	$(MV) obj/ps/$*.ps $@
 
 .PHONY: html
 html: bin/html/scrotty/index.html
-bin/html/scrotty/index.html: doc/info/scrotty.texinfo doc/info/*.texinfo
+bin/html/scrotty/index.html: doc/info/scrotty.texinfo doc/info/*.texinfo doc/info/*/*.texinfo
 	@$(MKDIR) -p bin/html
 	cd bin/html && $(MAKEINFO_HTML) ../../$< < /dev/null
 

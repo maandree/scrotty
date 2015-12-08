@@ -1,0 +1,33 @@
+@c  This file includes everything after the titlepage.
+
+
+@c @shortcontents  @c (if the table of content gets too large.)
+@contents
+
+
+@menu
+* Overview::                                Brief overview of @command{scrotty}.
+* Invoking::                                Invocation of @command{scrotty}.
+* strftime::                                Syntax support via @code{strftime}.
+
+* Free Software Needs Free Documentation::  Why free documentation is important.
+* GNU General Public License::              Copying and sharing @command{scrotty}.
+* GNU Free Documentation License::          Copying and sharing this manual.
+@end menu
+@c In GNU Emacs a @detailmenu can be created with `C-c C-u m`.
+
+
+@include chap/overview.texinfo
+@include chap/invoking.texinfo
+@include chap/strftime.texinfo
+
+@include appx/free-software-needs-free-documentation.texinfo
+
+@node GNU General Public License
+@appendix GNU General Public License
+@include appx/gpl.texinfo
+
+@node GNU Free Documentation License
+@appendix GNU Free Documentation License
+@include appx/fdl.texinfo
+
