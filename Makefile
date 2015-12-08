@@ -382,15 +382,15 @@ $(PKGNAME)-$(VERSION).tar:
 	@if $(TEST) -f $@; then $(RM) $@; fi
 	git archive --prefix=$(PKGNAME)-$(VERSION)/ --format=tar $(VERSION) -o $@
 
-$(PKGNAME)-$(VERSION).tar.xz: $(PKGNAME)-$(VERSION).tar
+%.xz: %
 	@if $(TEST) -f $@; then $(RM) $@; fi
 	xz -ke9 $<
 
-$(PKGNAME)-$(VERSION).tar.bz2: $(PKGNAME)-$(VERSION).tar
+%.bz2: %
 	@if $(TEST) -f $@; then $(RM) $@; fi
 	bzip2 -k9 $<
 
-$(PKGNAME)-$(VERSION).tar.gz: $(PKGNAME)-$(VERSION).tar
+%.gz: %
 	@if $(TEST) -f $@; then $(RM) $@; fi
 	gzip -k9 $<
 
