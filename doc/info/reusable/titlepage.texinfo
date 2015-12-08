@@ -64,7 +64,9 @@
 @insertcopying
 @page
 @end ifset
+@ifset HAVE_DEDICATION
 @dedication{}
+@end ifset
 @ifclear HARDCOPY
 @vskip 0pt plus 1filll
 @ifset HARDCOPY_AVAILABLE
