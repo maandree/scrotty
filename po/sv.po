@@ -158,7 +158,7 @@ msgstr "Val känns inte igen."
 
 #: src/scrotty.c:781
 msgid "--exec has no argument."
-msgstr "--exec har inget argument."
+msgstr "--exec saknar argument."
 
 #: src/scrotty.c:818
 #, c-format
