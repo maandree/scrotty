@@ -65,7 +65,12 @@ OPTIMISE = -O2 -g
 endif
 ifndef DEBUG
 ifdef OPTIMISE
+ifdef __USING_GCC
 OPTIMISE = -Og -g
+endif
+ifndef __USING_GCC
+OPTIMISE = -g
+endif
 endif
 endif
 
