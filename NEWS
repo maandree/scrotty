@@ -4,9 +4,7 @@ scrotty NEWS                                          -*- outline -*-
 
 ** Installation changes
 
-  The Make rule 'default' has been renamed to 'all', and the
-  Make rule 'all' has been renamed to 'everything'. The Make
-  rule 'install-all' has been renamed to 'install-everything'.
+  The installation process has changed. Please read INSTALL.
 
 ** Improvements
 
