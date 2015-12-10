@@ -56,12 +56,12 @@ _VERSION = 1.1
 _C_STD = c99
 _PEDANTIC = yes
 _BIN = scrotty
-_OBJ_scrotty = scrotty
-_HEADER_DIRLEVELS = 0
+_OBJ_scrotty = scrotty kern-linux info pattern
+_HEADER_DIRLEVELS = 1
 _CPPFLAGS = -D'PACKAGE="$(PKGNAME)"' -D'PROGRAM_VERSION="$(_VERSION)"'
 
 # Used by mk/i18n.mk
-_SRC = $(foreach B,$(_BIN),$(_OBJ_$(B)).c)
+_SRC = $(foreach B,$(_BIN),$(foreach F,$(_OBJ_$(B)),$(F).c))
 _PROJECT_FULL = scrotty
 _COPYRIGHT_HOLDER = Mattias Andrée (maandree@member.fsf.org)
 
@@ -81,11 +81,13 @@ _MAN_sv_1 = scrotty
 _COPYING = COPYING
 
 # Used by mk/dist.mk
-_EVERYTHING_INFO = scrotty titlepage-data content hardcopy-copying  \
+___EVERYTHING_INFO = scrotty titlepage-data content hardcopy-copying  \
                    appx/fdl appx/free-software-needs-free-documentation appx/gpl  \
                    chap/invoking chap/overview chap/strftime  \
                    reusable/macros reusable/paper reusable/titlepage
-_EVERYTHING = $(foreach F,$(_EVERYTHING_INFO),doc/info/$(F).texinfo)  \
+___EVERYTHING_H = common kern info pattern pnm
+_EVERYTHING = $(foreach F,$(___EVERYTHING_INFO),doc/info/$(F).texinfo)  \
+              $(foreach F,$(___EVERYTHING_H),src/$(F).h)  \
               $(__EVERYTHING_ALL_COMMON) DEPENDENCIES INSTALL NEWS $(__todo) doc/concept
 
 # }}

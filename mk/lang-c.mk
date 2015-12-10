@@ -153,7 +153,7 @@ aux/%.o: $(v)src/%.c $(foreach H,$(__H),$(v)$(H))
 	@$(ECHO_EMPTY)
 
 # Link object files into a command.
-# Dependencies are declared below..
+# Dependencies are declared below.
 bin/%:
 	@$(PRINTF_INFO) '\e[00;01;31mLD\e[34m %s\e[00;32m$A\n' "$@"
 	@$(MKDIR) -p bin
@@ -161,8 +161,11 @@ bin/%:
 	@$(ECHO_EMPTY)
 
 # Dependencies for the rule above.
-$(foreach B,$(_BIN),$(foreach O,$(_OBJ_$(B)),bin/$(B): aux/$(O).o\
-))
+include aux/lang-c.mk
+aux/lang-c.mk: Makefile
+	@$(MKDIR) -p aux
+	@$(ECHO) > aux/lang-c.mk
+	@$(foreach B,$(_BIN),$(ECHO) bin/$(B): $(foreach O,$(_OBJ_$(B)),aux/$(O).o) >> aux/lang-c.mk)
 
 
 # INSTALL RULES:

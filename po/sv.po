@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: scrotty 1.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-10 02:23+0100\n"
+"POT-Creation-Date: 2015-12-10 16:17+0100\n"
 "PO-Revision-Date: 2015-12-07 18:50+0100\n"
 "Last-Translator: Mattias Andrée <maandree@member.fsf.org>\n"
 "Language-Team: none\n"
@@ -17,12 +17,40 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/scrotty.c:606
+#: src/scrotty.c:377
 #, c-format
-msgid "Saved framebuffer %i to %s,\n"
+msgid "Saved framebuffer %i to %s.\n"
 msgstr "Bildrutebuffert %i sparad till %s.\n"
 
-#: src/scrotty.c:686
+#: src/scrotty.c:467 src/scrotty.c:474
+#, c-format
+msgid "%s: %s. Type '%s --help' for help.\n"
+msgstr "%s: %s. Kör '%s --help' för hjälp.\n"
+
+#: src/scrotty.c:467
+msgid "Unrecognised option."
+msgstr "Val känns inte igen."
+
+#: src/scrotty.c:474
+msgid "--exec has no argument."
+msgstr "--exec saknar argument."
+
+#: src/scrotty.c:524
+#, c-format
+msgid "%s: It looks like you are inside a display server. If this is correct, what you see is probably not what you get.\n"
+msgstr "%s: Det ser ut som att du är innan för en grafikserver. Om detta är korrect, vad de ser är troligtvis inte vad du får.\n"
+
+#: src/scrotty.c:534
+#, c-format
+msgid "%s: %s: %s\n"
+msgstr "%s: %s: %s\n"
+
+#: src/kern-linux.c:41
+#, c-format
+msgid "%s: Unable to find a framebuffer. If you have a file named %s/MAKEDEV, run it with '-d /dev/fb' as root, or try running '%s'.\n"
+msgstr "%s: Kunde inte hitta någon bildrutebuffert. Om filen %s/MAKEDEV finns ditt system, kör den med '-d /dev/fb' som root, eller testa att köra '%s'.\n"
+
+#: src/info.c:32
 #, c-format
 msgid ""
 "SYNOPSIS\n"
@@ -93,8 +121,8 @@ msgstr ""
 "\tslutet av strängen, och om ett sådant även förekom direkt framför.\n"
 "\n"
 
-#: src/scrotty.c:731
-#, fuzzy, c-format
+#: src/info.c:77
+#, c-format
 msgid ""
 "%s\n"
 "Copyright (C) %s.\n"
@@ -112,7 +140,7 @@ msgstr ""
 "\n"
 "Skriven av Mattias Andrée.\n"
 
-#: src/scrotty.c:751
+#: src/info.c:97
 #, c-format
 msgid ""
 "scrotty -- Screenshot program for Linux's TTY\n"
@@ -146,35 +174,3 @@ msgstr ""
 "\n"
 "Du skall ha fått en kopia av GNU General Public License tillsammans\n"
 "med det här programmet. Om inte, se <http://www.gnu.org/licenses/>.\n"
-
-#: src/scrotty.c:813 src/scrotty.c:820
-#, c-format
-msgid "%s: %s. Type '%s --help' for help.\n"
-msgstr "%s: %s. Kör '%s --help' för hjälp.\n"
-
-#: src/scrotty.c:813
-msgid "Unrecognised option."
-msgstr "Val känns inte igen."
-
-#: src/scrotty.c:820
-msgid "--exec has no argument."
-msgstr "--exec saknar argument."
-
-#: src/scrotty.c:860
-#, fuzzy, c-format
-msgid "%s: Unable to find a framebuffer.\n"
-msgstr "%s: Kunde inte hitta någon bildrutebuffert.\n"
-
-#: src/scrotty.c:867
-#, c-format
-msgid "%s: It looks like you are inside a display server. If this is correct, what you see is probably not what you get.\n"
-msgstr "%s: Det ser ut som att du är innan för en grafikserver. Om detta är korrect, vad de ser är troligtvis inte vad du får.\n"
-
-#: src/scrotty.c:879
-#, c-format
-msgid "%s: %s: %s\n"
-msgstr "%s: %s: %s\n"
-
-#, fuzzy
-#~ msgid "%s: %i %i.\n"
-#~ msgstr "%s: %s: %s\n"

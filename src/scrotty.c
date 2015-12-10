@@ -16,72 +16,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef PROGRAM_NAME
-# define PROGRAM_NAME  "scrotty"
-#endif
-#ifndef PROGRAM_VERSION
-# define PROGRAM_VERSION  "1.1"
-#endif
+#include "common.h"
+#include "kern.h"
+#include "info.h"
+#include "pnm.h"
+#include "pattern.h"
 
-
-#define _POSIX_SOURCE
-#include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <alloca.h>
-#include <time.h>
 #ifdef USE_GETTEXT
-# include <libintl.h>
 # include <locale.h>
-#endif
-
-
-#ifndef PATH_MAX
-# define PATH_MAX  4096
-#endif
-#ifndef DEVDIR
-# define DEVDIR  "/dev"
-#endif
-#ifndef SYSDIR
-# define SYSDIR  "/sys"
-#endif
-
-
-
-#ifdef USE_GETTEXT
-# define _(STR)  gettext (STR)
-#else
-# define _(STR)  STR
 #endif
 
 
 
 /**
- * Stores a filename to `failure_file` and goes to the label `fail`.
- * 
- * @param  PATH:char *  The file that could not be used.
- *                      Must be accessible by `main`.
+ * X-macro that lists all environment variables
+ * that indicate that the program is running
+ * inside a display server.
  */
-#define FILE_FAILURE(PATH)	\
-  do				\
-    {				\
-      failure_file = PATH;	\
-      goto fail;		\
-    }				\
-  while (0)
-
+#define LIST_DISPLAY_VARS  X(DISPLAY) X(MDS_DISPLAY) X(MIR_DISPLAY) X(WAYLAND_DISPLAY) X(PREFERRED_DISPLAY)
 
 
 #define LIST_0_9(P)  P"0\n", P"1\n", P"2\n", P"3\n", P"4\n", P"5\n", P"6\n", P"7\n", P"8\n", P"9\n"
-
 /**
  * [0, 255]-integer-to-text convertion lookup table for faster conversion from
  * raw framebuffer data to the PNM format. The values have a whitespace at the
@@ -89,8 +47,11 @@
  * Lines should not be longer than 70 (although most programs will probably
  * work even if there are longer lines), therefore the selected whitespace
  * is LF (new line).
+ * 
+ * ASCII is wider supported than binary, and is create for version control,
+ * especifially with one datum per line.
  */
-static const char* inttable[] =
+const char* inttable[] =
   {
     LIST_0_9(""),  LIST_0_9("1"), LIST_0_9("2"), LIST_0_9("3"), LIST_0_9("4"),
     LIST_0_9("5"), LIST_0_9("6"), LIST_0_9("7"), LIST_0_9("8"), LIST_0_9("9"),
@@ -106,7 +67,14 @@ static const char* inttable[] =
 /**
  * `argv[0]` from `main`.
  */
-static const char *execname;
+const char *execname;
+
+/**
+ * If a function fails when it tries to
+ * open a file, it will set this variable
+ * point to the pathname of that file.
+ */
+const char *failure_file = NULL;
 
 /**
  * Arguments for `convert`,
@@ -116,11 +84,11 @@ static const char *execname;
 static char **convert_args = NULL;
 
 /**
- * If a function fails when it tries to
- * open a file, it will set this variable
- * point to the pathname of that file.
+ * The index of the alternative path-pattern,
+ * for the framebuffers, to try.
  */
-static const char *failure_file = NULL;
+static int try_alt_fbpath = 0;
+
 
 
 /**
@@ -130,7 +98,7 @@ static const char *failure_file = NULL;
  * @param   fbname  The framebuffer device.
  * @param   width   The width of the image.
  * @param   height  The height of the image.
- * @param   fd      The file descriptor connected to `convert`'s stdin
+ * @param   fd      The file descriptor connected to `convert`'s stdin.
  * @return          Zero on success, -1 on error.
  */
 static int
@@ -139,10 +107,9 @@ save_pnm (const char *fbpath, long width, long height, int fd)
   char buf[PATH_MAX];
   FILE *file = NULL;
   int fbfd = 1;
-  int r, g, b;
   ssize_t got, off;
-  uint32_t *pixel;
   int saved_errno;
+  size_t adjustment;
   
   /* Open the framebuffer device for reading. */
   fbfd = open (fbpath, O_RDONLY);
@@ -171,24 +138,14 @@ save_pnm (const char *fbpath, long width, long height, int fd)
       got += off;
       
       /* Convert read pixels. */
-      for (off = 0; off < got; off += 4)
-	{
-	  /* A pixel in the framebuffer is formatted as `%{blue}%{green}%{red}%{x}`
-	     in big-endian binary, or `%{x}%{red}%{green}%{blue}` in little-endian binary. */
-	  pixel = (uint32_t *)(buf + off);
-	  r = (*pixel >> 16) & 255;
-	  g = (*pixel >> 8) & 255;
-	  b = (*pixel >> 0) & 255;
-	  /* A pixel in the PNM image is formatted as `%{red} %{green} %{blue} ` in text. */
-	  if (fprintf (file, "%s%s%s", inttable[r], inttable[g], inttable[b]) < 0)
-	    goto fail;
-	}
+      if (convert_fb (file, buf, (size_t)got, &adjustment) < 0)
+	goto fail;
       
       /* If we read a whole number of pixels, reset the buffer, otherwise,
          move the unconverted bytes to the beginning of the buffer. */
-      if (off != got)
+      if (adjustment)
 	{
-	  off -= 4;
+	  off -= (ssize_t)adjustment;
 	  memcpy (buf, buf + off, (size_t)(got - off) * sizeof (char));
 	  off = got - off;
 	}
@@ -243,6 +200,7 @@ save (const char *fbpath, const char *imgpath, long width, long height)
   if (pid == -1)
     goto fail;
   
+  
   /* Child process: */
   if (pid == 0)
     {
@@ -264,6 +222,7 @@ save (const char *fbpath, const char *imgpath, long width, long height)
       perror(execname);
       _exit(1);
     }
+  
   
   /* Parent process: */
   
@@ -310,189 +269,6 @@ save (const char *fbpath, const char *imgpath, long width, long height)
     close (fd);
   errno = saved_errno;
   return -1;
-}
-
-
-/**
- * Get the dimensions of the framebuffer.
- * 
- * @param   fbno    The number of the framebuffer.
- * @param   width   Output parameter for the width of the image.
- * @param   height  Output parameter for the height of the image.
- * @return          Zero on success, -1 on error.
- */
-static int
-measure (int fbno, long *width, long *height)
-{
-  static char buf[PATH_MAX];
-  char *delim;
-  int sizefd = -1;
-  ssize_t got;
-  int saved_errno;
-  
-  /* Open the file with the framebuffer's dimensions. */
-  sprintf (buf, "%s/class/graphics/fb%i/virtual_size", SYSDIR, fbno);
-  sizefd = open (buf, O_RDONLY);
-  if (sizefd == -1)
-    FILE_FAILURE (buf);
-  
-  /* Get the dimensions of the framebuffer. */
-  got = read (sizefd, buf, sizeof (buf) / sizeof (char) - 1);
-  if (got < 0)
-    goto fail;
-  close (sizefd);
-  
-  /* The read content is formated as `%{width},%{height}\n`,
-     convert it to `%{width}\0%{height}\0` and parse it. */
-  buf[got] = '\0';
-  delim = strchr (buf, ',');
-  *delim++ = '\0';
-  *width = atol (buf);
-  *height = atol (delim);
-  
-  return 0;
-  
- fail:
-  saved_errno = errno;
-  if (sizefd >= 0)
-    close (sizefd);
-  errno = saved_errno;
-  return -1;
-}
-
-
-/**
- * Duplicate all '%':s in a buffer until the first occurrence of a zero byte.
- * 
- * @param   buf  The buffer.
- * @param   n    The size of the buffer.
- * @return       -1 if the buffer is too small, otherwise.
- *               the new position of the first zero byte.
- */
-static ssize_t
-duplicate_percents (char *restrict buf, size_t n)
-{
-  size_t p = 0, pi, pc = 0, i;
-  
-  /* Count number of '%':s. */
-  for (i = 0; buf[i]; i++)
-    if (buf[i] == '%')
-      pc++;
-  
-  /* Check whether the string will overflow. */
-  if (i + pc > n)
-    return -1;
-  
-  /* Duplicate all '%':s. */
-  for (pi = 0; pi < pc; pi++)
-    {
-      p = (size_t)(strchr (buf + p, '%') - buf);
-      memmove (buf + p + 1, buf + p, (i - (p - pi)) * sizeof (char));
-      p += 2;
-    }
-  
-  return (ssize_t)(i + pi);
-}
-
-
-/**
- * Parse and evaluate a --exec argument or filename pattern.
- * 
- * If `path != NULL` than all non-escaped spaces in
- * `pattern` will be stored as 255-bytes in `buf`.
- * 
- * @param   buf      The output buffer.
- * @param   n        The size of `buf`.
- * @param   pattern  The pattern to evaluate.
- * @param   fbno     The index of the framebuffer.
- * @param   width    The width of the image/framebuffer.
- * @param   height   The height of the image/framebuffer.
- * @param   path     The filename of the saved image, `NULL` during the evaluation of the filename pattern.
- * @return           Zero on success, -1 on error.
- */
-static int evaluate (char *restrict buf, size_t n, const char *restrict pattern,
-		     int fbno, long width, long height, const char *restrict path)
-{
-#define P(format, value)  r = snprintf (buf + i, n - i, format "%zn", value, &j)
-  
-  size_t i = 0;
-  ssize_t j = 0;
-  int percent = 0, backslash = 0, dollar = 0, r;
-  char c;
-  char *fmt;
-  time_t t;
-  struct tm *tm;
-  
-  /* Expand '$' and '\'. */
-  while ((c = *pattern++))
-    {
-      if (dollar)
-	{
-	  dollar = 0;
-	  if (path == NULL)
-	    if ((c == 'f') || (c == 'n'))
-	      continue;
-	  if      (c == 'i')  P ("%i", fbno);
-	  else if (c == 'f')  P ("%s", path);
-	  else if (c == 'n')  P ("%s", strrchr (path, '/') ? (strrchr (path, '/') + 1) : path);
-	  else if (c == 'p')  P ("%ju", (uintmax_t)width * (uintmax_t)height);
-	  else if (c == 'w')  P ("%li", width);
-	  else if (c == 'h')  P ("%li", height);
-	  else if (c == '$')  r = 0, j = 1, buf[i] = '$';
-	  else
-	    continue;
-	  if ((r < 0) || (j <= 0))
-	    return -1;
-	  if ((c == 'f') || (c == 'n'))
-	    if (j = duplicate_percents (buf + i, n - i), j < 0)
-	      goto enametoolong;
-	  i += (size_t)j;
-	}
-      else if (backslash)  buf[i++] = (c == 'n' ? '\n' : c), backslash = 0;
-      else if (percent)    buf[i++] = c, percent = 0;
-      else if (c == '%')   buf[i++] = c, percent = 1;
-      else if (c == '\\')  backslash = 1;
-      else if (c == '$')   dollar = 1;
-      else if (c == ' ')   buf[i++] = path == NULL ? ' ' : (char)255; /* 255 is not valid in UTF-8. */
-      else                 buf[i++] = c;
-      
-      if (i >= n)
-	goto enametoolong;
-    }
-  buf[i] = '\0';
-  
-  /* Check whether there are any '%' to expand. */
-  if (strchr (buf, '%') == NULL)
-    return 0;
-  
-  /* Copy the buffer so we can reuse the buffer and use its old content for the format. */
-  fmt = alloca ((strlen (buf) + 1) * sizeof (char));
-  memcpy (fmt, buf, (strlen (buf) + 1) * sizeof (char));
-  
-  /* Expand '%'. */
-  t = time (NULL);
-  tm = localtime (&t);
-  if (tm == NULL)
-    goto fail;
-#ifdef __GNUC__
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wformat-nonliteral"
-#endif
-  if (strftime (buf, n, fmt, tm) == 0)
-    goto enametoolong; /* No errors are defined for `strftime`. */
-#ifdef __GNUC__
-# pragma GCC diagnostic pop
-#endif
-  
-  return 0;
-  
- enametoolong:
-  return errno = ENAMETOOLONG, -1;
-  
- fail:
-  return -1;
-  
-#undef P
 }
 
 
@@ -576,25 +352,20 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
   int i, saved_errno;
   
   /* Get pathname for framebuffer, and stop if we have read all existing ones. */
-  sprintf (fbpath, "%s/fb%i", DEVDIR, fbno);
+  get_fbpath (fbpath, try_alt_fbpath, fbno);
   if (access (fbpath, F_OK))
     return 1;
   
   /* Get the size of the framebuffer. */
-  if (measure (fbno, &width, &height) < 0)
+  if (measure (fbno, fbpath, &width, &height) < 0)
     goto fail;
-
+  
   /* Get output pathname. */
   if (filepattern == NULL)
     {
       sprintf (imgpath, "fb%i.%s", fbno, (raw ? "pnm" : "png"));
-      if (access (imgpath, F_OK) == 0)
-	for (i = 2;; i++)
-	  {
-	    sprintf (imgpath, "fb%i.%s.%i", fbno, (raw ? "pnm" : "png"), i);
-	    if (access (imgpath, F_OK))
-	      break;
-	  }
+      for (i = 2; access (imgpath, F_OK) == 0; i++)
+	sprintf (imgpath, "fb%i.%s.%i", fbno, (raw ? "pnm" : "png"), i);
     }
   else
     if (evaluate (imgpath, (size_t)PATH_MAX, filepattern, fbno, width, height, NULL) < 0)
@@ -603,7 +374,7 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
   /* Take a screenshot of the current framebuffer. */
   if (save (fbpath, imgpath, width, height) < 0)
     goto fail;
-  fprintf (stderr, _("Saved framebuffer %i to %s,\n"), fbno, imgpath);
+  fprintf (stderr, _("Saved framebuffer %i to %s.\n"), fbno, imgpath);
   
   /* Should we run a command over the image? */
   if (execpattern == NULL)
@@ -645,135 +416,18 @@ static int
 have_display (void)
 {
   char *env;
-  
-  /* X (should also contain a ':'.) */
-  env = getenv("DISPLAY");
-  if (env && *env)
-    return 1;
-  
-  /* mds (should also contain a ':'.) */
-  env = getenv("MDS_DISPLAY");
-  if (env && *env)
-    return 1;
-  
-  /* Mir (not verified, have not been able to find documentation.) */
-  env = getenv("MIR_DISPLAY");
-  if (env && *env)
-    return 1;
-  
-  /* Wayland. */
-  env = getenv("WAYLAND_DISPLAY");
-  if (env && *env)
-    return 1;
-  
-  /* Proposed metavariable. */
-  env = getenv("PREFERRED_DISPLAY");
-  if (env && *env)
-    return 1;
-  
+#define X(VAR)  env = getenv(#VAR); if (env && *env) return 1;
+  LIST_DISPLAY_VARS
   return 0;
 }
 
 
 /**
- * Print usage information.
+ * Take a screenshot of all framebuffers.
  * 
- * @return  Zero on success, -1 on error.
- */
-static int
-print_help(void)
-{
-  return printf (_("SYNOPSIS\n"
-		   "\t%s [options...] [filename-pattern] [-- options-for-convert...]\n"
-		   "\n"
-		   "OPTIONS\n"
-		   "\t--help         Print usage information.\n"
-		   "\t--version      Print program name and version.\n"
-		   "\t--copyright    Print copyright information.\n"
-		   "\t--raw          Save in PNM rather than in PNG.\n"
-		   "\t--exec CMD     Command to run for each saved image.\n"
-		   "\n"
-		   "SPECIAL STRINGS\n"
-		   "\tBoth the --exec and filename-pattern parameters can take format specifiers\n"
-		   "\tthat are expanded by scrotty when encountered. There are two types of format\n"
-		   "\tspecifier. Characters preceded by a '%%' are interpreted by strftime(3).\n"
-		   "\tSee `man strftime` for examples. These options may be used to refer to the\n"
-		   "\tcurrent date and time. The second kind are internal to scrotty and are prefixed\n"
-		   "\tby '$' or '\\'. The following specifiers are recognised:\n"
-		   "\n"
-		   "\t$i  framebuffer index\n"
-		   "\t$f  image filename/pathname (ignored when used in filename-pattern)\n"
-		   "\t$n  image filename          (ignored when used in filename-pattern)\n"
-		   "\t$p  image width multiplied by image height\n"
-		   "\t$w  image width\n"
-		   "\t$h  image height\n"
-		   "\t$$  expands to a literal '$'\n"
-		   "\t\\n  expands to a new line\n"
-		   "\t\\\\  expands to a literal '\\'\n"
-		   "\t\\   expands to a literal ' ' (the string is a backslash followed by a space)\n"
-		   "\n"
-		   "\tA space that is not prefixed by a backslash in --exec is interpreted as an\n"
-		   "\targument delimiter. This is the case even at the beginning and end of the\n"
-		   "\tstring and if a space was the previous character in the string.\n"
-		   "\n"),
-		 execname) < 0 ? -1 : 0;
-}
-
-
-/**
- * Print program name and version.
- * 
- * @return  Zero on success, -1 on error.
- */
-static int
-print_version (void)
-{
-  return printf (_("%s\n"
-		   "Copyright (C) %s.\n"
-		   "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\n"
-		   "This is free software: you are free to change and redistribute it.\n"
-		   "There is NO WARRANTY, to the extent permitted by law.\n"
-		   "\n"
-		   "Written by Mattias Andrée.\n"),
-		 PROGRAM_NAME " " PROGRAM_VERSION,
-		 "2014, 2015 Mattias Andrée") < 0 ? -1 : 0;
-}
-
-
-/**
- * Print copyright information.
- * 
- * @return  Zero on success, -1 on error.
- */
-static int
-print_copyright (void)
-{
-  return printf (_("scrotty -- Screenshot program for Linux's TTY\n"
-		   "Copyright (C) %s\n"
-		   "\n"
-		   "This program is free software: you can redistribute it and/or modify\n"
-		   "it under the terms of the GNU General Public License as published by\n"
-		   "the Free Software Foundation, either version 3 of the License, or\n"
-		   "(at your option) any later version.\n"
-		   "\n"
-		   "This program is distributed in the hope that it will be useful,\n"
-		   "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-		   "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
-		   "GNU General Public License for more details.\n"
-		   "\n"
-		   "You should have received a copy of the GNU General Public License\n"
-		   "along with this program.  If not, see <http://www.gnu.org/licenses/>.\n"),
-		 "2014, 2015  Mattias Andrée (maandree@member.fsf.org)"
-		 ) < 0 ? -1 : 0;
-}
-
-
-/**
- * Take a screenshot of all framebuffers
- * 
- * @param   argc  The number of elements in `argv`
- * @param   argv  Command line arguments
- * @return        Zero on and only on success
+ * @param   argc  The number of elements in `argv`.
+ * @param   argv  Command line arguments, run with `--help` for more information.
+ * @return        Zero on and only on success.
  */
 int
 main (int argc, char *argv[])
@@ -836,6 +490,7 @@ main (int argc, char *argv[])
       convert_args[3 + (argc - dash)] = NULL;
     }
   
+ retry:  
   /* Take a screenshot of each framebuffer. */
   for (fbno = 0;; fbno++)
     {
@@ -857,18 +512,18 @@ main (int argc, char *argv[])
   /* Did not find any framebuffer? */
   if (found == 0)
     {
-      fprintf (stderr, _("%s: Unable to find a framebuffer.\n"), execname);
+      if (try_alt_fbpath++ < alt_fbpath_limit)
+	goto retry;
+      
+      print_not_found_help ();
       return 1;
     }
   
   /* Warn about being inside a display server. */
   if (have_display ())
-    {
-      fprintf (stderr, _("%s: It looks like you are inside a "
-			 "display server. If this is correct, "
-			 "what you see is probably not what "
-			 "you get.\n"), execname);
-    }
+    fprintf (stderr, _("%s: It looks like you are inside a display server. "
+		       "If this is correct, what you see is probably not "
+		       "what you get.\n"), execname);
   
   return 0;
   

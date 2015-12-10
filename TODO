@@ -2,10 +2,9 @@ Use auto-auto-complete.
 
 (maybe) include date and time by default in filenames.
 
-Take the screenshot the the framebuffers
-more simultaneously.
+Take the screenshot of the framebuffers more simultaneously. (async)
 
-/dev/fb/[0-9]*
+Support framebuffers with other depths.
 
-framebuffers with other depths.
+Investigate Hurd support.
 
