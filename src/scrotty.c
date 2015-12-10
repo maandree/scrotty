@@ -40,6 +40,7 @@
 #include <time.h>
 #ifdef USE_GETTEXT
 # include <libintl.h>
+# include <locale.h>
 #endif
 
 
@@ -330,7 +331,7 @@ measure (int fbno, long *width, long *height)
   int saved_errno;
   
   /* Open the file with the framebuffer's dimensions. */
-  sprintf (buf, SYSDIR "/class/graphics/fb%i/virtual_size", fbno);
+  sprintf (buf, "%s/class/graphics/fb%i/virtual_size", SYSDIR, fbno);
   sizefd = open (buf, O_RDONLY);
   if (sizefd == -1)
     FILE_FAILURE (buf);
@@ -575,7 +576,7 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
   int i, saved_errno;
   
   /* Get pathname for framebuffer, and stop if we have read all existing ones. */
-  sprintf (fbpath, DEVDIR "/fb%i", fbno);
+  sprintf (fbpath, "%s/fb%i", DEVDIR, fbno);
   if (access (fbpath, F_OK))
     return 1;
   
@@ -633,6 +634,44 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
   free (execargs);
   errno = saved_errno;
   return -1;
+}
+
+
+/**
+ * Figure out whether the user is in a display server.
+ * We will print a warning in `main` if so.
+ */
+static int
+have_display (void)
+{
+  char *env;
+  
+  /* X (should also contain a ':'.) */
+  env = getenv("DISPLAY");
+  if (env && *env)
+    return 1;
+  
+  /* mds (should also contain a ':'.) */
+  env = getenv("MDS_DISPLAY");
+  if (env && *env)
+    return 1;
+  
+  /* Mir (not verified, have not been able to find documentation.) */
+  env = getenv("MIR_DISPLAY");
+  if (env && *env)
+    return 1;
+  
+  /* Wayland. */
+  env = getenv("WAYLAND_DISPLAY");
+  if (env && *env)
+    return 1;
+  
+  /* Proposed metavariable. */
+  env = getenv("PREFERRED_DISPLAY");
+  if (env && *env)
+    return 1;
+  
+  return 0;
 }
 
 
@@ -742,7 +781,7 @@ main (int argc, char *argv[])
 #define EXIT_USAGE(MSG)  \
   return fprintf (stderr, _("%s: %s. Type '%s --help' for help.\n"), execname, MSG, execname), 1
   
-  int fbno, r, i, dash = argc, exec = -1, help = 0;
+  int fbno, r, i, dash = argc, exec = -1, help = 0, found = 0;
   int raw = 0, version = 0, copyright = 0, filepattern = -1;
   static char convert_args_0[] = "convert";
   static char convert_args_1[] = DEVDIR "/stdin";
@@ -806,7 +845,29 @@ main (int argc, char *argv[])
       if (r < 0)
 	goto fail;
       if (r > 0)
-	break;
+	{
+	  if (fbno) /* Perhaps framebuffer 1 is the first. */
+	    break;
+	  else
+	    continue;
+	}
+      found = 1;
+    }
+  
+  /* Did not find any framebuffer? */
+  if (found == 0)
+    {
+      fprintf (stderr, _("%s: Unable to find a framebuffer.\n"), execname);
+      return 1;
+    }
+  
+  /* Warn about being inside a display server. */
+  if (have_display ())
+    {
+      fprintf (stderr, _("%s: It looks like you are inside a "
+			 "display server. If this is correct, "
+			 "what you see is probably not what "
+			 "you get.\n"), execname);
     }
   
   return 0;

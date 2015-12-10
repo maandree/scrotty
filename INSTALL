@@ -1,27 +1,65 @@
-For most users the following should be sufficient:
+Type './configure --help' for configuration options. The normal settings for a
+GNU package should work. If not, please make a bug report.
 
-	make
-	make install DESTDIR="pkg"  # install to ./pkg temporarily instead
-	                            # of to /, installed files can then be
-	                            # moved by root.
+	On a common GNU/Linux distribution the following should
+	be sufficient for most users:
 
-Note however, `make install` will not run `install-info'
-to add the info manual to `info '(dir)'`. Distributors
-should postinstall and preuninstall commands:
+		./configure --prefix=/usr
+		make
+		make install DESTDIR="somewhere you want the files for now"
+		# Now let the package manager put the files in place...
 
-	infodir="usr/share/info"
+	Or for an unstaged install:
+
+		./configure --prefix=/usr
+		make
+		sudo make install
+
+By default any applicable pre-install, post-install, pre-uninstall, and
+post-install commands is run. This suppress these, run 'make' with 'N=true'
+or 'N=:'. IF you want to know which these commands are, you can use the
+methods specificed in the GNU Coding Standards. Another method is found in
+mk/README. However, for this packages, these will be:
+
+	infodir="usr/local/share/info" ## Assuming default prefix.
 	
-	post_install() {
+	post_install () {
 	  install-info -- "${infodir}/scrotty.info" "${infodir}/dir"
 	}
 	
-	post_upgrade() {
-	  post_install "$1"
-	}
-	
-	pre_uninstall() {
+	pre_uninstall () {
 	  install-info --delete -- "${infodir}/scrotty.info" "${infodir}/dir"
 	}
+
+
+────────────────────────────────────────────────────────────────────────────────
+INTERNATIONALISATION
+────────────────────────────────────────────────────────────────────────────────
+
+You can chose to restrict the locales to install:
+
+	./configure LOCALES=sv
+
+You can select which translations of the man page you
+want to install too:
+
+	./configure MAN_LOCALES=sv
+
+
+────────────────────────────────────────────────────────────────────────────────
+CUSTOMISED COMPILATION
+────────────────────────────────────────────────────────────────────────────────
+
+The makefile is configured to compile the C code with -O2 -g, you can
+change this by setting OPTIMISE, or with CFLAGS and LDFLAGS if you want
+to change all optional flags compiling and linking flags:
+
+	./configure OPTIMISE="-Og -g"
+
+
+────────────────────────────────────────────────────────────────────────────────
+CUSTOMISED INSTALLATION
+────────────────────────────────────────────────────────────────────────────────
 
 If you want to install absolutely everything, you can
 instead use the commands below:
@@ -34,55 +72,6 @@ Or if you only want to absolute basics:
 	make base
 	make install-base DESTDIR="pkg"
 
-
-────────────────────────────────────────────────────────────────────────────────
-INTERNATIONALISATION
-────────────────────────────────────────────────────────────────────────────────
-
-If you want to do not want internationalisation build and install
-with WITHOUT_GETTEXT=1. For example:
-
-	make base WITHOUT_GETTEXT=1
-	make install-base WITHOUT_GETTEXT=1 DESTDIR="pkg"
-
-You can also chose to restrict the locales to install:
-
-	make all LOCALES=sv
-	make install LOCALES=sv DESTDIR="pkg"
-
-You can select which translations of the man page you want to
-install too:
-
-	make install MAN_LOCALES=sv DESTDIR="pkg"
-
-
-────────────────────────────────────────────────────────────────────────────────
-CUSTOMISED COMPILATION
-────────────────────────────────────────────────────────────────────────────────
-
-If you do not have GCC, you may want to set WARN to an empty string:
-
-	make WARN=
-
-The makefile is configured to compile the C code with -O2, you can
-change this by setting OPTIMISE:
-
-	make OPTIMISE="-Og -g"
-
-If you want to build the package with another prefix the /usr, set
-PREFIX:
-
-	make PREFIX=/usr/local
-
-See the beginning of the Makefile for further file system hierarchy
-customisations. These changes, including PREFIX, should be used both
-when compiling and installing.
-
-
-────────────────────────────────────────────────────────────────────────────────
-CUSTOMISED INSTALLATION
-────────────────────────────────────────────────────────────────────────────────
-
 You can select freely what parts of the package to install and not
 to install. This rules are available:
 
@@ -91,9 +80,7 @@ to install. This rules are available:
 ├─────────────┼─────────────────────┼────────────────────────────────────────────┤
 │ base        │ install-base        │ Install be basics:                         │
 │   cmd       │   install-cmd       │   Install the scrotty command.             │
-│             │   install-copyright │   Install legal documents:                 │
-│             │     install-copying │     Install copyright notice.              │
-│             │     install-license │     Install the GNU GPL version 3.         │
+│             │   install-copyright │   Install GNU GPL version 3.               │
 │ doc         │ install-doc         │ Include all manuals:                       │
 │   info      │   install-info      │   Include info manual. (Texinfo)           │
 │   dvi       │   install-dvi       │   Include DVI manual. (Texinfo)            │

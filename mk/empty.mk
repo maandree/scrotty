@@ -25,6 +25,10 @@ cmd:
 doc:
 
 
+.PHONY: check
+check:
+
+
 .PHONY: install
 install:
 
@@ -39,6 +43,10 @@ install-cmd:
 
 .PHONY: install-doc
 install-doc:
+
+
+.PHONY: installcheck
+installcheck:
 
 
 .PHONY: uninstall

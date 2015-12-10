@@ -34,7 +34,7 @@
 # should be the basenames. For each command
 # you should be the variable _OBJ_$(COMMAND)
 # that lists all objects files (without the
-# suffix and without the obj/ prefix) that
+# suffix and without the aux/ prefix) that
 # are required to build the command.
 
 
@@ -60,12 +60,12 @@ endif
 # BUILD VARIABLES:
 
 # Optimisation settings for C code compilation.
-ifdef DEBUG
-OPTIMISE = -Og -g
+ifndef DEBUG
+OPTIMISE = -O2 -g
 endif
 ifndef DEBUG
-ifndef OPTIMISE
-OPTIMISE = -O2
+ifdef OPTIMISE
+OPTIMISE = -Og -g
 endif
 endif
 
@@ -73,6 +73,10 @@ endif
 ifdef _PEDANTIC
 _PEDANTIC = -pedantic
 endif
+ifndef DEBUG
+WARN = -Wall
+endif
+ifdef DEBUG
 ifdef __USING_GCC
 WARN = -Wall -Wextra $(_PEDANTIC) -Wdouble-promotion -Wformat=2 -Winit-self -Wmissing-include-dirs   \
        -Wtrampolines -Wmissing-prototypes -Wmissing-declarations -Wnested-externs                    \
@@ -89,6 +93,7 @@ endif
 ifndef __USING_GCC
 WARN = -Wall -Wextra $(_PEDANTIC)
 endif
+endif
 
 # Support for internationalisation?
 ifndef WITHOUT_GETTEXT
@@ -102,10 +107,13 @@ _CPPFLAGS += $(foreach D,$(_ALL_DIRS),-D'$(D)="$($(D))"')
 # MORE HELP VARIABLES:
 
 # Compilation and linking flags, and command.
-__CC = $(CC) -std=$(_C_STD) $(OPTIMISE) $(WARN) $(_CPPFLAGS) $(_CFLAGS) -c
-__LD = $(CC) -std=$(_C_STD) $(OPTIMISE) $(WARN) $(_LDFLAGS)
-__CC_POST = $(CPPFLAGS) $(CFLAGS)
-__LD_POST = $(LDFLAGS)
+CPPFLAGS = $(_CPPFLAGS)
+CFLAGS = $(OPTIMISE) $(WARN) $(_CFLAGS)
+LDFLAGS = $(OPTIMISE) $(WARN) $(_LDFLAGS)
+__CC = $(CC) -std=$(_C_STD) -c
+__LD = $(CC) -std=$(_C_STD) 
+__CC_POST = $(CPPFLAGS) $(CFLAGS) $(EXTRA_CPPFLAGS) $(EXTRA_CFLAGS)
+__LD_POST = $(LDFLAGS) $(EXTRA_LDFLAGS)
 
 # Header files.
 __H =
@@ -133,9 +141,9 @@ endif
 cmd-c: $(foreach B,$(_BIN),bin/$(B))
 
 # Compile a C file into an object file.
-obj/%.o: src/%.c $(__H)
+aux/%.o: $(v)src/%.c $(foreach H,$(__H),$(v)$(H))
 	@$(PRINTF_INFO) '\e[00;01;31mCC\e[34m %s\e[00m$A\n' "$@"
-	@$(MKDIR) -p $(shell dirname $@)
+	@$(MKDIR) -p $(shell $(DIRNAME) $@)
 	$(Q)$(__CC) -o $@ $< $(__CC_POST) #$Z
 	@$(ECHO_EMPTY)
 
@@ -148,7 +156,7 @@ bin/%:
 	@$(ECHO_EMPTY)
 
 # Dependencies for the rule above.
-$(foreach B,$(_BIN),$(foreach O,$(_OBJ_$(B)),bin/$(B): obj/$(O).o\
+$(foreach B,$(_BIN),$(foreach O,$(_OBJ_$(B)),bin/$(B): aux/$(O).o\
 ))
 
 

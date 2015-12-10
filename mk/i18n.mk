@@ -19,6 +19,9 @@
 # 
 # If WITHOUT_GETTEXT is defined, `locale` and
 # `install-locale` will not do anything.
+# 
+# _SRC should list all sources files, excluding the src/
+# at the beginning of the pathnames.
 
 
 ifdef LOCALES
@@ -50,9 +53,9 @@ endif
 update-po: $(foreach L,$(LOCALES),po/$(L).po)
 
 # Generate template for translations.
-obj/$(_PROJECT).pot: $(foreach S,$(_SRC),src/$(S).c)
+aux/$(_PROJECT).pot: $(foreach S,$(_SRC),$(v)src/$(S))
 	@$(PRINTF_INFO) '\e[00;01;31mPOT\e[34m %s\e[00m$A\n' "$@"
-	@$(MKDIR) -p obj
+	@$(MKDIR) -p aux
 	$(Q)$(CPP) -DUSE_GETTEXT=1 $^ |  \
 	$(XGETTEXT) -o "$@" -Lc --from-code utf-8 --package-name "$(_PROJECT_FULL)"  \
 	--package-version $(_VERSION) --no-wrap --force-po  \
@@ -60,22 +63,22 @@ obj/$(_PROJECT).pot: $(foreach S,$(_SRC),src/$(S).c)
 	@$(ECHO_EMPTY)
 
 # Create or update a translation file.
-po/%.po: obj/$(_PROJECT).pot
+po/%.po: aux/$(_PROJECT).pot
 	@$(PRINTF_INFO) '\e[00;01;31mPO\e[34m %s\e[00m$A\n' "$@"
 	@$(MKDIR) -p po
 	$(Q)if ! $(TEST) -e $@; then  \
-	  $(MSGINIT) --no-translator --no-wrap -i $< -o $@ -l $*;  \
+	  $(MSGINIT) --no-translator --no-wrap -i aux/$(_PROJECT).pot -o $@ -l $*;  \
 	else  \
-	  $(MSGMERGE) --no-wrap -U $@ $<;  \
+	  $(MSGMERGE) --no-wrap -U $@ aux/$(_PROJECT).pot;  \
 	fi #$Z
 	@$(TOUCH) $@
 	@$(ECHO_EMPTY)
 
 # Compile a translation file.
-bin/mo/%/messages.mo: po/%.po
+bin/mo/%/messages.mo: $(v)po/%.po
 	@$(PRINTF_INFO) '\e[00;01;31mMO\e[34m %s\e[00m$A\n' "$@"
 	@$(MKDIR) -p bin/mo/$*
-	$(Q)cd bin/mo/$* && $(MSGFMT) ../../../$< #$Z
+	$(Q)cd bin/mo/$* && $(MSGFMT) $(__back3unless_v)$< #$Z
 	@$(ECHO_EMPTY)
 
 

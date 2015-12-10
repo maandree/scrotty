@@ -8,20 +8,25 @@
 
 #=== This file includes all the other files in appropriate order. ===#
 
+
 ifndef Q
 A = \e[35m
 Z = [m
 endif
 
-include mk/path.mk
-include mk/empty.mk
-include mk/tools.mk
-include mk/copy.mk
-include mk/lang-c.mk
-include mk/texinfo.mk
-include mk/man.mk
-include mk/i18n.mk
-include mk/clean.mk
-include mk/dist.mk
-include mk/tags.mk
+include $(v)mk/path.mk
+include .config.mk
+include $(v)mk/path.mk
+include $(v)mk/lowerpath.mk
+include $(v)mk/empty.mk
+include $(v)mk/tools.mk
+include $(v)mk/copy.mk
+include $(v)mk/lang-c.mk
+include $(v)mk/texinfo.mk
+include $(v)mk/man.mk
+include $(v)mk/i18n.mk
+include $(v)mk/clean.mk
+include $(v)mk/dist.mk
+include $(v)mk/tags.mk
+include $(v)mk/prologue.mk
 

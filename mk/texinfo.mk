@@ -6,6 +6,7 @@
 # without any warranty.
 
 
+# TODO ((support translations))
 #=== These rules are used for Texinfo manuals. ===#
 
 
@@ -64,15 +65,15 @@ uninstall: uninstall-info uninstall-dvi uninstall-pdf uninstall-ps uninstall-htm
 __TEXI_SRC =
 ifdef _TEXINFO_DIRLEVELS
 ifeq ($(_TEXINFO_DIRLEVELS),1)
-__TEXI_SRC += doc/info/*.texinfo
+__TEXI_SRC += $(v)doc/info/*.texinfo
 endif
 ifneq ($(_TEXINFO_DIRLEVELS),1)
 ifeq ($(_TEXINFO_DIRLEVELS),2)
-__TEXI_SRC += doc/info/*.texinfo
-__TEXI_SRC += doc/info/*/*.texinfo
+__TEXI_SRC += $(v)doc/info/*.texinfo
+__TEXI_SRC += $(v)doc/info/*/*.texinfo
 endif
 ifneq ($(_TEXINFO_DIRLEVELS),2)
-__TEXI_SRC += $(foreach W,$(shell $(SEQ) $(_TEXINFO_DIRLEVELS) | while read n; do $(ECHO) $$($(SEQ) $$n)" " | $(SED) 's/[^ ]* /\/\*/g'; done | $(XARGS) $(ECHO)),doc/info$(W).texinfo)
+__TEXI_SRC += $(foreach W,$(shell $(SEQ) $(_TEXINFO_DIRLEVELS) | while read n; do $(ECHO) $$($(SEQ) $$n)" " | $(SED) 's/[^ ]* /\/\*/g'; done | $(XARGS) $(ECHO)),$(v)doc/info$(W).texinfo)
 endif
 endif
 endif
@@ -95,37 +96,37 @@ endif
 
 ifdef _LOGO
 # Prepare conversion of logo.
-obj/$(_LOGO).svg: doc/$(_LOGO).svg
+aux/$(_LOGO).svg: $(v)doc/$(_LOGO).svg
 	@$(PRINTF_INFO) '\e[00;01;31mCP\e[34m %s\e[00m$A\n' "$@"
-	@$(MKDIR) -p obj
-	$(Q)$(CP) $< $@ #$Z
+	@$(MKDIR) -p aux
+	$(Q)$(CP) $^ $@ #$Z
 	@$(ECHO_EMPTY)
 
 # Intermediate format for the logo for DVI and PostScript manuals.
-obj/$(_LOGO).ps: doc/$(_LOGO).svg
+aux/$(_LOGO).ps: $(v)doc/$(_LOGO).svg
 	@$(PRINTF_INFO) '\e[00;01;31mPS\e[34m %s\e[00m$A\n' "$@"
-	@$(MKDIR) -p obj
-	$(Q)$(SVG2PS) $< > $@ #$Z
+	@$(MKDIR) -p aux
+	$(Q)$(SVG2PS) $^ > $@ #$Z
 	@$(ECHO_EMPTY)
 
 # Logo for DVI and PostScript manuals.
-obj/$(_LOGO).eps: obj/$(_LOGO).ps
+aux/$(_LOGO).eps: aux/$(_LOGO).ps
 	@$(PRINTF_INFO) '\e[00;01;31mEPS\e[34m %s\e[00m$A\n' "$@"
-	$(Q)$(PS2EPS) $< #$Z
+	$(Q)$(PS2EPS) $^ #$Z
 	@$(ECHO_EMPTY)
 
 # Logo for PDF manual.
-obj/$(_LOGO).pdf: doc/$(_LOGO).svg
+aux/$(_LOGO).pdf: doc/$(_LOGO).svg
 	@$(PRINTF_INFO) '\e[00;01;31mPDF\e[34m %s\e[00m$A\n' "$@"
-	@$(MKDIR) -p obj
-	$(Q)$(SVG2PDF) $< > $@ #$Z
+	@$(MKDIR) -p aux
+	$(Q)$(SVG2PDF) $^ > $@ #$Z
 	@$(ECHO_EMPTY)
 endif
 
 # Build info manual.
 .PHONY: info
 info: bin/$(_PROJECT).info
-bin/%.info $(foreach P,$(__INFOPARTS),bin/%.info-$(P)): doc/info/%.texinfo $(__TEXI_SRC)
+bin/%.info $(foreach P,$(__INFOPARTS),bin/%.info-$(P)): $(v)doc/info/%.texinfo $(__TEXI_SRC)
 	@$(PRINTF_INFO) '\e[00;01;31mTEXI\e[34m %s\e[00m$A\n' "$@"
 	@$(MKDIR) -p bin
 	$(Q)$(MAKEINFO) $< #$Z
@@ -136,47 +137,47 @@ bin/%.info $(foreach P,$(__INFOPARTS),bin/%.info-$(P)): doc/info/%.texinfo $(__T
 # Build DVI manual.
 .PHONY: dvi
 dvi: bin/$(_PROJECT).dvi
-bin/%.dvi: doc/info/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),obj/$(L).eps)
+bin/%.dvi: $(v)doc/info/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),aux/$(L).eps)
 	@$(PRINTF_INFO) '\e[00;01;31mTEXI\e[34m %s\e[00m$A\n' "$@"
-	@! $(TEST) -d obj/dvi/$* || $(RM) -rf obj/dvi/$*
-	@$(MKDIR) -p obj/dvi/$* bin
-	$(Q)cd obj/dvi/$* && $(TEXI2DVI) ../../../$< $(__TEXINFO_FLAGS) < /dev/null #$Z
+	@! $(TEST) -d aux/dvi/$* || $(RM) -rf aux/dvi/$*
+	@$(MKDIR) -p aux/dvi/$* bin
+	$(Q)cd aux/dvi/$* && $(TEXI2DVI) $(__back3unless_v)$< $(__TEXINFO_FLAGS) < /dev/null #$Z
 	@$(PRINTF_INFO) '$A'
-	$(Q)$(MV) obj/dvi/$*/$*.dvi $@ #$Z
+	$(Q)$(MV) aux/dvi/$*/$*.dvi $@ #$Z
 	@$(ECHO_EMPTY)
 
 # Build PDF manual.
 .PHONY: pdf
 pdf: bin/$(_PROJECT).pdf
-bin/%.pdf: doc/info/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),obj/$(L).pdf)
+bin/%.pdf: $(v)doc/info/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),aux/$(L).pdf)
 	@$(PRINTF_INFO) '\e[00;01;31mTEXI\e[34m %s\e[00m$A\n' "$@"
-	@! $(TEST) -d obj/pdf/$* || $(RM) -rf obj/pdf/$*
-	@$(MKDIR) -p obj/pdf/$* bin
-	$(Q)cd obj/pdf/$* && $(TEXI2PDF) ../../../$< $(__TEXINFO_FLAGS) < /dev/null #$Z
+	@! $(TEST) -d aux/pdf/$* || $(RM) -rf aux/pdf/$*
+	@$(MKDIR) -p aux/pdf/$* bin
+	$(Q)cd aux/pdf/$* && $(TEXI2PDF) $(__back3unless_v)$< $(__TEXINFO_FLAGS) < /dev/null #$Z
 	@$(PRINTF_INFO) '$A'
-	$(Q)$(MV) obj/pdf/$*/$*.pdf $@ #$Z
+	$(Q)$(MV) aux/pdf/$*/$*.pdf $@ #$Z
 	@$(ECHO_EMPTY)
 
 # Build PostScript manual.
 .PHONY: ps
 ps: bin/$(_PROJECT).ps
-bin/%.ps: doc/info/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),obj/$(L).eps)
+bin/%.ps: $(v)doc/info/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),aux/$(L).eps)
 	@$(PRINTF_INFO) '\e[00;01;31mTEXI\e[34m %s\e[00m$A\n' "$@"
-	@! $(TEST) -d obj/ps/$* || $(RM) -rf obj/ps/$*
-	@$(MKDIR) -p obj/ps/$* bin
-	$(Q)cd obj/ps/$* && $(TEXI2PS) ../../../$< $(__TEXINFO_FLAGS) < /dev/null #$Z
+	@! $(TEST) -d aux/ps/$* || $(RM) -rf aux/ps/$*
+	@$(MKDIR) -p aux/ps/$* bin
+	$(Q)cd aux/ps/$* && $(TEXI2PS) $(__back3unless_v)$< $(__TEXINFO_FLAGS) < /dev/null #$Z
 	@$(PRINTF_INFO) '$A'
-	$(Q)$(MV) obj/ps/$*/$*.ps $@ #$Z
+	$(Q)$(MV) aux/ps/$*/$*.ps $@ #$Z
 	@$(ECHO_EMPTY)
 
 # Build HTML manual.
 .PHONY: html
 html: bin/html/$(_PROJECT)/index.html
-bin/html/%/index.html: doc/info/%.texinfo $(__TEXI_SRC)
+bin/html/%/index.html: $(v)doc/info/%.texinfo $(__TEXI_SRC)
 	@$(PRINTF_INFO) '\e[00;01;31mTEXI\e[34m %s\e[00m$A\n' "$@"
 	@! $(TEST) -d bin/html/$* || $(RM) -rf bin/html/$*
 	@$(MKDIR) -p bin/html
-	$(Q)cd bin/html && $(MAKEINFO_HTML) ../../$< < /dev/null #$Z
+	$(Q)cd bin/html && $(MAKEINFO_HTML) $(__back2unless_v)$< < /dev/null #$Z
 	@$(ECHO_EMPTY)
 
 
@@ -187,8 +188,19 @@ bin/html/%/index.html: doc/info/%.texinfo $(__TEXI_SRC)
 install-info: bin/$(_PROJECT).info $(foreach P,$(__INFOPARTS),bin/%.info-$(P))
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"
 	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$(INFODIR)"
-	$(Q)$(INSTALL_DATA) $< -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
+	$(Q)$(INSTALL_DATA) bin/$(_PROJECT).info -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info"
 	$(Q)$(forearch P,$(__INFOPARTS),$(INSTALL_DATA) bin/$*.info-$(P) -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info-$(P)" &&) $(TRUE)
+ifdef POST_INSTALL
+	$(POST_INSTALL)
+endif
+	$(Q)if $(SHELL) -c '$(N) $(INSTALL_INFO) --version' > /dev/null 2>&1; then  \
+	  $(N)$(z) $(INSTALL_INFO) -- "${DESTDIR}${INFODIR}/$(PKGNAME).info" "${DESTDIR}${INFODIR}/dir";  \
+	else  \
+	  $(TRUE);  \
+	fi
+ifdef POST_INSTALL
+	$(NORMAL_INSTALL)
+endif
 	@$(ECHO_EMPTY)
 
 # Install DVI manual.
@@ -196,7 +208,7 @@ install-info: bin/$(_PROJECT).info $(foreach P,$(__INFOPARTS),bin/%.info-$(P))
 install-dvi: bin/$(_PROJECT).dvi
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"
 	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$(DVIDIR)"
-	$(Q)$(INSTALL_DATA) $< -- "$(DESTDIR)$(DVIDIR)/$(PKGNAME).dvi"
+	$(Q)$(INSTALL_DATA) $^ -- "$(DESTDIR)$(DVIDIR)/$(PKGNAME).dvi"
 	@$(ECHO_EMPTY)
 
 # Install PDF manual.
@@ -204,7 +216,7 @@ install-dvi: bin/$(_PROJECT).dvi
 install-pdf: bin/$(_PROJECT).pdf
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"
 	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$(PDFDIR)"
-	$(Q)$(INSTALL_DATA) $< -- "$(DESTDIR)$(PDFDIR)/$(PKGNAME).pdf"
+	$(Q)$(INSTALL_DATA) $^ -- "$(DESTDIR)$(PDFDIR)/$(PKGNAME).pdf"
 	@$(ECHO_EMPTY)
 
 # Install PostScript manual.
@@ -212,15 +224,15 @@ install-pdf: bin/$(_PROJECT).pdf
 install-ps: bin/$(_PROJECT).ps
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"
 	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$(PSDIR)"
-	$(Q)$(INSTALL_DATA) $< -- "$(DESTDIR)$(PSDIR)/$(PKGNAME).ps"
+	$(Q)$(INSTALL_DATA) $^ -- "$(DESTDIR)$(PSDIR)/$(PKGNAME).ps"
 	@$(ECHO_EMPTY)
 
 # Install HTML manual.
 .PHONY: install-html
 install-html: $(foreach F,$(_HTML_FILES),bin/html/$(_PROJECT)/$(F))
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"
-	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$(HTMLDIR)/$(PKGNAME)/html"
-	$(Q)$(INSTALL_DATA) $^ -- "$(DESTDIR)$(HTMLDIR)/$(PKGNAME)/html/"
+	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$(HTMLDIR)/$(PKGNAME)"
+	$(Q)$(INSTALL_DATA) $^ -- "$(DESTDIR)$(HTMLDIR)/$(PKGNAME)/"
 	@$(ECHO_EMPTY)
 
 
@@ -229,6 +241,13 @@ install-html: $(foreach F,$(_HTML_FILES),bin/html/$(_PROJECT)/$(F))
 # Uninstall info manual.
 .PHONY: uninstall-info
 uninstall-info:
+ifdef PRE_UNINSTALL
+	$(PRE_UNINSTALL)
+endif
+	-$(Q)$(N)$(a) $(INSTALL_INFO) --delete -- "${DESTDIR}${INFODIR}/$(PKGNAME).info" "${DESTDIR}${INFODIR}/dir"
+ifdef PRE_UNINSTALL
+	$(NORMAL_UNINSTALL)
+endif
 	-$(Q)$(RM) -- "$(DESTDIR)$(INFODIR)/$(PKGNAME).info" $(forearch P,$(__INFOPARTS),"$(DESTDIR)$(INFODIR)/$(PKGNAME).info-$(P)")
 
 # Uninstall DVI manual.
@@ -249,8 +268,7 @@ uninstall-ps:
 # Uninstall HTML manual.
 .PHONY: uninstall-html
 uninstall-html:
-	-$(Q)$(RM) -- $(foreach F,$(_HTML_FILES),"$(DESTDIR)$(HTMLDIR)/$(PKGNAME)/html/$(F)")
-	-$(Q)$(RM) -- "$(DESTDIR)$(HTMLDIR)/$(PKGNAME)/html"
+	-$(Q)$(RM) -- $(foreach F,$(_HTML_FILES),"$(DESTDIR)$(HTMLDIR)/$(PKGNAME)/$(F)")
 	-$(Q)$(RM) -- "$(DESTDIR)$(HTMLDIR)/$(PKGNAME)"
 
 

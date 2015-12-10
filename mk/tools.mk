@@ -10,27 +10,70 @@
 
 
 # Part of GNU Coreutils:
-MKDIR ?= mkdir
+BASENAME ?= basename
+CHGRP ?= chgrp
+CHMOD ?= chmod
+CHOWN ?= chown
 CP ?= cp
-MV ?= mv
-RM ?= rm
-RMDIR ?= rmdir
-TRUE ?= true
-TEST ?= test
-TOUCH ?= touch
-ECHO ?= echo
+CPLIT ?= cplit
 CUT ?= cut
-TAC ?= tac
-TAIL ?= tail
+DATE ?= date
+DIRNAME ?= dirname
+ECHO ?= echo
+ENV ?= env
+EXPAND ?= expand
+EXPR ?= expr
+FALS ?= false
+FMT ?= fmt
+FOLD ?= fold
 HEAD ?= head
-SORT ?= sort
-UNIQ ?= uniq
-PRINTF ?= printf
-WC ?= wc
 INSTALL ?= install
-INSTALL_PROGRAM ?= $(INSTALL) -m755
 INSTALL_DATA ?= $(INSTALL) -m644
 INSTALL_DIR ?= $(INSTALL) -dm755
+INSTALL_PROGRAM ?= $(INSTALL) -m755
+JOIN ?= join
+LN ?= ln
+MKDIR ?= mkdir
+MKFIFO ?= mkfifo
+MKNOD ?= mknod
+MV ?= mv
+NL ?= nl
+NPROC ?= nproc
+NUMFMT ?= numfmt
+OD ?= od
+PASTE ?= paste
+PATHCHK ?= pathchk
+PR ?= pr
+PRINTF ?= printf
+READLINK ?= readlink
+REALPATH ?= realpath
+RM ?= rm
+RMDIR ?= rmdir
+SEQ ?= seq
+SLEEP ?= sleep
+SORT ?= sort
+SPLIT ?= split
+STAT ?= stat
+TAC ?= tac
+TAIL ?= tail
+TEE ?= tee
+TEST ?= test
+TOUCH ?= touch
+TR ?= tr
+TRUE ?= true
+TRUNCATE ?= truncate
+TSORT ?= tsort
+UNAME ?= uname
+UNEXPAND ?= unexpand
+UNIQ ?= uniq
+WC ?= wc
+YES ?= yes
+
+# Part of GNU help2man:
+HELP2MAN ?= help2man
+
+# Part of GNU tar:
+TAR ?= tar
 
 # Part of GNU Findutils:
 FIND ?= find
@@ -38,6 +81,8 @@ XARGS ?= xargs
 
 # Part of GNU Grep:
 GREP ?= grep
+EGREP ?= egrep
+FGREP ?= fgrep
 
 # Part of GNU Sed:
 SED ?= sed
@@ -48,6 +93,7 @@ GPG ?= gpg
 # Part of Texinfo:
 MAKEINFO ?= makeinfo
 MAKEINFO_HTML ?= $(MAKEINFO) --html
+INSTALL_INFO ?= install-info
 
 # Part of Texlive-plainextra:
 TEXI2PDF ?= texi2pdf
@@ -62,9 +108,26 @@ RSVG_CONVERT ?= rsvg-convert
 SVG2PS ?= $(RSVG_CONVERT) --format=ps
 SVG2PDF ?= $(RSVG_CONVERT) --format=pdf
 
-# Part of GCC:
+# Part of GNU Compiler Collection:
 CC ?= cc
 CPP ?= cpp
+CXX ?= c++
+
+# Part of GNU Binutils:
+AR ?= ar
+LD ?= ld
+RANLIB ?= ranlib
+
+# Part of GNU Bison:
+BISON ?= bison
+YACC ?= yacc
+
+# Part of Flex:
+FLEX ?= FLEX
+LEX ?= lex
+
+# Part of GNU C Library:
+LDCONFIG ?= ldconfig
 
 # Part of GNU Gettext:
 XGETTEXT ?= xgettext

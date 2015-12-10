@@ -27,9 +27,28 @@ GPG_FLAGS =
 # What key should be used for signing?
 GPG_KEY ?=
 
+# You should define _EVERYTHING to enumerate all files that belong in
+# the release tarball, lest 'git archive' will be used as a fallback.
+
 
 
 # HELP VARIALES:
+
+# You may use these to help list all files in _EVERYTHING
+__EVERYTHING_COMMON = $(_COPYING) $(_LICENSE) README
+__EVERYTHING_SRC = $(foreach F,$(_SRC),src/$(F))
+__EVERYTHING_LOCALE = $(foreach L,$(LOCALES),po/$(L).po)
+__EVERYTHING_MK_ = all clean copy dist empty i18n lang-c lowerpath man path prologue tags texinfo tools
+__EVERYTHING_MK = $(foreach F,$(__EVERYTHING_MK_),mk/$(F).mk) mk/configure mk/README configure Makefile.in
+__EVERYTHING_MAN = $(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(S)),doc/man/$(P).$(S)))  \
+                   $(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach L,$(MAN_LOCALES),$(foreach P,$(_MAN_$(L)_$(S)),doc/man/$(P).$(L).$(S))))
+__EVERYTHING_ALL_COMMON = $(__EVERYTHING_COMMON) $(__EVERYTHING_MK) $(__EVERYTHING_MAN)  \
+                          $(__EVERYTHING_LOCALE) $(__EVERYTHING_SRC)
+# This one (__todo) if you have a todo file, but do not want it to be greped.
+__TO__ = TO
+__DO__ = DO
+__todo = $(__TO__)$(__DO__)
+
 
 # The packages and there detached signatures (if any.)
 ifndef DO_NOT_SIGN
@@ -109,10 +128,20 @@ dist-gz: $(_PROJECT)-$(_VERSION).tar.gz
 endif
 
 # Generate the tarball for the release.
-$(_PROJECT)-$(_VERSION).tar:
-	@$(PRINTF_INFO) '\e[00;01;31mARCHIVE\e[34m %s\e[00m$A\n' "$@"
+ifdef v
+__GIT_DIR = --git-dir=$(v)
+endif
+$(_PROJECT)-$(_VERSION).tar: $(foreach F,$(_EVERYTHING),$(v)$(F))
+	@$(PRINTF_INFO) '\e[00;01;31mTAR\e[34m %s\e[00m$A\n' "$@"
 	@if $(TEST) -f $@; then $(RM) $@; fi
-	$(Q)git archive --prefix=$(_PROJECT)-$(_VERSION)/ --format=tar $(_VERSION) -o $@ #$Z
+ifndef _EVERYTHING
+	$(Q)git archive --prefix=$(_PROJECT)-$(_VERSION)/ --format=tar $(__GIT_DIR) $(_VERSION) -o $@ #$Z
+endif
+ifdef _EVERYTHING
+	$(Q)$(LN) -s . $(_PROJECT)-$(_VERSION)
+	$(Q)$(TAR) c -- $(foreach F,$(_EVERYTHING),$(v)$(_PROJECT)-$(_VERSION)/$(F)) > $@
+	$(Q)$(RM) $(_PROJECT)-$(_VERSION)
+endif
 	@$(ECHO_EMPTY)
 
 # Compression rule for xz-compression. Used on the tarball.

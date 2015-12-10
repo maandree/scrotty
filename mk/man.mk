@@ -56,7 +56,7 @@ ifdef COMMAND
 ifeq ($(shell $(PRINTF) '%s\n' $(COMMAND) | $(WC) -l),1)
 ifeq ($(shell $(PRINTF) '%s\n' $(_MAN_PAGE_SECTIONS) | $(WC) -l),1)
 ifeq ($(shell $(PRINTF) '%s\n' $(_MAN_$(_MAN_PAGE_SECTIONS)) | $(WC) -l),1)
-__MAN_COMMAND = $(COMMAND).$(MAN$(_MAN_PAGE_SECTIONS)EXT)
+__MAN_COMMAND = $(COMMAND)$(MAN$(_MAN_PAGE_SECTIONS)EXT)
 endif
 endif
 endif
@@ -71,27 +71,26 @@ install-man: install-man-untranslated install-man-locale
 .PHONY: install-man-untranslated
 install-man-untranslated:
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"
-	$(Q)$(INSTALL_DIR) -- $(foreach S,$(_MAN_PAGE_SECTIONS),"$(DESTDIR)$(MANDIR)$(MAN$(S))")
+	$(Q)$(INSTALL_DIR) -- $(foreach S,$(_MAN_PAGE_SECTIONS),"$(DESTDIR)$(MANDIR)/$(MAN$(S))")
 ifndef __MAN_COMMAND
-	$(Q)$(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(S)),$(INSTALL_DATA) doc/man/$(P).$(S) -- "$(DESTDIR)$(MANDIR)$(MAN$(S))/$(P).$(MAN$(S)EXT)" &&)) $(TRUE)
+	$(Q)$(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(S)),$(INSTALL_DATA) $(v)doc/man/$(P).$(S) -- "$(DESTDIR)$(MANDIR)/$(MAN$(S))/$(P)$(MAN$(S)EXT)" &&)) $(TRUE)
 endif
 ifdef __MAN_COMMAND
-	$(Q)$(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(S)),$(INSTALL_DATA) doc/man/$(P).$(S) -- "$(DESTDIR)$(MANDIR)$(MAN$(S))/$(__MAN_COMMAND)" &&)) $(TRUE)
+	$(Q)$(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(S)),$(INSTALL_DATA) $(v)doc/man/$(P).$(S) -- "$(DESTDIR)$(MANDIR)/$(MAN$(S))/$(__MAN_COMMAND)" &&)) $(TRUE)
 endif
 	@$(ECHO_EMPTY)
 
 .PHONY: install-man-locale
 install-man-locale:
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"
-	$(Q)$(foreach L,$(MAN_LOCALES),$(INSTALL_DIR) -- $(foreach S,$(_MAN_PAGE_SECTIONS),"$(DESTDIR)$(MANDIR)/$(L)$(MAN$(S))") &&) $(TRUE)
+	$(Q)$(foreach L,$(MAN_LOCALES),$(INSTALL_DIR) -- $(foreach S,$(_MAN_PAGE_SECTIONS),"$(DESTDIR)$(MANDIR)/$(L)/$(MAN$(S))") &&) $(TRUE)
 ifndef __MAN_COMMAND
-	$(Q)$(foreach L,$(MAN_LOCALES),$(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(L)_$(S)),$(INSTALL_DATA) doc/man/$(P).$(L).$(S) -- "$(DESTDIR)$(MANDIR)/$(L)$(MAN$(S))/$(P).$(MAN$(S)EXT)" &&))) $(TRUE)
+	$(Q)$(foreach L,$(MAN_LOCALES),$(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(L)_$(S)),$(INSTALL_DATA) $(v)doc/man/$(P).$(L).$(S) -- "$(DESTDIR)$(MANDIR)/$(L)/$(MAN$(S))/$(P)$(MAN$(S)EXT)" &&))) $(TRUE)
 endif
 ifdef __MAN_COMMAND
-	$(Q)$(foreach L,$(MAN_LOCALES),$(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(L)_$(S)),$(INSTALL_DATA) doc/man/$(P).$(L).$(S) -- "$(DESTDIR)$(MANDIR)/$(L)$(MAN$(S))/$(__MAN_COMMAND)" &&))) $(TRUE)
+	$(Q)$(foreach L,$(MAN_LOCALES),$(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(L)_$(S)),$(INSTALL_DATA) $(v)doc/man/$(P).$(L).$(S) -- "$(DESTDIR)$(MANDIR)/$(L)/$(MAN$(S))/$(__MAN_COMMAND)" &&))) $(TRUE)
 endif
 	@$(ECHO_EMPTY)
-
 
 
 # UNINSTALL RULES:
@@ -99,12 +98,12 @@ endif
 .PHONY: uninstall-man
 uninstall-man:
 ifndef __MAN_COMMAND
-	-$(Q)$(RM) -- $(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(S)),"$(DESTDIR)$(MANDIR)$(MAN$(S))/$(P).$(MAN$(S)EXT)"))
-	-$(Q)$(RM) -- $(foreach L,$(MAN_LOCALES),$(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(L)_$(S)),"$(DESTDIR)$(MANDIR)/$(L)$(MAN$(S))/$(P).$(MAN$(S)EXT)")))
+	-$(Q)$(RM) -- $(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(S)),"$(DESTDIR)$(MANDIR)/$(MAN$(S))/$(P).$(MAN$(S)EXT)"))
+	-$(Q)$(RM) -- $(foreach L,$(MAN_LOCALES),$(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(L)_$(S)),"$(DESTDIR)$(MANDIR)/$(L)/$(MAN$(S))/$(P)$(MAN$(S)EXT)")))
 endif
 ifdef __MAN_COMMAND
-	-$(Q)$(RM) -- "$(DESTDIR)$(MANDIR)$(MAN$(_MAN_PAGE_SECTIONS))/$(__MAN_COMMAND)"
-	-$(Q)$(RM) -- $(foreach L,$(MAN_LOCALES),$(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(L)_$(S)),"$(DESTDIR)$(MANDIR)/$(L)$(MAN$(S))/$(__MAN_COMMAND)")))
+	-$(Q)$(RM) -- "$(DESTDIR)$(MANDIR)/$(MAN$(_MAN_PAGE_SECTIONS))/$(__MAN_COMMAND)"
+	-$(Q)$(RM) -- $(foreach L,$(MAN_LOCALES),$(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(L)_$(S)),"$(DESTDIR)$(MANDIR)/$(L)/$(MAN$(S))/$(__MAN_COMMAND)")))
 endif
 
 

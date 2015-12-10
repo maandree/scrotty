@@ -31,19 +31,19 @@ ifdef _COPYING
 install-copyright: install-copying
 
 .PHONY: install-copying
-install-copying: $(_COPYING)
+install-copying: $(foreach F,$(_COPYING),$(v)$(F))
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"
 	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
 	$(Q)$(INSTALL_DATA) $^ -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
 	@$(ECHO_EMPTY)
 endif
 
-ifdef _COPYING
+ifdef _LICENSE
 .PHONY: install-copyright
 install-copyright: install-license
 
 .PHONY: install-license
-install-license: $(_LICENSE)
+install-license: $(foreach F,$(_LICENSE),$(v)$(F))
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"
 	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
 	$(Q)$(INSTALL_DATA) $^ -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
@@ -66,7 +66,7 @@ uninstall-copying:
 	-$(Q)$(RMDIR) -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
 endif
 
-ifdef _COPYING
+ifdef _LICENSE
 .PHONY: uninstall-copyright
 uninstall-copyright: uninstall-license
 

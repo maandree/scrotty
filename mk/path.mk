@@ -17,6 +17,8 @@ __PATH_MK_INCLUDED = 1
 
 # The package path prefix, if you want to install to another root, set DESTDIR to that root.
 PREFIX = /usr
+# The package path prefix for /bin, /sbin, /lib and /libexec.
+EXEC_PREFIX = /usr
 # The command path excluding prefix.
 BIN = /bin
 # The administration command path excluding prefix.
@@ -42,21 +44,32 @@ MAN8 = /man8
 MAN9 = /man9
 
 # The command path including prefix.
-BINDIR = $(PREFIX)$(BIN)
+BINDIR = $(EXEC_PREFIX)$(BIN)
 # The administration command path including prefix.
-SBINDIR = $(PREFIX)$(SBIN)
+SBINDIR = $(EXEC_PREFIX)$(SBIN)
 # The library path including prefix.
-LIBDIR = $(PREFIX)$(LIB)
+LIBDIR = $(EXEC_PREFIX)$(LIB)
 # The executable library path including prefix.
-LIBEXECDIR = $(PREFIX)$(LIBEXEC)
+LIBEXECDIR = $(EXEC_PREFIX)$(LIBEXEC)
 # The header-file path including prefix.
 INCLUDEDIR = $(PREFIX)$(INCLUDE)
-# The resource path including prefix.
+# The header-file path including prefix. Must not be /usr/local.
+ifeq ($(PREFIX),/usr/lcoal)
+OLDINCLUDEDIR = /usr$(INCLUDE)
+endif
+ifneq ($(PREFIX),/usr/lcoal)
+OLDINCLUDEDIR = $(PREFIX)$(INCLUDE)
+endif
+# The data path including prefix.
 DATADIR = $(PREFIX)$(DATA)
+# The architecture-dependent data path including prefix.
+SYSDEPDATADIR = $(DATADIR)
+# The resource path including prefix.
+RESDIR = $(DATADIR)
 # The architecture-dependent resource path including prefix.
-SYSDEPDATA = $(DATADIR)
+SYSDEPRESDIR = $(RESDIR)
 # The generic documentation path including prefix.
-DOCDIR = $(DATADIR)/doc
+DOCDIR = $(DATADIR)/doc/$(PKGNAME)
 # The info manual documentation path including prefix.
 INFODIR = $(DATADIR)/info
 # The DVI documentation path including prefix.
@@ -69,6 +82,8 @@ PSDIR = $(DOCDIR)
 HTMLDIR = $(DOCDIR)
 # The man page documentation path including prefix.
 MANDIR = $(DATADIR)/man
+# The Emacs LISP path including prefix.
+LISPDIR = $(DATADIR)/emacs/site-lisp
 # The locale path including prefix.
 LOCALEDIR = $(DATADIR)/locale
 # The license base path including prefix.
@@ -115,8 +130,6 @@ SKELDIR = $(SYSCONFDIR)/skel
 COMCACHEDIR = $(COMDIR)/cache
 # The network-common spool directory.
 COMSPOOLDIR = $(COMDIR)/spool
-# The network-common empty directory.
-COMEMPTYDIR = $(COMDIR)/empty
 # The network-common logfile directory.
 COMLOGDIR = $(COMDIR)/log
 # The network-common state directory.
@@ -128,28 +141,35 @@ COMGAMEDIR = $(COMDIR)/games
 # FILENAME SUFFIXES:
 
 # Filename suffixes for man pages by section.
-MAN0EXT = 0
-MAN1EXT = 1
-MAN2EXT = 2
-MAN3EXT = 3
-MAN4EXT = 4
-MAN5EXT = 5
-MAN6EXT = 6
-MAN7EXT = 7
-MAN8EXT = 8
-MAN9EXT = 9
+MAN0EXT = .0
+MAN1EXT = .1
+MAN2EXT = .2
+MAN3EXT = .3
+MAN4EXT = .4
+MAN5EXT = .5
+MAN6EXT = .6
+MAN7EXT = .7
+MAN8EXT = .8
+MAN9EXT = .9
 
 
 # HELP VARIABLES:
 
 # All path variables that includes the prefix,
 # or are unaffected by the prefix.
-_ALL_DIRS = BINDIR SBINDIR LIBDIR LIBEXECDIR INCLUDEDIR DATADIR SYSDEPDATA DOCDIR  \
+_ALL_DIRS = BINDIR SBINDIR LIBDIR LIBEXECDIR INCLUDEDIR DATADIR SYSDEPDATADIR DOCDIR  \
             INFODIR DVIDIR PDFDIR PSDIR HTMLDIR MANDIR LOCALEDIR LICENSEDIR VARDIR  \
-            VARTMPDIR COMDIR COMTMPDIR TMPDIR RUNDIR SYSCONFDIR DEVDIR SYSDIR  \
+            RESDIR VARTMPDIR COMDIR COMTMPDIR TMPDIR RUNDIR SYSCONFDIR DEVDIR SYSDIR  \
             PROCDIR SELFPROCDIR CACHEDIR SPOOLDIR EMPTYDIR LOGDIR STATEDIR GAMEDIR \
-            LOCKDIR SKELDIR COMCACHEDIR COMSPOOLDIR COMEMPTYDIR COMLOGDIR COMSTATEDIR \
-            COMGAMEDIR
+            LOCKDIR SKELDIR COMCACHEDIR COMSPOOLDIR COMLOGDIR COMSTATEDIR COMGAMEDIR \
+            SYSDEPRESDIR OLDINCLUDEDIR
+
+# ../, ../../, and ../../../, ignored if v is used, which if an absolute path.
+ifndef v
+__back1unless_v = ../
+__back2unless_v = ../../
+__back3unless_v = ../../../
+endif
 
 
 endif

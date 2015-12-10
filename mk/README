@@ -4,9 +4,6 @@ Please feel free to use them in your project.
 Usage:
 	Include all.mk from your makefile.
 
-	It is a good idea to include path.mk before you define
-	path variables.
-
 	Read the top of each file for details.
 
 	Define the variables:
@@ -46,4 +43,29 @@ Usage:
 
 	Variables that do not begin with _ are configurable
 	by the user of the package.
+
+	Do no use single character variables in your Makefile.
+
+	To suppress pre-install, post-install, pre-uninstall,
+	and post-uninstall instructions, set N=true.
+	PRE_INSTALL, POST_INSTALL, PRE_UNINSTALL, and
+	POST_UNINSTALL are supportered as specified by the
+	GNU coding standardars.
+
+	To figure out what pre-install commands to run in your package, run:
+		 make -n a=% install | sed -e 's/\\$//' -e 's/^ *//' | sed -n '/^% /s/^..//p'
+
+	To figure out what post-install commands to run in your package, run:
+		 make -n z=% uninstall | sed -e 's/\\$//' -e 's/^ *//' | sed -n '/^% /s/^..//p'
+
+	To figure out what pre-uninstall commands to run in your package, run:
+		 make -n a=% uninstall | sed -e 's/\\$//' -e 's/^ *//' | sed -n '/^% /s/^..//p'
+
+	To figure out what post-uninstall commands to run in your package, run:
+		 make -n z=% uninstall | sed -e 's/\\$//' -e 's/^ *//' | sed -n '/^% /s/^..//p'
+
+	To suppress verbatim which commands Make runs,
+	set Q=@. (Excluding the period.)
+
+Developers should use DEBUG=1 when running make, when possible.
 

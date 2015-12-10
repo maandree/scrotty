@@ -59,12 +59,13 @@ FUTURE DIRECTIONS
 	Support for TTY:s in other kernels should be added.
 
 RATIONALE
-	Taking screenshots was a pain before this. Screenshots
+	Taking screenshots was a pain before this (except, fbcat
+	already existed without my knowledge.) Screenshots
 	are useful if you want to remember something or send an
 	image of how something looks.
 
 SEE ALSO
-	scrot(1), convert(1), strftime(3)
+	scrot(1), convert(1), strftime(3), fbcat(1), setterm(1)
 
 	Full documentation available locally via: info '(scrotty)'
 

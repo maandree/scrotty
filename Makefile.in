@@ -1,0 +1,96 @@
+# Copyright (C) 2015  Mattias Andrée <maandree@member.fsf.org>
+# 
+# Copying and distribution of this file, with or without modification,
+# are permitted in any medium without royalty provided the copyright
+# notice and this notice are preserved.  This file is offered as-is,
+# without any warranty.
+
+
+### This file will be stored to Makefile once you have run ./configure. ###
+### See INSTALL for information on how to install this package.         ###
+
+
+
+# List of translations to install.
+LOCALES = sv
+
+# List of man page translations to install.
+MAN_LOCALES = sv
+
+# Can change these variables with ./configure in the same why you
+# would configure them when running make.
+
+
+
+##### What is below this line is configurable, but is seldom useful. #####
+
+
+# Additional options for compiling DVI, PDF, and PostScript manuals.
+TEXINFO_FLAGS =
+
+# The name of the command as it should be installed.
+COMMAND = scrotty
+
+# The name of the package as it should be installed.
+PKGNAME = scrotty
+
+
+
+##### Nothing interesting below this. #####
+
+
+# In case you want add some configurations. Primarily
+# intended for maintainers. Perhaps add GPG_KEY here.
+# Of course, you can declare everthing with ./configure,
+# but with this you are less likely to forget it.
+-include .make-configurations
+
+
+# YOU, AS A USER, SHOULD NOT CHANGE THESE VARIABLES. {{
+
+# Package information.
+_PROJECT = scrotty
+_VERSION = 1.1
+
+# Used by mk/lang-c.mk
+_C_STD = c99
+_PEDANTIC = yes
+_BIN = scrotty
+_OBJ_scrotty = scrotty
+_HEADER_DIRLEVELS = 0
+_CPPFLAGS = -D'PACKAGE="$(PKGNAME)"' -D'PROGRAM_VERSION="$(_VERSION)"'
+
+# Used by mk/i18n.mk
+_SRC = $(foreach B,$(_BIN),$(_OBJ_$(B)).c)
+_PROJECT_FULL = scrotty
+_COPYRIGHT_HOLDER = Mattias Andrée (maandree@member.fsf.org)
+
+# Used by mk/texinfo.mk
+_TEXINFO_DIRLEVELS = 2
+_INFOPARTS = 0
+_HAVE_TEXINFO_MANUAL = yes
+_HTML_FILES = Free-Software-Needs-Free-Documentation.html  GNU-Free-Documentation-License.html  \
+              GNU-General-Public-License.html  index.html  Invoking.html  Overview.html  strftime.html
+
+# Used by mk/man.mk
+_MAN_PAGE_SECTIONS = 1
+_MAN_1 = scrotty
+_MAN_sv_1 = scrotty
+
+# Used by mk/copy.mk
+_COPYING = COPYING
+
+# Used by mk/dist.mk
+_EVERYTHING_INFO = scrotty titlepage-data content hardcopy-copying  \
+                   appx/fdl appx/free-software-needs-free-documentation appx/gpl  \
+                   chap/invoking chap/overview chap/strftime  \
+                   reusable/macros reusable/paper reusable/titlepage
+_EVERYTHING = $(foreach F,$(_EVERYTHING_INFO),doc/info/$(F).texinfo)  \
+              $(__EVERYTHING_ALL_COMMON) DEPENDENCIES INSTALL NEWS $(__todo) doc/concept
+
+# }}
+
+
+# All of the make rules and the configurations.
+include $(v)mk/all.mk
+
