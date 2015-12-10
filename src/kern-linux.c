@@ -54,7 +54,7 @@ print_not_found_help (void)
  * @param  fbno     The index of the framebuffer.
  */
 void
-get_fbpath (char *pathbuf, int altpath, int fbno)
+get_fbpath (char *restrict pathbuf, int altpath, int fbno)
 {
   sprintf (pathbuf, "%s/fb%s%i", DEVDIR, (altpath ? "/" : ""), fbno);
 }
@@ -70,7 +70,7 @@ get_fbpath (char *pathbuf, int altpath, int fbno)
  * @return          Zero on success, -1 on error.
  */
 int
-measure (int fbno, char *fbpath, long *width, long *height)
+measure (int fbno, char *restrict fbpath, long *restrict width, long *restrict height)
 {
   static char buf[PATH_MAX];
   char *delim;
@@ -124,9 +124,10 @@ measure (int fbno, char *fbpath, long *width, long *height)
  * @return              Zero on success, -1 on error.
  */
 int
-convert_fb (FILE *file, char *buf, size_t n, size_t *adjustment)
+convert_fb (FILE *restrict file, const char *restrict buf,
+	    size_t n, size_t *restrict adjustment)
 {
-  uint32_t *pixel;
+  const uint32_t *restrict pixel;
   int r, g, b;
   size_t off;
   
@@ -134,7 +135,7 @@ convert_fb (FILE *file, char *buf, size_t n, size_t *adjustment)
     {
       /* A pixel in the framebuffer is formatted as `%{blue}%{green}%{red}%{x}`
 	 in big-endian binary, or `%{x}%{red}%{green}%{blue}` in little-endian binary. */
-      pixel = (uint32_t *)(buf + off);
+      pixel = (const uint32_t *)(buf + off);
       r = (*pixel >> 16) & 255;
       g = (*pixel >> 8) & 255;
       b = (*pixel >> 0) & 255;

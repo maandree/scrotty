@@ -8,3 +8,8 @@ Support framebuffers with other depths.
 
 Investigate Hurd support.
 
+Make a release-test script that validates that the
+build system works as expected, that the tarball
+does not contain .gitignore, and that all references
+to the version number is correct.
+

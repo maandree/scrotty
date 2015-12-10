@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: scrotty 1.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-10 16:17+0100\n"
+"POT-Creation-Date: 2015-12-10 22:45+0100\n"
 "PO-Revision-Date: 2015-12-07 18:50+0100\n"
 "Last-Translator: Mattias Andrée <maandree@member.fsf.org>\n"
 "Language-Team: none\n"
@@ -17,30 +17,34 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/scrotty.c:377
+#: src/scrotty.c:373
 #, c-format
 msgid "Saved framebuffer %i to %s.\n"
 msgstr "Bildrutebuffert %i sparad till %s.\n"
 
-#: src/scrotty.c:467 src/scrotty.c:474
+#: src/scrotty.c:468 src/scrotty.c:472 src/scrotty.c:478
 #, c-format
 msgid "%s: %s. Type '%s --help' for help.\n"
 msgstr "%s: %s. Kör '%s --help' för hjälp.\n"
 
-#: src/scrotty.c:467
-msgid "Unrecognised option."
-msgstr "Val känns inte igen."
+#: src/scrotty.c:468
+msgid "--exec is used twice."
+msgstr "--exec förkommer mer än en gång."
 
-#: src/scrotty.c:474
-msgid "--exec has no argument."
-msgstr "--exec saknar argument."
+#: src/scrotty.c:472
+msgid "Invalid input."
+msgstr "Ogiltig indata."
 
-#: src/scrotty.c:524
+#: src/scrotty.c:478
+msgid "FILENAME-PATTERN is used twice."
+msgstr "FILNAMNSMÖNSTER förekommer mer än en gång"
+
+#: src/scrotty.c:509
 #, c-format
 msgid "%s: It looks like you are inside a display server. If this is correct, what you see is probably not what you get.\n"
 msgstr "%s: Det ser ut som att du är innan för en grafikserver. Om detta är korrect, vad de ser är troligtvis inte vad du får.\n"
 
-#: src/scrotty.c:534
+#: src/scrotty.c:519
 #, c-format
 msgid "%s: %s: %s\n"
 msgstr "%s: %s: %s\n"
@@ -54,14 +58,14 @@ msgstr "%s: Kunde inte hitta någon bildrutebuffert. Om filen %s/MAKEDEV finns d
 #, c-format
 msgid ""
 "SYNOPSIS\n"
-"\t%s [options...] [filename-pattern] [-- options-for-convert...]\n"
+"\t%s [OPTIONS...] [--] [FILENAME-PATTERN]\n"
 "\n"
 "OPTIONS\n"
-"\t--help         Print usage information.\n"
-"\t--version      Print program name and version.\n"
-"\t--copyright    Print copyright information.\n"
-"\t--raw          Save in PNM rather than in PNG.\n"
-"\t--exec CMD     Command to run for each saved image.\n"
+"\t-h, --help         Print usage information.\n"
+"\t-v, --version      Print program name and version.\n"
+"\t-c, --copyright    Print copyright information.\n"
+"\t-r, --raw          Save in PNM rather than in PNG.\n"
+"\t-e, --exec CMD     Command to run for each saved image.\n"
 "\n"
 "SPECIAL STRINGS\n"
 "\tBoth the --exec and filename-pattern parameters can take format specifiers\n"
@@ -88,14 +92,14 @@ msgid ""
 "\n"
 msgstr ""
 "ANVÄNDING\n"
-"\t%s [ALTERNATIV...] [FILNAMNSMÖNSTER] [-- ALTERNATIV_FÖR_CONVERT...]\n"
+"\t%s [ALTERNATIV...] [--] [FILNAMNSMÖNSTER]\n"
 "\n"
 "ALTERNATIV\n"
-"\t--help         Skriv ut burksanvisningar.\n"
-"\t--version      Skriv ut programmets namn och version.\n"
-"\t--copyright    Skriv ut upphovsrätts information.\n"
-"\t--raw          Spara som PNM-bild snarare än som PNG-bild.\n"
-"\t--exec KMD     Kommando att köra för varje sparad bild.\n"
+"\t-h, --help         Skriv ut burksanvisningar.\n"
+"\t-v, --version      Skriv ut programmets namn och version.\n"
+"\t-c, --copyright    Skriv ut upphovsrätts information.\n"
+"\t-r, --raw          Spara som PNM-bild snarare än som PNG-bild.\n"
+"\t-e, --exec KMD     Kommando att köra för varje sparad bild.\n"
 "\n"
 "SÄRSKILDA STRÄNGAR\n"
 "\tBåde --exec och filnamnsmönstrets tar formatspecifikationsargument som\n"

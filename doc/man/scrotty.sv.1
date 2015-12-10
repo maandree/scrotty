@@ -4,9 +4,8 @@
 scrotty \- Bildrutebuffertskärmsdumpsprogram
 .SH ÖVERSIKT
 .B scrotty
-.RI [ ALTERNATIV ]...\ [ FILNAMNSMÖNSTER ]
-[\-\-
-.IR ALTERNATIV_FÖR_CONVERT ...]
+.RI [ ALTERNATIV ]...\ [\-\-]
+.RI [ FILNAMNSMÖNSTER ]
 .SH BESKRIVNING
 .B scrotty
 är ett minimalistiskt skärmsdumpsprogram för dina
@@ -19,25 +18,26 @@ Det finns inget stöd för
 .BR scrot (1),
 men har en del förbättringar: inget stöd för fördröjda
 skrämdumpar, val av bildkvalitet eller stöd för att skapa
-miniatyrer, men det finns stöd för att specifiera valfria
-alternativ för
-.BR convert (1),
-som används för att spara bilden.
+miniatyrer. Sådana operations är lämnat till användaren
+att utföra med hjälp av alternativet
+.B \-\-exec
+och verktyg såsom
+.BR convert (1).
 .SH ALTERNATIV
 .TP
-.B \-\-help
+.B \-h ,\  \-\-help
 Skriv ut burksanvisningar.
 .TP
-.B \-\-version
+.B \-v ,\  \-\-version
 Skriv ut programmets namn och version.
 .TP
-.B \-\-copyright
+.B \-c ,\  \-\-copyright
 Skriv ut upphovsrätts information.
 .TP
-.B \-\-raw
+.B \-r ,\  \-\-raw
 Spara som PNM-bild snarare än som PNG-bild.
 .TP
-.BR \-\-exec \ \fIKMD\fP
+.BR \-e ,\  \-\-exec \ \fIKMD\fP
 Kommando att köra för varje sparad bild.
 .SH "SÄRSKILDA STRÄNGAR"
 Både
@@ -91,8 +91,10 @@ redan fanns utan författarens kännedom.) Skärmdumpar
 du vill skicka en bild på hur någonting ser hur.
 .SH "SE ÄVEN"
 .BR scrot (1),
+.BR strftime (3),
 .BR convert (1),
-.BR strftime (3)
+.BR fbcat (1),
+.BR setterm (1)
 .PP
 Full dokumentation finns tillgängligt lokalt via: info \(aq(scrotty)\(aq
 .SH FÖRFATTARE

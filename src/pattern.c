@@ -145,7 +145,5 @@ evaluate (char *restrict buf, size_t n, const char *restrict pattern,
   
  fail:
   return -1;
-  
-#undef P
 }
 

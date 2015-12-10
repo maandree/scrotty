@@ -39,7 +39,7 @@ void print_not_found_help (void);
  * @param  altpath  The index of the alternative path-pattern to use.
  * @param  fbno     The index of the framebuffer.
  */
-void get_fbpath (char *pathbuf, int altpath, int fbno);
+void get_fbpath (char *restrict pathbuf, int altpath, int fbno);
 
 /**
  * Get the dimensions of a framebuffer.
@@ -50,7 +50,7 @@ void get_fbpath (char *pathbuf, int altpath, int fbno);
  * @param   height  Output parameter for the height of the image.
  * @return          Zero on success, -1 on error.
  */
-int measure (int fbno, char *fbpath, long *width, long *height);
+int measure (int fbno, char *restrict fbpath, long *restrict width, long *restrict height);
 
 /**
  * Convert read data from a framebuffer to PNM pixel data.
@@ -64,5 +64,6 @@ int measure (int fbno, char *fbpath, long *width, long *height);
  *                      pixel is encoded.
  * @return              Zero on success, -1 on error.
  */
-int convert_fb (FILE *file, char *buf, size_t n, size_t *adjustment);
+int convert_fb (FILE *restrict file, const char *restrict buf,
+		size_t n, size_t *restrict adjustment);
 

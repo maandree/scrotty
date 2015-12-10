@@ -16,12 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#define _GNU_SOURCE /* For getopt_long. */
 #include "common.h"
 #include "kern.h"
 #include "info.h"
 #include "pnm.h"
 #include "pattern.h"
 
+#include <getopt.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
@@ -64,6 +66,7 @@ const char* inttable[] =
   };
 
 
+
 /**
  * `argv[0]` from `main`.
  */
@@ -77,13 +80,6 @@ const char *execname;
 const char *failure_file = NULL;
 
 /**
- * Arguments for `convert`,
- * the output file should be printed into `convert_args[2]`.
- * `NULL` is `convert` shall not be used.
- */
-static char **convert_args = NULL;
-
-/**
  * The index of the alternative path-pattern,
  * for the framebuffers, to try.
  */
@@ -92,13 +88,13 @@ static int try_alt_fbpath = 0;
 
 
 /**
- * Create an PNM-file that is sent to `convert` for convertion
- * to a compressed format, or directly to a file.
+ * Create an PNM-file that is sent to a conversion process,
+ * or directly to a file.
  * 
  * @param   fbname  The framebuffer device.
  * @param   width   The width of the image.
  * @param   height  The height of the image.
- * @param   fd      The file descriptor connected to `convert`'s stdin.
+ * @param   fd      The file descriptor connected to conversion process's stdin.
  * @return          Zero on success, -1 on error.
  */
 static int
@@ -116,7 +112,7 @@ save_pnm (const char *fbpath, long width, long height, int fd)
   if (fbfd == -1)
     goto fail;
   
-  /* Create a FILE*, for writing, for the image file. */
+  /* Create a FILE *, for writing, for the image file. */
   file = fdopen (fd, "w");
   if (file == NULL)
     goto fail;
@@ -177,10 +173,11 @@ save_pnm (const char *fbpath, long width, long height, int fd)
  * @param   imgname   The pathname of the output image.
  * @param   width     The width of the image.
  * @param   height    The height of the image.
+ * @param   raw       Save in PNM?
  * @return            Zero on success, -1 on error.
  */
 static int
-save (const char *fbpath, const char *imgpath, long width, long height)
+save (const char *fbpath, const char *imgpath, long width, long height, int raw)
 {
   int pipe_rw[2] = { -1, -1 };
   pid_t pid;
@@ -188,14 +185,14 @@ save (const char *fbpath, const char *imgpath, long width, long height)
   int fd = -1;
   int saved_errno;
   
-  if (convert_args == NULL)
+  if (raw)
     goto no_convert;
   
-  /* Create a pipe that for sending data into the `convert` program. */
+  /* Create a pipe that for sending data into the conversion process program. */
   if (pipe (pipe_rw) < 0)
     goto fail;
   
-  /* Fork the process, the child will exec. `convert`. */
+  /* Fork the process, the child will become the conversion process. */
   pid = fork ();
   if (pid == -1)
     goto fail;
@@ -206,7 +203,7 @@ save (const char *fbpath, const char *imgpath, long width, long height)
     {
       /* Close the write-end of the pipe. */
       close (pipe_rw[1]);
-      /* Turn the read-end of the into stdin. */
+      /* Turn the read-end of the pipe into stdin. */
       if (pipe_rw[0] != STDIN_FILENO)
 	{
 	  close (STDIN_FILENO);
@@ -215,8 +212,7 @@ save (const char *fbpath, const char *imgpath, long width, long height)
 	  close (pipe_rw[0]);
 	}
       /* Exec. `convert` to convert the PNM-image we create to a compressed image. */
-      sprintf (convert_args[2], "%s", imgpath);
-      execvp ("convert", convert_args);
+      execlp ("convert", "convert", DEVDIR "/stdin", imgpath, NULL);
       
     child_fail:
       perror(execname);
@@ -236,15 +232,15 @@ save (const char *fbpath, const char *imgpath, long width, long height)
   /* Close the write-end of the pipe. */
   close (pipe_rw[1]), pipe_rw[1] = -1;
   
-  /* Wait for `convert` to exit. */
+  /* Wait for conversion process to exit. */
   if (waitpid (pid, &status, 0) < 0)
     goto fail;
   
-  /* Return successfully if and only if `convert` did. */
+  /* Return successfully if and only if conversion did. */
   return status == 0 ? 0 : -1;
   
   
-  /* `convert` shall not be used: */
+  /* Conversion shall not take place: */
   
  no_convert:
   /* Open output file. */
@@ -372,7 +368,7 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
       return -1;
   
   /* Take a screenshot of the current framebuffer. */
-  if (save (fbpath, imgpath, width, height) < 0)
+  if (save (fbpath, imgpath, width, height, raw) < 0)
     goto fail;
   fprintf (stderr, _("Saved framebuffer %i to %s.\n"), fbno, imgpath);
   
@@ -433,15 +429,22 @@ int
 main (int argc, char *argv[])
 {
 #define EXIT_USAGE(MSG)  \
-  return fprintf (stderr, _("%s: %s. Type '%s --help' for help.\n"), execname, MSG, execname), 1
+  return fprintf (stderr, _("%s: %s. Type '%s --help' for help.\n"), execname, MSG, execname), 2
+#define USAGE_ASSERT(ASSERTION, MSG)  \
+  do { if (!(ASSERTION))  EXIT_USAGE (MSG); } while (0)
   
-  int fbno, r, i, dash = argc, exec = -1, help = 0, found = 0;
-  int raw = 0, version = 0, copyright = 0, filepattern = -1;
-  static char convert_args_0[] = "convert";
-  static char convert_args_1[] = DEVDIR "/stdin";
-  static char convert_args_2[PATH_MAX];
-  
-  execname = argc ? *argv : "scrotty";
+  int fbno, r, found = 0, raw = 0;
+  char *exec = NULL;
+  char *filepattern = NULL;
+  struct option long_options[] =
+    {
+      {"help",      no_argument,       NULL, 'h'},
+      {"version",   no_argument,       NULL, 'v'},
+      {"copyright", no_argument,       NULL, 'c'},
+      {"raw",       no_argument,       NULL, 'r'},
+      {"exec",      required_argument, NULL, 'e'},
+      {NULL,        0,                 NULL,  0 }
+    };
   
   /* Set up for internationalisation. */
 #if defined(USE_GETTEXT) && defined(PACKAGE) && defined(LOCALEDIR)
@@ -451,62 +454,44 @@ main (int argc, char *argv[])
 #endif
   
   /* Parse command line. */
-  for (i = 1; i < argc; i++)
+  execname = argc ? *argv : "scrotty";
+  for (;;)
     {
-      if      (!strcmp (argv[i], "--help"))       help = 1;
-      else if (!strcmp (argv[i], "--version"))    version = 1;
-      else if (!strcmp (argv[i], "--copyright"))  copyright = 1;
-      else if (!strcmp (argv[i], "--raw"))        raw = 1;
-      else if (!strcmp (argv[i], "--exec"))       exec = ++i;
-      else if (!strcmp (argv[i], "--"))
+      r = getopt_long (argc, argv, "hvcre:", long_options, NULL);
+      if      (r == -1)   break;
+      else if (r == 'h')  return -(print_help ());
+      else if (r == 'v')  return -(print_version ());
+      else if (r == 'c')  return -(print_copyright ());
+      else if (r == 'r')  raw = 1;
+      else if (r == 'e')
 	{
-	  dash = i + 1;
-	  break;
+	  USAGE_ASSERT (exec == NULL, _("--exec is used twice."));
+	  exec = optarg;
 	}
-      else if ((argv[i][0] == '-') || (filepattern != -1))
-	EXIT_USAGE (_("Unrecognised option."));
+      else if (r == '?')
+	EXIT_USAGE (_("Invalid input."));
       else
-	filepattern = i;
+	abort ();
     }
-  
-  /* Check that --exec is valid. */
-  if (exec == argc)
-    EXIT_USAGE (_("--exec has no argument."));
-  
-  /* Was --help, --version, or --copyright used? */
-  if (help)       return -(print_help ());
-  if (version)    return -(print_version ());
-  if (copyright)  return -(print_copyright ());
-  
-  /* Create arguments for `convert`. */
-  if ((!raw) || (dash < argc))
+  while (optind < argc)
     {
-      convert_args = alloca ((size_t)(4 + (argc - dash)) * sizeof (char*));
-      convert_args[0] = convert_args_0;
-      convert_args[1] = convert_args_1;
-      convert_args[2] = convert_args_2;
-      for (i = dash; i < argc; i++)
-	convert_args[i - dash + 2] = argv[i];
-      convert_args[3 + (argc - dash)] = NULL;
+      USAGE_ASSERT (filepattern == NULL, _("FILENAME-PATTERN is used twice."));
+      filepattern = argv[optind++];
     }
   
  retry:  
   /* Take a screenshot of each framebuffer. */
   for (fbno = 0;; fbno++)
     {
-      r = save_fb (fbno, raw,
-		   (filepattern < 0 ? NULL : argv[filepattern]),
-		   (exec < 0 ? NULL : argv[exec]));
+      r = save_fb (fbno, raw, filepattern, exec);
       if (r < 0)
 	goto fail;
-      if (r > 0)
-	{
-	  if (fbno) /* Perhaps framebuffer 1 is the first. */
-	    break;
-	  else
-	    continue;
-	}
-      found = 1;
+      else if (r == 0)
+	found = 1;
+      else if (fbno > 0)
+	break;
+      else
+	continue; /* Perhaps framebuffer 1 is the first. */
     }
   
   /* Did not find any framebuffer? */
@@ -535,6 +520,5 @@ main (int argc, char *argv[])
 	     execname, strerror (errno), failure_file);
   return 1;
   
-#undef EXIT_USAGE
 }
 

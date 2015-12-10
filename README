@@ -1,8 +1,8 @@
 NAME
-	scrotty 1.1-dev - Framebuffer screenshot program
+	scrotty 2.0-dev - Framebuffer screenshot program
 
 SYNOPSIS
-	scrotty [OPTION]... [FILENAME_PATTERN] [-- CONVERT_OPTION...]
+	scrotty [OPTION]... [--] [FILENAME_PATTERN]
 
 DESCRIPTION
 	scrotty is a minimalist screenshoter for your framebuffers.
@@ -10,24 +10,24 @@ DESCRIPTION
 
 	scrotty is designed after scrot(1), but includes a some
 	improvements. Namely it does not support delaying the screenshot,
-	selecting image quality or creating thumbnails, but it has
-	support for adding arbitrary arguments to convert(1), which is
-	used to save the image.
+	selecting image quality or creating thumbnails. That is left
+	to be done by the user with the option --exec and a a utility
+	such as convert(1).
 
 OPTIONS
-	--help
+	-h, --help
 		Print usage information.
 
-	--version
+	-v, --version
 		Print program name and version.
 
-	--copyright
+	-c, --copyright
 		Print copyright information.
 
-	--raw
+	-r, --raw
 		Save in PNM rather than in PNG.
 
-	--exec CMD
+	-e, --exec CMD
 		Command to run for each saved image.
 
 SPECIAL STRINGS
@@ -65,7 +65,7 @@ RATIONALE
 	image of how something looks.
 
 SEE ALSO
-	scrot(1), convert(1), strftime(3), fbcat(1), setterm(1)
+	scrot(1), strftime(3), convert(1), fbcat(1), setterm(1)
 
 	Full documentation available locally via: info '(scrotty)'
 

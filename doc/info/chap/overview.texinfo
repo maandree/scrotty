@@ -10,11 +10,16 @@ rendered on the framebuffer.}
 @command{scrotty} is designed after @command{scrot}, but
 includes a some improvements. Namely it does not support
 delaying the screenshot, selecting image quality or creating
-thumbnails, but it has support for adding arbitrary arguments
-to @command{convert} (from the ImageMagick project), which
-is used to save the image.
+thumbnails. Such operations is left to be done by the user
+with the option @option{--exec} and a utility such as
+@command{convert} (from the ImageMagick project.)
 
 @command{scrotty} reads the data stored in the framebuffers,
 convert it the @sc{PNM} images and pipes it to @command{convert}
 to create @sc{PNG} images.
+
+@command{scrotty} can appear to be a bit slow. This is not
+@command{scrotty}'s fault. Reading a framebuffer, even if
+not processing the data, takes time. In fact, screenshots
+for @sc{X} are slow too.
 

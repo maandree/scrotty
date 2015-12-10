@@ -1,16 +1,17 @@
 RUNTIME DEPENDENCIES:
 
 	linux
-	libc
-	imagemagick (opt-out)
+	glibc (any libc with getopt_long)
+	libpng
 
 
 BUILD DEPENDENCIES:
 
 	make
 	coreutils
-	libc
-	gcc (any c99 can be used if WARN in Makefile is edited)
+	glibc (any libc with getopt_long)
+	libpng
+	c99
 	gettext (opt-out, for internationalisation)
 	texinfo (opt-out, for info, pdf, dvi, ps, and html manuals)
 	texlive-plainextra (opt-in, for pdf, dvi, and ps manuals)

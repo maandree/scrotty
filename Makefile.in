@@ -50,7 +50,7 @@ PKGNAME = scrotty
 
 # Package information.
 _PROJECT = scrotty
-_VERSION = 1.1
+_VERSION = 2.0
 
 # Used by mk/lang-c.mk
 _C_STD = c99

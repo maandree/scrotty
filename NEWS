@@ -1,18 +1,30 @@
 scrotty NEWS                                          -*- outline -*-
 
-* Noteworthy changes in release 1.1 (TO BE DETERMINED) [stable]
+* Noteworthy changes in release 2.0 (TO BE DETERMINED) [stable]
 
 ** Installation changes
 
   The installation process has changed. Please read INSTALL.
 
+** Dependency changes
+
+   ImageMagick is not longer used.
+
+   libpng is now required.
+
+   GCC is not required, any compiler for ISO C 99 will do.
+
+   The GNU C library, or any POSIX-compliant C standard
+   library with the getopt_long function, is now required.
+
 ** Improvements
 
   The option --raw has been added. This option makes scrotty
-  store the images as a portble anymap format image rather
-  than as Portable Network Graphics image. With this change
-  ImageMagick becomes optional, but you have to opt-out if
-  you do not have it.
+  store the images as a portable anymap format image rather
+  than as Portable Network Graphics image.
+
+  The ability to pass arguments to convert(1) has been
+  removed. Utilise the --exec option instead!
 
   Internationalisation support has been added. For the purpose
   of testing, a complete Swedish translation has been included.
@@ -20,6 +32,9 @@ scrotty NEWS                                          -*- outline -*-
   HTML manual can now be built and installed.
 
   The Texinfo manual lists the basics of strftime(3P).
+
+  The invocation syntax is less strict, and short options
+  have been added.
 
 ** Translations
 

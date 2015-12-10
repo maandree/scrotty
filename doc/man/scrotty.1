@@ -3,9 +3,8 @@
 scrotty \- Framebuffer screenshot program
 .SH SYNOPSIS
 .B scrotty
-.RI [ OPTION ]...\ [ FILENAME_PATTERN ]
-[\-\-
-.IR CONVERT_OPTION ...]
+.RI [ OPTION ]...\ [\-\-]
+.RI [ FILENAME_PATTERN ]
 .SH DESCRIPTION
 .B scrotty
 is a minimalist screenshoter for your framebuffers.
@@ -18,25 +17,26 @@ is designed after
 .BR scrot (1),
 but includes a some improvements. Namely it does not support
 delaying the screenshot, selecting image quality or creating
-thumbnails, but it has support for adding arbitrary arguments
-to
-.BR convert (1),
-which is used to save the image.
+thumbnails. Such operations is left to be done by the user
+with the option
+.B \-\-exec
+and a utility such as
+.BR convert (1).
 .SH OPTIONS
 .TP
-.B \-\-help
+.B \-h ,\  \-\-help
 Print usage information.
 .TP
-.B \-\-version
+.B \-v ,\  \-\-version
 Print program name and version.
 .TP
-.B \-\-copyright
+.B \-c ,\  \-\-copyright
 Print copyright information.
 .TP
-.B \-\-raw
+.B \-r ,\  \-\-raw
 Save in PNM rather than in PNG.
 .TP
-.BR \-\-exec \ \fICMD\fP
+.BR \-e ,\  \-\-exec \ \fICMD\fP
 Command to run for each saved image.
 .SH "SPECIAL STRINGS"
 Both the
@@ -89,8 +89,8 @@ Screenshots are useful if you want to remember something or
 send an image of how something looks.
 .SH "SEE ALSO"
 .BR scrot (1),
-.BR convert (1),
 .BR strftime (3),
+.BR convert (1),
 .BR fbcat (1),
 .BR setterm (1)
 .PP
