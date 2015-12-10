@@ -1,13 +1,6 @@
-Use getopt.
-
-Support for short options.
-
 Use auto-auto-complete.
 
 (maybe) include date and time by default in filenames.
-
-Do not require imagemagick for mere conversion.
-(gimp does not work, but perhaps it can be cannibalised)
 
 Take the screenshot the the framebuffers
 more simultaneously.
