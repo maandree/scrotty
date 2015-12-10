@@ -5,3 +5,7 @@ Use auto-auto-complete.
 Take the screenshot the the framebuffers
 more simultaneously.
 
+/dev/fb/[0-9]*
+
+framebuffers with other depths.
+
