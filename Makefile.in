@@ -17,6 +17,9 @@ LOCALES = sv
 # List of man page translations to install.
 MAN_LOCALES = sv
 
+# Uncomment this if they want another locale for the tab-completion.
+#SHELL_LOCALE = sv
+
 # Can change these variables with ./configure in the same why you
 # would configure them when running make.
 
