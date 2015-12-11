@@ -47,6 +47,7 @@ PKGNAME = scrotty
 
 
 # YOU, AS A USER, SHOULD NOT CHANGE THESE VARIABLES. {{
+# They specify how the reusable makefiles in mk/ shall behave.
 
 # Package information.
 _PROJECT = scrotty
