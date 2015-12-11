@@ -140,7 +140,7 @@ convert_fb (FILE *restrict file, const char *restrict buf,
       g = (*pixel >> 8) & 255;
       b = (*pixel >> 0) & 255;
       
-      if (SAVE_PIXEL(file, r, g, b) < 0)
+      if (SAVE_PIXEL (file, r, g, b) < 0)
 	goto fail;
     }
   

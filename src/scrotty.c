@@ -207,8 +207,8 @@ save (const char *fbpath, const char *imgpath, long width, long height, int raw)
       close (pipe_rw[1]);
       
       /* Open file descriptor for the output image. */
-      fd = open(imgpath, O_WRONLY | O_CREAT | O_TRUNC,
-		S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+      fd = open (imgpath, O_WRONLY | O_CREAT | O_TRUNC,
+		 S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
       if (fd == -1)
 	goto child_fail;
       
