@@ -24,7 +24,7 @@
  * 
  * A pixel in the PNM image is formatted as `%{red} %{green} %{blue} ` in text.
  * 
- * @parma   F:FILE *  The file whither the pixel shall be save.
+ * @param   F:FILE *  The file whither the pixel shall be save.
  * @param   R:int     The [0, 255]-value on the red subpixel.
  * @param   G:int     The [0, 255]-value on the green subpixel.
  * @param   B:int     The [0, 255]-value on the blue subpixel.
