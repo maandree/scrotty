@@ -26,19 +26,21 @@ bytes in difference.} and can in fact be smaller.
 
 @sc{PNM} is a good alternative for anything
 but storage. (Unless you compress them.)
+
+This option is also useful, in combination with
+@option{--exec} if you want to save the image
+in any other format.
 @item -e
 @itemx --exec CMD
 Run a command for each saved image.
+
+Can only be specified once.
 @end table
 
 In addition to these options, a filename
 pattern, that does not start with a dash,
 can be added. This filename pattern selects
 with what filename the image should be saved.
-
-Further, it is possible add @option{--}
-followed by additional options to add when
-@command{scrotty} spawns @command{convert}.
 
 Both the @option{--exec} and filename pattern
 parameters can take format specifiers that are

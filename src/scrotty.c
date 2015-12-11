@@ -21,6 +21,7 @@
 #include "kern.h"
 #include "info.h"
 #include "pnm.h"
+#include "png.h"
 #include "pattern.h"
 
 #include <getopt.h>
@@ -188,6 +189,7 @@ save (const char *fbpath, const char *imgpath, long width, long height, int raw)
   if (raw)
     goto no_convert;
   
+  
   /* Create a pipe that for sending data into the conversion process program. */
   if (pipe (pipe_rw) < 0)
     goto fail;
@@ -203,17 +205,18 @@ save (const char *fbpath, const char *imgpath, long width, long height, int raw)
     {
       /* Close the write-end of the pipe. */
       close (pipe_rw[1]);
-      /* Turn the read-end of the pipe into stdin. */
-      if (pipe_rw[0] != STDIN_FILENO)
-	{
-	  close (STDIN_FILENO);
-	  if (dup2 (pipe_rw[0], STDIN_FILENO) == -1)
-	    goto child_fail;
-	  close (pipe_rw[0]);
-	}
-      /* Exec. `convert` to convert the PNM-image we create to a compressed image. */
-      execlp ("convert", "convert", DEVDIR "/stdin", imgpath, NULL);
       
+      /* Open file descriptor for the output image. */
+      fd = open(imgpath, O_WRONLY | O_CREAT | O_TRUNC,
+		S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+      if (fd == -1)
+	goto child_fail;
+      
+      /* Convert the PNM-image we create to a compressed image, namely in PNG. */
+      if (convert (pipe_rw[0], fd) < 0)
+	goto child_fail;
+      
+      _exit(0);
     child_fail:
       perror(execname);
       _exit(1);

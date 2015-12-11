@@ -112,11 +112,11 @@ _CPPFLAGS += $(foreach D,$(_ALL_DIRS),-D'$(D)="$($(D))"')
 # MORE HELP VARIABLES:
 
 # Compilation and linking flags, and command.
-CPPFLAGS = $(_CPPFLAGS)
-CFLAGS = $(OPTIMISE) $(WARN) $(_CFLAGS)
-LDFLAGS = $(OPTIMISE) $(WARN) $(_LDFLAGS)
-__CC = $(CC) -std=$(_C_STD) -c
-__LD = $(CC) -std=$(_C_STD) 
+CPPFLAGS =
+CFLAGS = $(OPTIMISE) $(WARN)
+LDFLAGS = $(OPTIMISE) $(WARN)
+__CC = $(CC) -std=$(_C_STD) -c $(_CPPFLAGS) $(_CFLAGS)
+__LD = $(CC) -std=$(_C_STD) $(_LDFLAGS)
 __CC_POST = $(CPPFLAGS) $(CFLAGS) $(EXTRA_CPPFLAGS) $(EXTRA_CFLAGS)
 __LD_POST = $(LDFLAGS) $(EXTRA_LDFLAGS)
 

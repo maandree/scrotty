@@ -56,9 +56,12 @@ _VERSION = 2.0
 _C_STD = c99
 _PEDANTIC = yes
 _BIN = scrotty
-_OBJ_scrotty = scrotty kern-linux info pattern
+_OBJ_scrotty = scrotty kern-linux info pattern png
 _HEADER_DIRLEVELS = 1
 _CPPFLAGS = -D'PACKAGE="$(PKGNAME)"' -D'PROGRAM_VERSION="$(_VERSION)"'
+_CPPFLAGS += $(shell pkg-config --cflags libpng)
+#  -I is a CPPFLAG, not a CFLAG
+_LDFLAGS += $(shell pkg-config --libs libpng)
 
 # Used by mk/i18n.mk
 _SRC = $(foreach B,$(_BIN),$(foreach F,$(_OBJ_$(B)),$(F).c))
@@ -85,7 +88,7 @@ ___EVERYTHING_INFO = scrotty titlepage-data content hardcopy-copying  \
                    appx/fdl appx/free-software-needs-free-documentation appx/gpl  \
                    chap/invoking chap/overview chap/strftime  \
                    reusable/macros reusable/paper reusable/titlepage
-___EVERYTHING_H = common kern info pattern pnm
+___EVERYTHING_H = common kern info pattern pnm png
 _EVERYTHING = $(foreach F,$(___EVERYTHING_INFO),doc/info/$(F).texinfo)  \
               $(foreach F,$(___EVERYTHING_H),src/$(F).h)  \
               $(__EVERYTHING_ALL_COMMON) DEPENDENCIES INSTALL NEWS $(__todo) doc/concept

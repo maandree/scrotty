@@ -11,6 +11,7 @@ BUILD DEPENDENCIES:
 	coreutils
 	glibc (any libc with getopt_long)
 	libpng
+	pkg-config
 	c99
 	gettext (opt-out, for internationalisation)
 	texinfo (opt-out, for info, pdf, dvi, ps, and html manuals)
