@@ -25,6 +25,7 @@ include $(v)mk/lang-c.mk
 include $(v)mk/texinfo.mk
 include $(v)mk/man.mk
 include $(v)mk/i18n.mk
+include $(v)mk/shell.mk
 include $(v)mk/clean.mk
 include $(v)mk/dist.mk
 include $(v)mk/tags.mk

@@ -220,12 +220,14 @@ for option; do
 	    feature="WITH_${feature}"
 	    echo "${feature}" = yes >&20
 	    export "${feature}"=yes
+	    option="${option}=x"
 	    ;;
 	
 	(--without-*)
 	    feature="WITHOUT_${feature}"
 	    echo "${feature}" = yes >&20
 	    export "${feature}"=yes
+	    option="${option}=x"
 	    ;;
 	
 	(--enable-*=*)
@@ -245,12 +247,14 @@ for option; do
 	    feature="DISABLE_${feature}"
 	    echo "${feature}" = yes >&20
 	    export "${feature}"=yes
+	    option="${option}=x"
 	    ;;
 	
 	(--disable-*)
 	    feature="DISABLE_${feature}"
 	    echo "${feature}" = yes >&20
 	    export "${feature}"=yes
+	    option="${option}=x"
 	    ;;
 
 # unrecognised
@@ -711,7 +715,10 @@ test_enable ()
 #   
 #   Enabled features, see ${0} for more infomation:
 #   
-#       Internationalisation   $(test_with GETTEXT yes)
+#       Internationalisation     $(test_with GETTEXT yes)
+#       GNU Bash tab-completion  $(test_with BASH yes)
+#       Fish tab-completion      $(test_with FISH yes)
+#       Z shell tab-completion   $(test_with ZSH yes)
 #   
 #   You can now run 'make && make install'.
 #   

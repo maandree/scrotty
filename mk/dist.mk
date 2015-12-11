@@ -38,12 +38,14 @@ GPG_KEY ?=
 __EVERYTHING_COMMON = $(_COPYING) $(_LICENSE) README
 __EVERYTHING_SRC = $(foreach F,$(_SRC),src/$(F))
 __EVERYTHING_LOCALE = $(foreach L,$(LOCALES),po/$(L).po)
+__EVERYTHING_SHELL = $(foreach F,$(_AUTO_COMPLETE),src/$(F).auto-completion)  \
+                     $(foreach F,$(_AUTO_COMPLETE),$(foreac F,$(_SHELL_LOCALES),src/$(F).$(L),auto-completion))
 __EVERYTHING_MK_ = all clean copy dist empty i18n lang-c lowerpath man path prologue tags texinfo tools
 __EVERYTHING_MK = $(foreach F,$(__EVERYTHING_MK_),mk/$(F).mk) mk/configure mk/README configure Makefile.in
 __EVERYTHING_MAN = $(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach P,$(_MAN_$(S)),doc/man/$(P).$(S)))  \
                    $(foreach S,$(_MAN_PAGE_SECTIONS),$(foreach L,$(MAN_LOCALES),$(foreach P,$(_MAN_$(L)_$(S)),doc/man/$(P).$(L).$(S))))
 __EVERYTHING_ALL_COMMON = $(__EVERYTHING_COMMON) $(__EVERYTHING_MK) $(__EVERYTHING_MAN)  \
-                          $(__EVERYTHING_LOCALE) $(__EVERYTHING_SRC)
+                          $(__EVERYTHING_LOCALE) $(__EVERYTHING_SRC) $(__EVERYTHING_SHELL)
 # This one (__todo) if you have a todo file, but do not want it to be greped.
 __TO__ = TO
 __DO__ = DO

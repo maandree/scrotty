@@ -1,0 +1,23 @@
+((value command scrotty)
+	(default (arg FILENAME-PATTERN)  (files -0)  (suggest filename)
+	 (desc 'Pattern for the filenames of saved images.'))
+
+	(unargumented  (options -h --help)  (complete --version)
+	 (desc 'Print usage information.'))
+
+	(unargumented  (options -v --version)  (complete --version)
+	 (desc 'Print program name and version.'))
+
+	(unargumented  (options -c --copyright)  (complete --copyright)
+	 (desc 'Print copyright information.'))
+
+	(unargumented  (options -r --raw)  (complete --raw)
+	 (desc 'Save in PNM rather than in PNG.'))
+
+	(argumented  (options -e --exec)  (complete --exec)  (arg COMMAND)  (files -0)
+	 (desc 'Command to run for each saved image.'))
+
+	(suggestion filename (verbatim '%Y-%m-%d_%H:%M:%S_$wx$h.$i.png'
+	                               '%Y-%m-%d_%H:%M:%S.$i.png'))
+)
+

@@ -20,6 +20,9 @@ list_optional_features_help ()
 {
 cat <<EOF
   --without-gettext       Do not support internationalisation.
+  --with-bash             Include tab-completion for GNU Bash, requires the auto-auto-complete package.
+  --with-fish             Include tab-completion for fish, requires the auto-auto-complete package.
+  --with-zsh              Include tab-completion for Z shell, requires the auto-auto-complete package.
 EOF
 }
 
@@ -47,7 +50,10 @@ cat <<EOF
 
 Enabled features, see ${0} for more infomation:
 
-    Internationalisation   $(test_with GETTEXT yes)
+    Internationalisation     $(test_with GETTEXT yes)
+    GNU Bash tab-completion  $(test_with BASH no)
+    Fish tab-completion      $(test_with FISH no)
+    Z shell tab-completion   $(test_with ZSH no)
 
 You can now run 'make && make install'.
 

@@ -1,0 +1,23 @@
+((value command scrotty)
+	(default (arg FILNAMNSMÖNSTER)  (files -0)  (suggest filename)
+	 (desc 'Filnamnsmönster för sparade bilder.'))
+
+	(unargumented  (options -h --help)  (complete --version)
+	 (desc 'Skriv ut burksanvisningar.'))
+
+	(unargumented  (options -v --version)  (complete --version)
+	 (desc 'Skriv ut programmets namn och version.'))
+
+	(unargumented  (options -c --copyright)  (complete --copyright)
+	 (desc 'Skriv ut upphovsrättsinformation.'))
+
+	(unargumented  (options -r --raw)  (complete --raw)
+	 (desc 'Spara som PNM-bild snarare än som PNG-bild.'))
+
+	(argumented  (options -e --exec)  (complete --exec)  (arg KOMMANDO)  (files -0)
+	 (desc 'Kör ett Kommando för varje sparad bild.'))
+
+	(suggestion filename (verbatim '%Y-%m-%d_%H:%M:%S_$wx$h.$i.png'
+	                               '%Y-%m-%d_%H:%M:%S.$i.png'))
+)
+

@@ -89,6 +89,10 @@ to install. This rules are available:
 │   html      │   install-html      │   Include multifile HTML manual. (Texinfo) │
 │             │   install-man       │   Include man pages.                       │
 │ locale      │ install-locale      │ Include locales.                           │
+│ shell       │ install-shell       │ Include shell tab-completion.              │
+│   bash      │   install-bash      │   Include GNU Bash tab-completion.         │
+│   fish      │   install-fish      │   Include fish tab-completion.             │
+│   zsh       │   install-zsh       │   Include Z shell tab-completion.          │
 └─────────────┴─────────────────────┴────────────────────────────────────────────┘
 
 install, install-everything, install-base, and install-cmd, have alternatives
@@ -98,4 +102,9 @@ install-base-strip, and install-cmd-strip, respectively.
 The untranslated man page is installed via the rule install-man-untranslated.
 Additional translations are installed via the rule install-man-locale, which
 installes the locales listed in MAN_LOCALES.
+
+It is not possible to multiple translations of the tab-completion scripts.
+But you may select select one translation by setting SHELL_LOCALE. Note,
+doing this means that the non-translationed script will not be installed.
+A translated one will be installed in its place.
 

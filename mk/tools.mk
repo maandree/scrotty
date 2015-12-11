@@ -147,6 +147,9 @@ BZIP2_COMPRESS ?= $(BZIP2) -k9
 XZ ?= xz
 XZ_COMPRESS ?= $(XZ) -ke9
 
+# Part of auto-auto-complete:
+AUTO_AUTO_COMPLETE ?= auto-auto-complete
+
 
 # Change to $(TRUE) to suppress the bold red and blue output.
 ifndef PRINTF_INFO

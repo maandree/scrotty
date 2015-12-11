@@ -17,6 +17,8 @@ scrotty NEWS                                          -*- outline -*-
    The GNU C library, or any POSIX-compliant C standard
    library with the getopt_long function, is now required.
 
+   auto-auto-complete as been added as a optional dependency.
+
 ** Improvements
 
   The option --raw has been added. This option makes scrotty
@@ -38,6 +40,9 @@ scrotty NEWS                                          -*- outline -*-
 
   Performance is significantly improved (for PNG images)
   because images are stored directly as PNG and not converted.
+
+  Tab-completion for GNU Bash, fish, and Z shell has been
+  added as an optional features.
 
 ** Translations
 
