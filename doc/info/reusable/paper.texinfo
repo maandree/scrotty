@@ -75,7 +75,9 @@
 @fonttextsize 10
 @end ifset
 @ifclear SMALLFONT
+@iftex @c Because of bug in Texinfo<=4.13
 @fonttextsize 11
+@end iftex
 @end ifclear
 
 @c  In America it is customary to have two spaces after

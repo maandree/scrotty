@@ -14,9 +14,11 @@ BUILD DEPENDENCIES:
 	pkg-config
 	c99
 	gettext (opt-out, for internationalisation)
-	texinfo (opt-out, for info, pdf, dvi, ps, and html manuals)
+	texinfo>=4.11 (opt-out, for info, pdf, dvi, ps, and html manuals)
 	texlive-plainextra (opt-in, for pdf, dvi, and ps manuals)
 	auto-auto-complete (opt-in, for bash, fish, and zsh tab-completion)
+
+	texinfo<4.11 can be used if '@frenchspacing on' is removed.
 
 
 INSTALL DEPENDENCIES:
