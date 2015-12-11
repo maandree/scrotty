@@ -16,7 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define _POSIX_SOURCE
+#if !defined(_POSIX_C_SOURCE) || (_POSIX_C_SOURCE < 200809L)
+# if defined(_POSIX_C_SOURCE)
+#  undef _POSIX_C_SOURCE
+# endif
+# define _POSIX_C_SOURCE  200809L
+#endif
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -24,7 +29,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <alloca.h>
 #include <time.h>
 
 
@@ -41,9 +45,6 @@
 #endif
 #ifndef SYSDIR
 # define SYSDIR  "/sys"
-#endif
-#ifndef PATH_MAX  /* TODO can we avoid this and still have clean code */
-# define PATH_MAX  4096
 #endif
 
 

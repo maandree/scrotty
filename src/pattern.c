@@ -71,9 +71,9 @@ duplicate_percents (char *restrict buf, size_t n)
  *                   during the evaluation of the filename pattern.
  * @return           Zero on success, -1 on error.
  */
-int
-evaluate (char *restrict buf, size_t n, const char *restrict pattern,
-	  int fbno, long width, long height, const char *restrict path)
+static int
+try_evaluate (char *restrict buf, size_t n, const char *restrict pattern,
+	      int fbno, long width, long height, const char *restrict path)
 {
 #define P(format, value)  r = snprintf (buf + i, n - i, format "%zn", value, &j)
   
@@ -81,9 +81,10 @@ evaluate (char *restrict buf, size_t n, const char *restrict pattern,
   ssize_t j = 0;
   int percent = 0, backslash = 0, dollar = 0, r;
   char c;
-  char *fmt;
+  char *fmt = NULL;
   time_t t;
   struct tm *tm;
+  int saved_errno;
   
   /* Expand '$' and '\'. */
   while ((i < n) && ((c = *pattern++)))
@@ -123,8 +124,9 @@ evaluate (char *restrict buf, size_t n, const char *restrict pattern,
     return 0;
   
   /* Copy the buffer so we can reuse the buffer and use its old content for the format. */
-  fmt = alloca ((strlen (buf) + 1) * sizeof (char));
-  memcpy (fmt, buf, (strlen (buf) + 1) * sizeof (char));
+  fmt = strdup (buf);
+  if (fmt == NULL)
+    goto fail;
   
   /* Expand '%'. */
   t = time (NULL);
@@ -138,12 +140,62 @@ evaluate (char *restrict buf, size_t n, const char *restrict pattern,
   if (strftime (buf, n, fmt, tm) == 0)
     goto enametoolong; /* No errors are defined for `strftime`. What else can we do? */
   
+  free (fmt);
   return 0;
   
  enametoolong:
-  return errno = ENAMETOOLONG, -1;
+  errno = ENAMETOOLONG;
+ fail:
+  saved_errno = errno;
+  free (fmt);
+  errno = saved_errno;
+  return -1;
+}
+
+
+/**
+ * Parse and evaluate a --exec argument or filename pattern.
+ * 
+ * If `path != NULL` than all non-escaped spaces in
+ * `pattern` will be stored as 255-bytes in `buf`.
+ * 
+ * @param   pattern  The pattern to evaluate.
+ * @param   fbno     The index of the framebuffer.
+ * @param   width    The width of the image/framebuffer.
+ * @param   height   The height of the image/framebuffer.
+ * @param   path     The filename of the saved image, `NULL`
+ *                   during the evaluation of the filename pattern.
+ * @return           The constructed string, `NULL` on error.
+ */
+char*
+evaluate (const char *restrict pattern, int fbno, long width,
+	  long height, const char *restrict path)
+{
+  char *buffer = NULL;
+  size_t size = 32;
+  void *new;
+  int saved_errno;
+  
+ retry:
+  new = realloc (buffer, size * sizeof(char));
+  if (new == NULL)
+    goto fail;
+  buffer = new;
+  
+  if (try_evaluate (buffer, size, pattern, fbno, width, height, path) < 0)
+    {
+      if (errno == ENAMETOOLONG)
+	goto retry;
+      size <<= 1;
+      goto fail;
+    }
+  
+  return buffer;
   
  fail:
-  return -1;
+  saved_errno = errno;
+  free(buffer);
+  errno = saved_errno;
+  return NULL;
 }
 

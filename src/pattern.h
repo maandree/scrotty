@@ -25,16 +25,14 @@
  * If `path != NULL` than all non-escaped spaces in
  * `pattern` will be stored as 255-bytes in `buf`.
  * 
- * @param   buf      The output buffer.
- * @param   n        The size of `buf`.
  * @param   pattern  The pattern to evaluate.
  * @param   fbno     The index of the framebuffer.
  * @param   width    The width of the image/framebuffer.
  * @param   height   The height of the image/framebuffer.
  * @param   path     The filename of the saved image, `NULL`
  *                   during the evaluation of the filename pattern.
- * @return           Zero on success, -1 on error.
+ * @return           The constructed string, `NULL` on error.
  */
-int evaluate (char *restrict buf, size_t n, const char *restrict pattern,
-	      int fbno, long width, long height, const char *restrict path);
+char *evaluate (const char *restrict pattern, int fbno, long width,
+		long height, const char *restrict path);
 

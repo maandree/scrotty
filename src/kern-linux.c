@@ -49,14 +49,17 @@ print_not_found_help (void)
 /**
  * Construct the path to a framebuffer device.
  * 
- * @param  pathbuf  Ouput buffer for the path.
- * @param  altpath  The index of the alternative path-pattern to use.
- * @param  fbno     The index of the framebuffer.
+ * @param   altpath  The index of the alternative path-pattern to use.
+ * @param   fbno     The index of the framebuffer.
+ * @return           The path to the framebuffer device. Errors are impossible.
+ *                   This string is statically allocated and must not be deallocated.
  */
-void
-get_fbpath (char *restrict pathbuf, int altpath, int fbno)
+char *
+get_fbpath (int altpath, int fbno)
 {
+  static char pathbuf[sizeof (DEVDIR "/fb/") + 3 * sizeof (int)];
   sprintf (pathbuf, "%s/fb%s%i", DEVDIR, (altpath ? "/" : ""), fbno);
+  return pathbuf;
 }
 
 
@@ -72,7 +75,8 @@ get_fbpath (char *restrict pathbuf, int altpath, int fbno)
 int
 measure (int fbno, char *restrict fbpath, long *restrict width, long *restrict height)
 {
-  static char buf[PATH_MAX];
+  static char buf[sizeof (SYSDIR "/class/graphics/fb/virtual_size") + 3 * sizeof(int)];
+  /* The string "/class/graphics/fb/virtual_size" is large enought for the call (*) "*/
   char *delim;
   int sizefd = -1;
   ssize_t got;
@@ -85,7 +89,7 @@ measure (int fbno, char *restrict fbpath, long *restrict width, long *restrict h
     FILE_FAILURE (buf);
   
   /* Get the dimensions of the framebuffer. */
-  got = read (sizefd, buf, sizeof (buf) / sizeof (char) - 1);
+  got = read (sizefd, buf, sizeof (buf) / sizeof (char) - 1); /* (*) */
   if (got < 0)
     goto fail;
   close (sizefd);

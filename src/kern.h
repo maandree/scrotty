@@ -35,11 +35,12 @@ void print_not_found_help (void);
 /**
  * Construct the path to a framebuffer device.
  * 
- * @param  pathbuf  Ouput buffer for the path.
- * @param  altpath  The index of the alternative path-pattern to use.
- * @param  fbno     The index of the framebuffer.
+ * @param   altpath  The index of the alternative path-pattern to use.
+ * @param   fbno     The index of the framebuffer.
+ * @return           The path to the framebuffer device. Errors are impossible.
+ *                   This string is statically allocated and must not be deallocated.
  */
-void get_fbpath (char *restrict pathbuf, int altpath, int fbno);
+char *get_fbpath (int altpath, int fbno);
 
 /**
  * Get the dimensions of a framebuffer.

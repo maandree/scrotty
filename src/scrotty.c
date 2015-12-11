@@ -101,7 +101,7 @@ static int try_alt_fbpath = 0;
 static int
 save_pnm (const char *fbpath, long width, long height, int fd)
 {
-  char buf[PATH_MAX];
+  char buf[8 << 10];
   FILE *file = NULL;
   int fbfd = 1;
   ssize_t got, off;
@@ -280,11 +280,11 @@ save (const char *fbpath, const char *imgpath, long width, long height, int raw)
 static int
 exec_image (char *flatten_args)
 {
-  char **args;
+  char **args = NULL;
   char *arg;
   size_t i, arg_count = 1;
   pid_t pid;
-  int status;
+  int status, saved_errno;
   
   /* Count arguments. */
   for (i = 0; flatten_args[i]; i++)
@@ -292,7 +292,9 @@ exec_image (char *flatten_args)
       arg_count++;
   
   /* Allocate argument array. */
-  args = alloca ((arg_count + 1) * sizeof (char*));
+  args = malloc ((arg_count + 1) * sizeof (char*));
+  if (args == NULL)
+    goto fail;
   
   /* Unflatten argument array. */
   for (arg = flatten_args, i = 0;;)
@@ -308,7 +310,7 @@ exec_image (char *flatten_args)
   /* Fork process. */
   pid = fork ();
   if (pid == -1)
-    return -1;
+    goto fail;
 
   /* Child process: */
   if (pid == 0)
@@ -322,10 +324,17 @@ exec_image (char *flatten_args)
   
   /* Wait for child to exit. */
   if (waitpid (pid, &status, 0) < 0)
-    return -1;
+    goto fail;
   
   /* Return successfully if and only if `the child` did. */
+  free (args);
   return status == 0 ? 0 : -1;
+  
+ fail:
+  saved_errno = errno;
+  free (args);
+  errno = saved_errno;
+  return -1;
 }
 
 
@@ -336,22 +345,21 @@ exec_image (char *flatten_args)
  * @param   raw          Save in PNM rather than in PNG?.
  * @param   filepattern  The pattern for the filename, `NULL` for default.
  * @param   execpattern  The pattern for the command to run to
- *                       process the image, `NULL` for default.
+ *                       process the image, `NULL` for none.
  * @return               Zero on success, -1 on error, 1 if the framebuffer does not exist.
  */
 static int
 save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
 {
-  static char imgpath[PATH_MAX];
-  char fbpath[PATH_MAX];
+  char imgpath_[sizeof ("fb.xyz.") + 2 * 3 * sizeof (int)];
+  char *imgpath = imgpath_;
+  char *fbpath; /* Statically allocate string is returned. */
   char *execargs = NULL;
-  void *new;
   long width, height;
-  size_t size = PATH_MAX;
-  int i, saved_errno;
+  int i, rc = 0, saved_errno = 0;
   
   /* Get pathname for framebuffer, and stop if we have read all existing ones. */
-  get_fbpath (fbpath, try_alt_fbpath, fbno);
+  fbpath = get_fbpath (try_alt_fbpath, fbno);
   if (access (fbpath, F_OK))
     return 1;
   
@@ -367,8 +375,11 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
 	sprintf (imgpath, "fb%i.%s.%i", fbno, (raw ? "pnm" : "png"), i);
     }
   else
-    if (evaluate (imgpath, (size_t)PATH_MAX, filepattern, fbno, width, height, NULL) < 0)
-      return -1;
+    {
+      imgpath = evaluate (filepattern, fbno, width, height, NULL);
+      if (imgpath == NULL)
+	goto fail;
+    }
   
   /* Take a screenshot of the current framebuffer. */
   if (save (fbpath, imgpath, width, height, raw) < 0)
@@ -380,29 +391,66 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
     return 0;
   
   /* Get execute arguments. */
- retry:
-  new = realloc (execargs, size * sizeof (char));
+  execargs = evaluate (execpattern, fbno, width, height, imgpath);
   if (execargs == NULL)
     goto fail;
-  execargs = new;
-  if (evaluate (execargs, size, execpattern, fbno, width, height, imgpath) < 0)
-    {
-      if ((errno != ENAMETOOLONG) || ((size >> 8) <= PATH_MAX))
-	goto fail;
-      size <<= 1;
-      goto retry;
-    }
   
   /* Run command over image. */
   if (exec_image (execargs) < 0)
     goto fail;
-  free (execargs);
-  return 0;
+  
+  goto cleanup;
   
  fail:
   saved_errno = errno;
+  rc = -1;
+ cleanup:
   free (execargs);
-  errno = saved_errno;
+  if (imgpath != imgpath_)
+    free (imgpath);
+  return errno = saved_errno, rc;
+}
+
+
+/**
+ * Take a screenshot of all framebuffers.
+ * 
+ * @param   raw          Save in PNM rather than in PNG?.
+ * @param   filepattern  The pattern for the filename, `NULL` for default.
+ * @param   execpattern  The pattern for the command to run to
+ *                       process thes image, `NULL` for none.
+ * @return               Zero on success, -1 on error, 1 if no framebuffer exists.
+ */
+static
+int save_fbs (int raw, const char *filepattern, const char *exec)
+{
+  int r, fbno, found = 0;
+  
+ retry:
+  /* Take a screenshot of each framebuffer. */
+  for (fbno = 0;; fbno++)
+    {
+      r = save_fb (fbno, raw, filepattern, exec);
+      if (r < 0)
+	goto fail;
+      else if (r == 0)
+	found = 1;
+      else if (fbno > 0)
+	break;
+      else
+	continue; /* Perhaps framebuffer 1 is the first. */
+    }
+  
+  /* Did not find any framebuffer? */
+  if (found == 0)
+    {
+      if (try_alt_fbpath++ < alt_fbpath_limit)
+	goto retry;
+      return 1;
+    }
+  
+  return 0;
+ fail:
   return -1;
 }
 
@@ -436,7 +484,7 @@ main (int argc, char *argv[])
 #define USAGE_ASSERT(ASSERTION, MSG)  \
   do { if (!(ASSERTION))  EXIT_USAGE (MSG); } while (0)
   
-  int fbno, r, found = 0, raw = 0;
+  int r, raw = 0;
   char *exec = NULL;
   char *filepattern = NULL;
   struct option long_options[] =
@@ -482,30 +530,12 @@ main (int argc, char *argv[])
       filepattern = argv[optind++];
     }
   
- retry:  
   /* Take a screenshot of each framebuffer. */
-  for (fbno = 0;; fbno++)
-    {
-      r = save_fb (fbno, raw, filepattern, exec);
-      if (r < 0)
-	goto fail;
-      else if (r == 0)
-	found = 1;
-      else if (fbno > 0)
-	break;
-      else
-	continue; /* Perhaps framebuffer 1 is the first. */
-    }
-  
-  /* Did not find any framebuffer? */
-  if (found == 0)
-    {
-      if (try_alt_fbpath++ < alt_fbpath_limit)
-	goto retry;
-      
-      print_not_found_help ();
-      return 1;
-    }
+  r = save_fbs (raw, filepattern, exec);
+  if (r < 0)
+    goto fail;
+  if (r > 0)
+    goto no_fb;
   
   /* Warn about being inside a display server. */
   if (have_display ())
@@ -523,5 +553,8 @@ main (int argc, char *argv[])
 	     execname, strerror (errno), failure_file);
   return 1;
   
+ no_fb:
+  print_not_found_help ();
+  return 1;
 }
 
