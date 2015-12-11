@@ -23,4 +23,5 @@ INSTALL DEPENDENCIES:
 
 	make
 	coreutils
+	texinfo (opt-out, for dir-entry of info manual)
 
