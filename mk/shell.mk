@@ -136,27 +136,33 @@ endif
 
 # BUILD RULES:
 
+# Built tab-completion scripts for GNU Bash.
 .PHONY: bash
 bash: $(foreach F,$(_AUTO_COMPLETE),bin/$(F).bash-completion)
 
+# Built tab-completion scripts for fish.
 .PHONY: fish
 fish: $(foreach F,$(_AUTO_COMPLETE),bin/$(F).fish-completion)
 
+# Built tab-completion scripts for Z shell.
 .PHONY: zsh
 zsh: $(foreach F,$(_AUTO_COMPLETE),bin/$(F).zsh-completion)
 
+# Built a tab-completion script for GNU Bash.
 bin/%.bash-completion: $(v)src/%$(__AAC)
 	@$(PRINTF_INFO) '\e[00;01;31mAUTO-AUTO-COMPLETE\e[34m %s\e[00m$A\n' "$@"
 	@$(MKDIR) -p bin
 	$(Q)$(AUTO_AUTO_COMPLETE) bash -o $@ -s $< $(__SHELL_COMMAND) #$Z
 	@$(ECHO_EMPTY)
 
+# Built a tab-completion script for fish.
 bin/%.fish-completion: $(v)src/%$(__AAC)
 	@$(PRINTF_INFO) '\e[00;01;31mAUTO-AUTO-COMPLETE\e[34m %s\e[00m$A\n' "$@"
 	@$(MKDIR) -p bin
 	$(Q)$(AUTO_AUTO_COMPLETE) fish -o $@ -s $< $(__SHELL_COMMAND) #$Z
 	@$(ECHO_EMPTY)
 
+# Built a tab-completion script for Z shell.
 bin/%.zsh-completion: $(v)src/%$(__AAC)
 	@$(PRINTF_INFO) '\e[00;01;31mAUTO-AUTO-COMPLETE\e[34m %s\e[00m$A\n' "$@"
 	@$(MKDIR) -p bin
@@ -166,6 +172,7 @@ bin/%.zsh-completion: $(v)src/%$(__AAC)
 
 # INSTALL RULES:
 
+# Install tab-completion scripts for GNU Bash.
 .PHONY: install-bash
 install-bash: $(foreach F,$(_AUTO_COMPLETE),bin/$(F).bash-completion)
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"
@@ -178,6 +185,7 @@ ifdef __SHELL_COMMAND
 endif
 	@$(ECHO_EMPTY)
 
+# Install tab-completion scripts for fish.
 .PHONY: install-fish
 install-fish: $(foreach F,$(_AUTO_COMPLETE),bin/$(F).fish-completion)
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"
@@ -190,6 +198,7 @@ ifdef __SHELL_COMMAND
 endif
 	@$(ECHO_EMPTY)
 
+# Install tab-completion scripts for Z shell.
 .PHONY: install-zsh
 install-zsh: $(foreach F,$(_AUTO_COMPLETE),bin/$(F).zsh-completion)
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"
@@ -205,6 +214,7 @@ endif
 
 # UNINSTALL RULES:
 
+# Uninstall tab-completion.
 .PHONY: uninstall-shell
 uninstall-shell:
 ifndef __SHELL_COMMAND

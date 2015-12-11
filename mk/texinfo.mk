@@ -62,21 +62,27 @@ uninstall: uninstall-info uninstall-dvi uninstall-pdf uninstall-ps uninstall-htm
 # HELP VARIABLES:
 
 # Files from which the Texinfo manuals are built.
-__TEXI_SRC =
 ifdef _TEXINFO_DIRLEVELS
 ifeq ($(_TEXINFO_DIRLEVELS),1)
-__TEXI_SRC += $(v)doc/info/*.texinfo
+__TEXI_SRC_ = *.texinfo
+endif
+ifeq ($(_TEXINFO_DIRLEVELS),2)
+__TEXI_SRC_ = *.texinfo */*.texinfo
+endif
+ifeq ($(_TEXINFO_DIRLEVELS),3)
+__TEXI_SRC_ = *.texinfo */*.texinfo */*/*.texinfo
 endif
 ifneq ($(_TEXINFO_DIRLEVELS),1)
-ifeq ($(_TEXINFO_DIRLEVELS),2)
-__TEXI_SRC += $(v)doc/info/*.texinfo
-__TEXI_SRC += $(v)doc/info/*/*.texinfo
-endif
 ifneq ($(_TEXINFO_DIRLEVELS),2)
-__TEXI_SRC += $(foreach W,$(shell $(SEQ) $(_TEXINFO_DIRLEVELS) | while read n; do $(ECHO) $$($(SEQ) $$n)" " | $(SED) 's/[^ ]* /\/\*/g'; done | $(XARGS) $(ECHO)),$(v)doc/info$(W).texinfo)
+ifneq ($(_TEXINFO_DIRLEVELS),3)
+__TEXI_SRC_ = $(foreach W,$(shell $(SEQ) $(_TEXINFO_DIRLEVELS) | while read n; do $(ECHO) $$($(SEQ) $$n)" " | $(SED) 's/[^ ]* /\/\*/g'; done | $(XARGS) $(ECHO)),$(shell $(ECHO) $(W).texinfo | $(SED) 's/^.//'))
 endif
 endif
 endif
+__TEXI_SRC = $(foreach S,$(__TEXI_SRC_),$(foreach F,$(shell cd $(v)doc/info && $(ECHO) $(S)),aux/doc/$(F)))
+endif
+X:
+	@echo $(__TEXI_SRC)
 
 # Split parts of the info manual.
 ifdef _INFOPARTS
@@ -116,17 +122,24 @@ aux/$(_LOGO).eps: aux/$(_LOGO).ps
 	@$(ECHO_EMPTY)
 
 # Logo for PDF manual.
-aux/$(_LOGO).pdf: doc/$(_LOGO).svg
+aux/$(_LOGO).pdf: $(v)doc/$(_LOGO).svg
 	@$(PRINTF_INFO) '\e[00;01;31mPDF\e[34m %s\e[00m$A\n' "$@"
 	@$(MKDIR) -p aux
 	$(Q)$(SVG2PDF) $^ > $@ #$Z
 	@$(ECHO_EMPTY)
 endif
 
+# Copy texinfo files to aux/doc.
+aux/doc/%.texinfo: $(v)doc/info/%.texinfo
+	@$(PRINTF_INFO) '\e[00;01;31mCP\e[34m %s\e[00m$A\n' "$@"
+	@$(MKDIR) -p $(shell $(DIRNAME) $@)
+	$(Q)$(CP) $< $@ #$Z
+	@$(ECHO_EMPTY)
+
 # Build info manual.
 .PHONY: info
-info: bin/$(_PROJECT).info
-bin/%.info $(foreach P,$(__INFOPARTS),bin/%.info-$(P)): $(v)doc/info/%.texinfo $(__TEXI_SRC)
+info: $(__TEXI_SRC) bin/$(_PROJECT).info
+bin/%.info $(foreach P,$(__INFOPARTS),bin/%.info-$(P)): aux/doc/%.texinfo $(__TEXI_SRC)
 	@$(PRINTF_INFO) '\e[00;01;31mTEXI\e[34m %s\e[00m$A\n' "$@"
 	@$(MKDIR) -p bin
 	$(Q)$(MAKEINFO) $< #$Z
@@ -136,8 +149,8 @@ bin/%.info $(foreach P,$(__INFOPARTS),bin/%.info-$(P)): $(v)doc/info/%.texinfo $
 
 # Build DVI manual.
 .PHONY: dvi
-dvi: bin/$(_PROJECT).dvi
-bin/%.dvi: $(v)doc/info/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),aux/$(L).eps)
+dvi: $(__TEXI_SRC) bin/$(_PROJECT).dvi
+bin/%.dvi: aux/doc/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),aux/$(L).eps)
 	@$(PRINTF_INFO) '\e[00;01;31mTEXI\e[34m %s\e[00m$A\n' "$@"
 	@! $(TEST) -d aux/dvi/$* || $(RM) -rf aux/dvi/$*
 	@$(MKDIR) -p aux/dvi/$* bin
@@ -148,8 +161,8 @@ bin/%.dvi: $(v)doc/info/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),aux/$(L).ep
 
 # Build PDF manual.
 .PHONY: pdf
-pdf: bin/$(_PROJECT).pdf
-bin/%.pdf: $(v)doc/info/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),aux/$(L).pdf)
+pdf: $(__TEXI_SRC) bin/$(_PROJECT).pdf
+bin/%.pdf: aux/doc/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),aux/$(L).pdf)
 	@$(PRINTF_INFO) '\e[00;01;31mTEXI\e[34m %s\e[00m$A\n' "$@"
 	@! $(TEST) -d aux/pdf/$* || $(RM) -rf aux/pdf/$*
 	@$(MKDIR) -p aux/pdf/$* bin
@@ -160,8 +173,8 @@ bin/%.pdf: $(v)doc/info/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),aux/$(L).pd
 
 # Build PostScript manual.
 .PHONY: ps
-ps: bin/$(_PROJECT).ps
-bin/%.ps: $(v)doc/info/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),aux/$(L).eps)
+ps: $(__TEXI_SRC) bin/$(_PROJECT).ps
+bin/%.ps: aux/doc/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),aux/$(L).eps)
 	@$(PRINTF_INFO) '\e[00;01;31mTEXI\e[34m %s\e[00m$A\n' "$@"
 	@! $(TEST) -d aux/ps/$* || $(RM) -rf aux/ps/$*
 	@$(MKDIR) -p aux/ps/$* bin
@@ -172,8 +185,8 @@ bin/%.ps: $(v)doc/info/%.texinfo $(__TEXI_SRC) $(foreach L,$(_LOGO),aux/$(L).eps
 
 # Build HTML manual.
 .PHONY: html
-html: bin/html/$(_PROJECT)/index.html
-bin/html/%/index.html: $(v)doc/info/%.texinfo $(__TEXI_SRC)
+html: $(__TEXI_SRC) bin/html/$(_PROJECT)/index.html
+bin/html/%/index.html: aux/doc/%.texinfo $(__TEXI_SRC)
 	@$(PRINTF_INFO) '\e[00;01;31mTEXI\e[34m %s\e[00m$A\n' "$@"
 	@! $(TEST) -d bin/html/$* || $(RM) -rf bin/html/$*
 	@$(MKDIR) -p bin/html
