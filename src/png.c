@@ -37,10 +37,12 @@
  * @param   width   The width of the image.
  * @param   height  The height of the image.
  * @param   imgfd   The file descriptor connected to conversion process's stdin.
+ * @param   data    Additional data for `convert_fb_to_pnm`
+ *                  and `convert_fb_to_png`.
  * @return          Zero on success, -1 on error.
  */
 int
-save_png (int fbfd, long width, long height, int imgfd)
+save_png (int fbfd, long width, long height, int imgfd, void *restrict data)
 {
   char buf[8 << 10];
   FILE *file = NULL;
@@ -94,7 +96,7 @@ save_png (int fbfd, long width, long height, int imgfd)
       
       /* Convert read pixels. */
       if (convert_fb_to_png (pngbuf, pixbuf, buf, (size_t)got,
-			     width3, &adjustment, &state) < 0)
+			     width3, &adjustment, &state, data) < 0)
 	goto fail;
       
       /* If we read a whole number of pixels, reset the buffer, otherwise,

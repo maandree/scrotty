@@ -55,10 +55,12 @@ const char* inttable[] =
  * @param   width   The width of the image.
  * @param   height  The height of the image.
  * @param   imgfd   The file descriptor connected to conversion process's stdin.
+ * @param   data    Additional data for `convert_fb_to_pnm`
+ *                  and `convert_fb_to_png`.
  * @return          Zero on success, -1 on error.
  */
 int
-save_pnm (int fbfd, long width, long height, int imgfd)
+save_pnm (int fbfd, long width, long height, int imgfd, void *restrict data)
 {
   char buf[8 << 10];
   FILE *file = NULL;
@@ -88,7 +90,7 @@ save_pnm (int fbfd, long width, long height, int imgfd)
       got += off;
       
       /* Convert read pixels. */
-      if (convert_fb_to_pnm (file, buf, (size_t)got, &adjustment) < 0)
+      if (convert_fb_to_pnm (file, buf, (size_t)got, &adjustment, data) < 0)
 	goto fail;
       
       /* If we read a whole number of pixels, reset the buffer, otherwise,

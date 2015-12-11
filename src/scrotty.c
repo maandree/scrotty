@@ -71,10 +71,13 @@ static int try_alt_fbpath = 0;
  * @param   width     The width of the image.
  * @param   height    The height of the image.
  * @param   raw       Save in PNM?
+ * @param   data      Additional data for `convert_fb_to_pnm`
+ *                    and `convert_fb_to_png`.
  * @return            Zero on success, -1 on error.
  */
 static int
-save (const char *fbpath, const char *imgpath, long width, long height, int raw)
+save (const char *fbpath, const char *imgpath, long width,
+      long height, int raw, void *restrict data)
 {
   int imgfd = -1, fbfd;
   int saved_errno;
@@ -91,7 +94,7 @@ save (const char *fbpath, const char *imgpath, long width, long height, int raw)
     FILE_FAILURE (fbpath);
   
   /* Save image. */
-  if ((raw ? save_pnm : save_png) (fbfd, width, height, imgfd) < 0)
+  if ((raw ? save_pnm : save_png) (fbfd, width, height, imgfd, data) < 0)
     goto fail;
   
   close (fbfd);
@@ -194,6 +197,7 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
   char *fbpath; /* Statically allocate string is returned. */
   char *execargs = NULL;
   long width, height;
+  void *data = NULL;
   int i, rc = 0, saved_errno = 0;
   
   /* Get pathname for framebuffer, and stop if we have read all existing ones. */
@@ -202,7 +206,7 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
     return 1;
   
   /* Get the size of the framebuffer. */
-  if (measure (fbno, fbpath, &width, &height) < 0)
+  if (measure (fbno, fbpath, &width, &height, &data) < 0)
     goto fail;
   
   /* Get output pathname. */
@@ -220,7 +224,7 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
     }
   
   /* Take a screenshot of the current framebuffer. */
-  if (save (fbpath, imgpath, width, height, raw) < 0)
+  if (save (fbpath, imgpath, width, height, raw, data) < 0)
     goto fail;
   fprintf (stderr, _("Saved framebuffer %i to %s.\n"), fbno, imgpath);
   

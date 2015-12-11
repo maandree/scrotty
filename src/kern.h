@@ -58,9 +58,12 @@ char *get_fbpath (int altpath, int fbno);
  * @param   fbpath  The path to the framebuffer device..
  * @param   width   Output parameter for the width of the image.
  * @param   height  Output parameter for the height of the image.
+ * @parma   data    Additional data to pass to `convert_fb_to_pnm`
+ *                  and `convert_fb_to_png`.
  * @return          Zero on success, -1 on error.
  */
-int measure (int fbno, char *restrict fbpath, long *restrict width, long *restrict height);
+int measure (int fbno, char *restrict fbpath, long *restrict width,
+	     long *restrict height, void **restrict data);
 
 /**
  * Convert read data from a framebuffer to PNM pixel data.
@@ -72,10 +75,11 @@ int measure (int fbno, char *restrict fbpath, long *restrict width, long *restri
  *                      (a whole number of pixels where available,)
  *                      otherwise, set to the number of bytes a
  *                      pixel is encoded.
+ * @param   data        Data from `measure`.
  * @return              Zero on success, -1 on error.
  */
-int convert_fb_to_pnm (FILE *restrict file, const char *restrict buf,
-		       size_t n, size_t *restrict adjustment);
+int convert_fb_to_pnm (FILE *restrict file, const char *restrict buf, size_t n,
+		       size_t *restrict adjustment, void *restrict data);
 
 /**
  * Convert read data from a framebuffer to PNG pixel data.
@@ -90,8 +94,10 @@ int convert_fb_to_pnm (FILE *restrict file, const char *restrict buf,
  *                      pixel is encoded.
  * @param   state       Use this to keep track of where in the you
  *                      stopped. It will be 0 on the first call.
+ * @param   data        Data from `measure`.
  * @return              Zero on success, -1 on error.
  */
 int convert_fb_to_png (png_struct *pngbuf, png_byte *restrict pixbuf, const char *restrict buf,
-		       size_t n, long width3, size_t *restrict adjustment, long *restrict state);
+		       size_t n, long width3, size_t *restrict adjustment, long *restrict state,
+		       void *restrict data);
 

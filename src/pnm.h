@@ -54,7 +54,9 @@ extern const char* inttable[];
  * @param   width   The width of the image.
  * @param   height  The height of the image.
  * @param   imgfd   The file descriptor connected to conversion process's stdin.
+ * @param   data    Additional data for `convert_fb_to_pnm`
+ *                  and `convert_fb_to_png`.
  * @return          Zero on success, -1 on error.
  */
-int save_pnm (int fbfd, long width, long height, int imgfd);
+int save_pnm (int fbfd, long width, long height, int imgfd, void *restrict data);
 
