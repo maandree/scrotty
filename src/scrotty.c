@@ -51,7 +51,7 @@
  * work even if there are longer lines), therefore the selected whitespace
  * is LF (new line).
  * 
- * ASCII is wider supported than binary, and is create for version control,
+ * ASCII has wider support than binary, and is create for version control,
  * especifially with one datum per line.
  */
 const char* inttable[] =
