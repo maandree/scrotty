@@ -16,11 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <stdio.h>
 
 
 /**
- * Store a pixel to an PNM image.
+ * Store a pixel to a PNM image.
  * 
  * A pixel in the PNM image is formatted as `%{red} %{green} %{blue} ` in text.
  * 
@@ -30,7 +29,7 @@
  * @param   B:int     The [0, 255]-value on the blue subpixel.
  * @return            Positive on success (not zero!), -1 on error.
  */
-#define SAVE_PIXEL(F, R, G, B)  \
+#define SAVE_PNM_PIXEL(F, R, G, B)  \
   fprintf (F, "%s%s%s", inttable[R], inttable[G], inttable[B])
 
 
@@ -46,4 +45,16 @@
  * especifially with one datum per line.
  */
 extern const char* inttable[];
+
+
+/**
+ * Create an PNM file.
+ * 
+ * @param   fbfd    The file descriptor connected to framebuffer device.
+ * @param   width   The width of the image.
+ * @param   height  The height of the image.
+ * @param   imgfd   The file descriptor connected to conversion process's stdin.
+ * @return          Zero on success, -1 on error.
+ */
+int save_pnm (int fbfd, long width, long height, int imgfd);
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: scrotty 1.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-11 12:27+0100\n"
+"POT-Creation-Date: 2015-12-11 13:21+0100\n"
 "PO-Revision-Date: 2015-12-07 18:50+0100\n"
 "Last-Translator: Mattias Andrée <maandree@member.fsf.org>\n"
 "Language-Team: none\n"
@@ -17,39 +17,39 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/scrotty.c:387
+#: src/scrotty.c:225
 #, c-format
 msgid "Saved framebuffer %i to %s.\n"
 msgstr "Bildrutebuffert %i sparad till %s.\n"
 
-#: src/scrotty.c:519 src/scrotty.c:523 src/scrotty.c:529
+#: src/scrotty.c:357 src/scrotty.c:361 src/scrotty.c:367
 #, c-format
 msgid "%s: %s. Type '%s --help' for help.\n"
 msgstr "%s: %s. Kör '%s --help' för hjälp.\n"
 
-#: src/scrotty.c:519
+#: src/scrotty.c:357
 msgid "--exec is used twice."
 msgstr "--exec förkommer mer än en gång."
 
-#: src/scrotty.c:523
+#: src/scrotty.c:361
 msgid "Invalid input."
 msgstr "Ogiltig indata."
 
-#: src/scrotty.c:529
+#: src/scrotty.c:367
 msgid "FILENAME-PATTERN is used twice."
 msgstr "FILNAMNSMÖNSTER förekommer mer än en gång"
 
-#: src/scrotty.c:542
+#: src/scrotty.c:380
 #, c-format
 msgid "%s: It looks like you are inside a display server. If this is correct, what you see is probably not what you get.\n"
 msgstr "%s: Det ser ut som att du är innan för en grafikserver. Om detta är korrect, vad de ser är troligtvis inte vad du får.\n"
 
-#: src/scrotty.c:552
+#: src/scrotty.c:390
 #, c-format
 msgid "%s: %s: %s\n"
 msgstr "%s: %s: %s\n"
 
-#: src/kern-linux.c:41
+#: src/kern-linux.c:42
 #, c-format
 msgid "%s: Unable to find a framebuffer. If you have a file named %s/MAKEDEV, run it with '-d /dev/fb' as root, or try running '%s'.\n"
 msgstr "%s: Kunde inte hitta någon bildrutebuffert. Om filen %s/MAKEDEV finns ditt system, kör den med '-d /dev/fb' som root, eller testa att köra '%s'.\n"

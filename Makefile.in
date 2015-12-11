@@ -56,7 +56,7 @@ _VERSION = 2.0
 _C_STD = c99
 _PEDANTIC = yes
 _BIN = scrotty
-_OBJ_scrotty = scrotty kern-linux info pattern png
+_OBJ_scrotty = scrotty kern-linux info pattern pnm png
 _HEADER_DIRLEVELS = 1
 _CPPFLAGS = -D'PACKAGE="$(PKGNAME)"' -D'PROGRAM_VERSION="$(_VERSION)"'
 _CPPFLAGS += $(shell pkg-config --cflags libpng)

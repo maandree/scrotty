@@ -16,14 +16,50 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef __GNUC__
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wpadded"
+#endif
+#include <png.h>
+#ifdef __GNUC__
+# pragma GCC diagnostic pop
+#endif
+
 
 
 /**
- * Convert an image from PNM to PNG.
+ * Store a pixel to a PNG row buffer.
  * 
- * @param   fdin   The file descriptor for the image to convert (PNM).
- * @param   fdout  The file descriptor for the output image (PNG).
- * @return         Zero on success, -1 on error.
+ * @param  PIXBUF:png_byte *  The pixel buffer for the row.
+ * @param  X3:long            The column of the pixel multipled by 3.
+ * @param  R:int              The [0, 255]-value on the red subpixel.
+ * @param  G:int              The [0, 255]-value on the green subpixel.
+ * @param  B:int              The [0, 255]-value on the blue subpixel.
  */
-int convert (int fdin, int fdout);
+#define SAVE_PNG_PIXEL(PIXBUF, X3, R, G, B)	\
+  ((PIXBUF)[(X3) + 0] = (png_byte)(R),		\
+   (PIXBUF)[(X3) + 1] = (png_byte)(G),		\
+   (PIXBUF)[(X3) + 2] = (png_byte)(B))
+
+/**
+ * Store a row to a PNG image.
+ * 
+ * @param  PNGBUF:png_struct *  The PNG image structure.
+ * @param  PIXBUF:png_byte *    The pixel buffer for the row.
+ */
+#define SAVE_PNG_ROW(PNGBUF, PIXBUF)  \
+  png_write_row (PNGBUF, PIXBUF)
+
+
+/**
+ * Create an PNG file.
+ * 
+ * @param   fbfd    The file descriptor connected to framebuffer device.
+ * @param   width   The width of the image.
+ * @param   height  The height of the image.
+ * @param   imgfd   The file descriptor connected to conversion process's stdin.
+ * @return          Zero on success, -1 on error.
+ */
+int
+save_png (int fbfd, long width, long height, int imgfd);
 

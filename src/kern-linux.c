@@ -19,6 +19,7 @@
 #include "common.h"
 #include "kern.h"
 #include "pnm.h"
+#include "png.h"
 
 
 
@@ -128,8 +129,8 @@ measure (int fbno, char *restrict fbpath, long *restrict width, long *restrict h
  * @return              Zero on success, -1 on error.
  */
 int
-convert_fb (FILE *restrict file, const char *restrict buf,
-	    size_t n, size_t *restrict adjustment)
+convert_fb_to_pnm (FILE *restrict file, const char *restrict buf,
+		   size_t n, size_t *restrict adjustment)
 {
   const uint32_t *restrict pixel;
   int r, g, b;
@@ -144,7 +145,7 @@ convert_fb (FILE *restrict file, const char *restrict buf,
       g = (*pixel >> 8) & 255;
       b = (*pixel >> 0) & 255;
       
-      if (SAVE_PIXEL (file, r, g, b) < 0)
+      if (SAVE_PNM_PIXEL (file, r, g, b) < 0)
 	goto fail;
     }
   
@@ -152,5 +153,52 @@ convert_fb (FILE *restrict file, const char *restrict buf,
   return 0;
  fail:
   return -1;
+}
+
+
+/**
+ * Convert read data from a framebuffer to PNG pixel data.
+ * 
+ * @param   file        The output image file.
+ * @param   buf         Buffer with read data.
+ * @param   n           The number of read characters.
+ * @param   width3      The width of the image multipled by 3.
+ * @param   adjustment  Set to zero if all bytes were converted
+ *                      (a whole number of pixels where available,)
+ *                      otherwise, set to the number of bytes a
+ *                      pixel is encoded.
+ * @param   state       Use this to keep track of where in the you
+ *                      stopped. It will be 0 on the first call.
+ * @return              Zero on success, -1 on error.
+ */
+int convert_fb_to_png (png_struct *pngbuf, png_byte *restrict pixbuf, const char *restrict buf,
+		       size_t n, long width3, size_t *restrict adjustment, long *restrict state)
+{
+  const uint32_t *restrict pixel;
+  int r, g, b;
+  size_t off;
+  long x3 = *state;
+  
+  for (off = 0; off < n; off += 4)
+    {
+      /* A pixel in the framebuffer is formatted as `%{blue}%{green}%{red}%{x}`
+	 in big-endian binary, or `%{x}%{red}%{green}%{blue}` in little-endian binary. */
+      pixel = (const uint32_t *)(buf + off);
+      r = (*pixel >> 16) & 255;
+      g = (*pixel >> 8) & 255;
+      b = (*pixel >> 0) & 255;
+      
+      SAVE_PNG_PIXEL (pixbuf, x3, r, g, b);
+      x3 += 3;
+      if (x3 == width3)
+	{
+	  SAVE_PNG_ROW (pngbuf, pixbuf);
+	  x3 = 0;
+	}
+    }
+  
+  *adjustment = (off != n ? 4 : 0);
+  *state = x3;
+  return 0;
 }
 

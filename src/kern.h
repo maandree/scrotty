@@ -16,6 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef __GNUC__
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wpadded"
+#endif
+#include <png.h>
+#ifdef __GNUC__
+# pragma GCC diagnostic pop
+#endif
+
 
 
 /**
@@ -65,6 +74,24 @@ int measure (int fbno, char *restrict fbpath, long *restrict width, long *restri
  *                      pixel is encoded.
  * @return              Zero on success, -1 on error.
  */
-int convert_fb (FILE *restrict file, const char *restrict buf,
-		size_t n, size_t *restrict adjustment);
+int convert_fb_to_pnm (FILE *restrict file, const char *restrict buf,
+		       size_t n, size_t *restrict adjustment);
+
+/**
+ * Convert read data from a framebuffer to PNG pixel data.
+ * 
+ * @param   file        The output image file.
+ * @param   buf         Buffer with read data.
+ * @param   n           The number of read characters.
+ * @param   width3      The width of the image multipled by 3.
+ * @param   adjustment  Set to zero if all bytes were converted
+ *                      (a whole number of pixels where available,)
+ *                      otherwise, set to the number of bytes a
+ *                      pixel is encoded.
+ * @param   state       Use this to keep track of where in the you
+ *                      stopped. It will be 0 on the first call.
+ * @return              Zero on success, -1 on error.
+ */
+int convert_fb_to_png (png_struct *pngbuf, png_byte *restrict pixbuf, const char *restrict buf,
+		       size_t n, long width3, size_t *restrict adjustment, long *restrict state);
 

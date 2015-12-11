@@ -42,31 +42,6 @@
 #define LIST_DISPLAY_VARS  X(DISPLAY) X(MDS_DISPLAY) X(MIR_DISPLAY) X(WAYLAND_DISPLAY) X(PREFERRED_DISPLAY)
 
 
-#define LIST_0_9(P)  P"0\n", P"1\n", P"2\n", P"3\n", P"4\n", P"5\n", P"6\n", P"7\n", P"8\n", P"9\n"
-/**
- * [0, 255]-integer-to-text convertion lookup table for faster conversion from
- * raw framebuffer data to the PNM format. The values have a whitespace at the
- * end for even faster conversion.
- * Lines should not be longer than 70 (although most programs will probably
- * work even if there are longer lines), therefore the selected whitespace
- * is LF (new line).
- * 
- * ASCII has wider support than binary, and is create for version control,
- * especifially with one datum per line.
- */
-const char* inttable[] =
-  {
-    LIST_0_9(""),  LIST_0_9("1"), LIST_0_9("2"), LIST_0_9("3"), LIST_0_9("4"),
-    LIST_0_9("5"), LIST_0_9("6"), LIST_0_9("7"), LIST_0_9("8"), LIST_0_9("9"),
-    
-    LIST_0_9("10"), LIST_0_9("11"), LIST_0_9("12"), LIST_0_9("13"), LIST_0_9("14"),
-    LIST_0_9("15"), LIST_0_9("16"), LIST_0_9("17"), LIST_0_9("18"), LIST_0_9("19"),
-    
-    LIST_0_9("20"), LIST_0_9("21"), LIST_0_9("22"), LIST_0_9("23"), LIST_0_9("24"),
-    "250\n", "251\n", "252\n", "253\n", "254\n", "255\n"
-  };
-
-
 
 /**
  * `argv[0]` from `main`.
@@ -89,85 +64,6 @@ static int try_alt_fbpath = 0;
 
 
 /**
- * Create an PNM-file that is sent to a conversion process,
- * or directly to a file.
- * 
- * @param   fbname  The framebuffer device.
- * @param   width   The width of the image.
- * @param   height  The height of the image.
- * @param   fd      The file descriptor connected to conversion process's stdin.
- * @return          Zero on success, -1 on error.
- */
-static int
-save_pnm (const char *fbpath, long width, long height, int fd)
-{
-  char buf[8 << 10];
-  FILE *file = NULL;
-  int fbfd = 1;
-  ssize_t got, off;
-  int saved_errno;
-  size_t adjustment;
-  
-  /* Open the framebuffer device for reading. */
-  fbfd = open (fbpath, O_RDONLY);
-  if (fbfd == -1)
-    goto fail;
-  
-  /* Create a FILE *, for writing, for the image file. */
-  file = fdopen (fd, "w");
-  if (file == NULL)
-    goto fail;
-  
-  /* The PNM image should begin with `P3\n%{width} %{height}\n%{colour max=255}\n`.
-     ('\n' and ' ' can be exchanged at will.) */
-  if (fprintf (file, "P3\n%li %li\n255\n", width, height) < 0)
-    goto fail;
-  
-  /* Convert raw framebuffer data into an PNM image. */
-  for (off = 0;;)
-    {
-      /* Read data from the framebuffer, we may have up to 3 bytes buffered. */
-      got = read (fbfd, buf + off, sizeof (buf) - (size_t)off * sizeof (char));
-      if (got < 0)
-	goto fail;
-      if (got == 0)
-	break;
-      got += off;
-      
-      /* Convert read pixels. */
-      if (convert_fb (file, buf, (size_t)got, &adjustment) < 0)
-	goto fail;
-      
-      /* If we read a whole number of pixels, reset the buffer, otherwise,
-         move the unconverted bytes to the beginning of the buffer. */
-      if (adjustment)
-	{
-	  off -= (ssize_t)adjustment;
-	  memcpy (buf, buf + off, (size_t)(got - off) * sizeof (char));
-	  off = got - off;
-	}
-      else
-	off = 0;
-    }
-  
-  /* Close files and return successfully. */
-  fflush (file);
-  fclose (file);
-  close (fbfd);
-  return 0;
-  
- fail:
-  saved_errno = errno;
-  if (file != NULL)
-    fclose (file);
-  if (fbfd >= 0)
-    close (fbfd);
-  errno = saved_errno;
-  return -1;
-}
-
-
-/**
  * Create an image of a framebuffer.
  * 
  * @param   fbname    The framebuffer device.
@@ -180,92 +76,34 @@ save_pnm (const char *fbpath, long width, long height, int fd)
 static int
 save (const char *fbpath, const char *imgpath, long width, long height, int raw)
 {
-  int pipe_rw[2] = { -1, -1 };
-  pid_t pid;
-  int status;
-  int fd = -1;
+  int imgfd = -1, fbfd;
   int saved_errno;
   
-  if (raw)
-    goto no_convert;
-  
-  
-  /* Create a pipe that for sending data into the conversion process program. */
-  if (pipe (pipe_rw) < 0)
-    goto fail;
-  
-  /* Fork the process, the child will become the conversion process. */
-  pid = fork ();
-  if (pid == -1)
-    goto fail;
-  
-  
-  /* Child process: */
-  if (pid == 0)
-    {
-      /* Close the write-end of the pipe. */
-      close (pipe_rw[1]);
-      
-      /* Open file descriptor for the output image. */
-      fd = open (imgpath, O_WRONLY | O_CREAT | O_TRUNC,
-		 S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-      if (fd == -1)
-	goto child_fail;
-      
-      /* Convert the PNM-image we create to a compressed image, namely in PNG. */
-      if (convert (pipe_rw[0], fd) < 0)
-	goto child_fail;
-      
-      _exit(0);
-    child_fail:
-      perror(execname);
-      _exit(1);
-    }
-  
-  
-  /* Parent process: */
-  
-  /* Close the read-end of the pipe. */
-  close (pipe_rw[0]), pipe_rw[0] = -1;
-  
-  /* Create a PNM-image of the framebuffer. */
-  if (save_pnm (fbpath, width, height, pipe_rw[1]) < 0)
-    goto fail;
-  
-  /* Close the write-end of the pipe. */
-  close (pipe_rw[1]), pipe_rw[1] = -1;
-  
-  /* Wait for conversion process to exit. */
-  if (waitpid (pid, &status, 0) < 0)
-    goto fail;
-  
-  /* Return successfully if and only if conversion did. */
-  return status == 0 ? 0 : -1;
-  
-  
-  /* Conversion shall not take place: */
-  
- no_convert:
   /* Open output file. */
-  if (fd = open (imgpath, O_WRONLY | O_CREAT | O_TRUNC,
-		 S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH), fd == -1)
+  imgfd = open (imgpath, O_WRONLY | O_CREAT | O_TRUNC,
+		S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  if (imgfd == -1)
     FILE_FAILURE (imgpath);
   
+  /* Open the framebuffer device for reading. */
+  fbfd = open (fbpath, O_RDONLY);
+  if (fbfd == -1)
+    FILE_FAILURE (fbpath);
+  
   /* Save image. */
-  if (save_pnm (fbpath, width, height, fd) < 0)
+  if ((raw ? save_pnm : save_png) (fbfd, width, height, imgfd) < 0)
     goto fail;
   
-  close (fd);
+  close (fbfd);
+  close (imgfd);
   return 0;
   
  fail:
   saved_errno = errno;
-  if (pipe_rw[0] >= 0)
-    close (pipe_rw[0]);
-  if (pipe_rw[1] >= 0)
-    close (pipe_rw[1]);
-  if (fd >= 0)
-    close (fd);
+  if (fbfd >= 0)
+    close (fbfd);
+  if (imgfd >= 0)
+    close (imgfd);
   errno = saved_errno;
   return -1;
 }

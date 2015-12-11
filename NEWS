@@ -36,9 +36,20 @@ scrotty NEWS                                          -*- outline -*-
   The invocation syntax is less strict, and short options
   have been added.
 
+  Performance is significantly improved (for PNG images)
+  because images are stored directly as PNG and not converted.
+
 ** Translations
 
   The program and the man page has been translated to Swedish.
+
+** Bug fixes
+
+  The images is not saved as PNM if PNG is requested but the
+  filenames does not end with .png, which could happend when
+  the program selected filename automatically and needed to
+  add a number at the end so that existing files were not
+  overriden.
 
 
 * Noteworthy changes in release 1.0.2 (2015-(10)Dec-01 UTC) [stable]

@@ -17,21 +17,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "common.h"
-#include "png.h"
+#include "pnm.h"
 #include "kern.h"
 
 
-/*
- * Rationale:
+
+#define LIST_0_9(P)  P"0\n", P"1\n", P"2\n", P"3\n", P"4\n", P"5\n", P"6\n", P"7\n", P"8\n", P"9\n"
+/**
+ * [0, 255]-integer-to-text convertion lookup table for faster conversion from
+ * raw framebuffer data to the PNM format. The values have a whitespace at the
+ * end for even faster conversion.
+ * Lines should not be longer than 70 (although most programs will probably
+ * work even if there are longer lines), therefore the selected whitespace
+ * is LF (new line).
  * 
- *   Users want their files in PNG (most often), not PNM.
- *   Calling an external program for conversion poses
- *   potential security risks, and is significantly slower.
+ * ASCII has wider support than binary, and is create for version control,
+ * especifially with one datum per line.
  */
+const char* inttable[] =
+  {
+    LIST_0_9(""),  LIST_0_9("1"), LIST_0_9("2"), LIST_0_9("3"), LIST_0_9("4"),
+    LIST_0_9("5"), LIST_0_9("6"), LIST_0_9("7"), LIST_0_9("8"), LIST_0_9("9"),
+    
+    LIST_0_9("10"), LIST_0_9("11"), LIST_0_9("12"), LIST_0_9("13"), LIST_0_9("14"),
+    LIST_0_9("15"), LIST_0_9("16"), LIST_0_9("17"), LIST_0_9("18"), LIST_0_9("19"),
+    
+    LIST_0_9("20"), LIST_0_9("21"), LIST_0_9("22"), LIST_0_9("23"), LIST_0_9("24"),
+    "250\n", "251\n", "252\n", "253\n", "254\n", "255\n"
+  };
+
 
 
 /**
- * Create an PNG file.
+ * Create an PNM file.
  * 
  * @param   fbfd    The file descriptor connected to framebuffer device.
  * @param   width   The width of the image.
@@ -40,48 +58,25 @@
  * @return          Zero on success, -1 on error.
  */
 int
-save_png (int fbfd, long width, long height, int imgfd)
+save_pnm (int fbfd, long width, long height, int imgfd)
 {
   char buf[8 << 10];
   FILE *file = NULL;
   ssize_t got, off;
   size_t adjustment;
-  png_byte   *restrict pixbuf = NULL;
-  png_struct *pngbuf = NULL;
-  png_info   *pnginfo = NULL;
-  long width3, state = 0;
-  int rc, saved_errno;
+  int saved_errno;
   
-  /* Get a FILE * for the output, libpng wants a FILE *, not a file descriptor. */
+  /* Create a FILE *, for writing, for the image file. */
   file = fdopen (imgfd, "w");
   if (file == NULL)
     goto fail;
   
-  /* Allocte structures for the PNG. */
-  width3 = width * 3;
-  pixbuf = malloc ((size_t)width3 * sizeof (png_byte));
-  if (pixbuf == NULL)
-    goto fail;
-  pngbuf = png_create_write_struct (png_get_libpng_ver (NULL), NULL, NULL, NULL);
-  if (pngbuf == NULL)
-    goto fail;
-  pnginfo = png_create_info_struct (pngbuf);
-  if (pnginfo == NULL)
+  /* The PNM image should begin with `P3\n%{width} %{height}\n%{colour max=255}\n`.
+     ('\n' and ' ' can be exchanged at will.) */
+  if (fprintf (file, "P3\n%li %li\n255\n", width, height) < 0)
     goto fail;
   
-  /* Initialise PNG write, and write head. */
-  if (setjmp (png_jmpbuf(pngbuf))) /* Failing libpng calls jump here. */
-    goto fail;
-  png_init_io (pngbuf, file);
-  png_set_IHDR (pngbuf, pnginfo, (png_uint_32)width, (png_uint_32)height,
-		8 /* bit depth */, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
-		PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-  png_write_info (pngbuf, pnginfo);
-  
-  /* TODO (maybe) The image shall be packed. That is, if 24 bits per pixel is
-   *              unnecessary, less shall be used. 6 bits is often sufficient. */
-  
-  /* Convert raw framebuffer data into a PNG image (body). */
+  /* Convert raw framebuffer data into a PNM image. */
   for (off = 0;;)
     {
       /* Read data from the framebuffer, we may have up to 3 bytes buffered. */
@@ -93,8 +88,7 @@ save_png (int fbfd, long width, long height, int imgfd)
       got += off;
       
       /* Convert read pixels. */
-      if (convert_fb_to_png (pngbuf, pixbuf, buf, (size_t)got,
-			     width3, &adjustment, &state) < 0)
+      if (convert_fb_to_pnm (file, buf, (size_t)got, &adjustment) < 0)
 	goto fail;
       
       /* If we read a whole number of pixels, reset the buffer, otherwise,
@@ -109,24 +103,16 @@ save_png (int fbfd, long width, long height, int imgfd)
 	off = 0;
     }
   
-  /* Done! */
-  png_write_end (pngbuf, pnginfo);
-  rc = 0;
-  goto cleanup;
+  /* Close file and return successfully. */
+  fflush (file);
+  fclose (file);
+  return 0;
+  
  fail:
   saved_errno = errno;
-  rc = -1;
-  goto cleanup;
-  
- cleanup: 
-  png_destroy_write_struct (&pngbuf, (pnginfo ? &pnginfo : NULL));
   if (file != NULL)
-    {
-      fflush (file);
-      fclose (file);
-    }
-  free (pixbuf);
+    fclose (file);
   errno = saved_errno;
-  return rc;
+  return -1;
 }
 
