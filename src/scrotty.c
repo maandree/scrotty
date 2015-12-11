@@ -388,7 +388,7 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
   
   /* Should we run a command over the image? */
   if (execpattern == NULL)
-    return 0;
+    goto done;
   
   /* Get execute arguments. */
   execargs = evaluate (execpattern, fbno, width, height, imgpath);
@@ -399,12 +399,12 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
   if (exec_image (execargs) < 0)
     goto fail;
   
-  goto cleanup;
+  goto done;
   
  fail:
   saved_errno = errno;
   rc = -1;
- cleanup:
+ done:
   free (execargs);
   if (imgpath != imgpath_)
     free (imgpath);
