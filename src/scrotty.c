@@ -79,7 +79,7 @@ static int
 save (const char *fbpath, const char *imgpath, long width,
       long height, int raw, void *restrict data)
 {
-  int imgfd = -1, fbfd;
+  int imgfd = -1, fbfd = -1;
   int saved_errno;
   
   /* Open output file. */

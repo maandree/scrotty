@@ -79,7 +79,7 @@ try_evaluate (char *restrict buf, size_t n, const char *restrict pattern,
   
   size_t i = 0;
   ssize_t j = 0;
-  int percent = 0, backslash = 0, dollar = 0, r;
+  int percent = 0, backslash = 0, dollar = 0, r = 0;
   char c;
   char *fmt = NULL;
   time_t t;
