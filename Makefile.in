@@ -100,15 +100,6 @@ _EVERYTHING = $(foreach F,$(___EVERYTHING_INFO),doc/info/$(F).texinfo)  \
 # Used by mk/shell.mk
 _AUTO_COMPLETE = scrotty
 _WITH_SHELL = 1
-ifndef WITH_BASH
-WITHOUT_BASH = 1
-endif
-ifndef WITH_FISH
-WITHOUT_FISH = 1
-endif
-ifndef WITH_ZSH
-WITHOUT_ZSH = 1
-endif
 
 # }}
 
