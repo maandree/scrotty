@@ -1,5 +1,5 @@
 NAME
-	scrotty 2.0-dev - Framebuffer screenshot program
+	scrotty 2.0-rc - Framebuffer screenshot program
 
 SYNOPSIS
 	scrotty [OPTION]... [--] [FILENAME_PATTERN | > FILE]
