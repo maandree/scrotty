@@ -30,6 +30,8 @@ OPTIONS
 	-e, --exec CMD
 		Command to run for each saved image.
 
+	Each option can only be used once.
+
 SPECIAL STRINGS
 	Both the --exec and FILENAME_PATTERN parameters can take format
 	specifiers that are expanded by scrotty when encountered. There
