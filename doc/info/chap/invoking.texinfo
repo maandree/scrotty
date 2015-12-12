@@ -13,12 +13,19 @@ Print program name and version and exit.
 @item -c
 @itemx --copyright
 Print copyright information and exit.
+@item -d
+@itemx --device NO
+Select a framebuffer device, by index, to
+screenshot.  All framebuffers are screenshoot
+if this option is omitted.
 @item -e
 @itemx --exec CMD
 Run a command for each saved image.
 
 Can only be specified once.
 @end table
+
+Each option can only ube used once.
 
 In addition to these options, a filename
 pattern, that does not start with a dash,

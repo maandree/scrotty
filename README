@@ -24,6 +24,9 @@ OPTIONS
 	-c, --copyright
 		Print copyright information.
 
+	-d, --device NO
+		Select framebuffer device.
+
 	-e, --exec CMD
 		Command to run for each saved image.
 

@@ -11,8 +11,11 @@
 	(unargumented  (options -c --copyright)  (complete --copyright)
 	 (desc 'Skriv ut upphovsrättsinformation.'))
 
+	(argumented  (options -d --device)  (complete --device)  (arg NUMMER)  (files -0)
+	 (desc 'Välj bildrutebuffertenhet'))
+
 	(argumented  (options -e --exec)  (complete --exec)  (arg KOMMANDO)  (files -0)
-	 (desc 'Kör ett Kommando för varje sparad bild.'))
+	 (desc 'Kör ett kommando för varje sparad bild.'))
 
 	(suggestion filename (verbatim '%Y-%m-%d_%H:%M:%S_$wx$h.$i.png'
 	                               '%Y-%m-%d_%H:%M:%S.$i.png'))

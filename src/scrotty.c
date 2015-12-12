@@ -23,6 +23,7 @@
 #include "png.h"
 #include "pattern.h"
 
+#include <ctype.h>
 #include <getopt.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -251,21 +252,24 @@ save_fb (int fbno, const char *filepattern, const char *execpattern)
 
 
 /**
- * Take a screenshot of all framebuffers.
+ * Take a screenshot of all, or one, framebuffers.
  * 
  * @param   filepattern  The pattern for the filename, `NULL` for default.
  * @param   execpattern  The pattern for the command to run to
  *                       process thes image, `NULL` for none.
+ * @param   all          All framebuffers?
+ * @param   devno        The index of the framebuffer.
  * @return               Zero on success, -1 on error, 1 if no framebuffer exists.
  */
 static
-int save_fbs (const char *filepattern, const char *exec)
+int save_fbs (const char *filepattern, const char *exec, int all, int devno)
 {
   int r, fbno, found = 0;
+  int last = all ? INT_MAX : (devno + 1);
   
  retry:
   /* Take a screenshot of each framebuffer. */
-  for (fbno = 0;; fbno++)
+  for (fbno = (all ? 0 : devno); fbno < last; fbno++)
     {
       r = save_fb (fbno, filepattern, exec);
       if (r < 0)
@@ -281,7 +285,7 @@ int save_fbs (const char *filepattern, const char *exec)
   /* Did not find any framebuffer? */
   if (found == 0)
     {
-      if (try_alt_fbpath++ < alt_fbpath_limit)
+      if (all && (try_alt_fbpath++ < alt_fbpath_limit))
 	goto retry;
       return 1;
     }
@@ -321,14 +325,17 @@ main (int argc, char *argv[])
 #define USAGE_ASSERT(ASSERTION, MSG)  \
   do { if (!(ASSERTION))  EXIT_USAGE (MSG); } while (0)
   
-  int r, all = 1, devno = 0;
+  int r, all = 1, devno = -1;
+  long devno_;
   char *exec = NULL;
   char *filepattern = NULL;
+  char *p;
   struct option long_options[] =
     {
       {"help",      no_argument,       NULL, 'h'},
       {"version",   no_argument,       NULL, 'v'},
       {"copyright", no_argument,       NULL, 'c'},
+      {"device",    required_argument, NULL, 'd'},
       {"exec",      required_argument, NULL, 'e'},
       {NULL,        0,                 NULL,  0 }
     };
@@ -344,29 +351,44 @@ main (int argc, char *argv[])
   execname = argc ? *argv : "scrotty";
   for (;;)
     {
-      r = getopt_long (argc, argv, "hvcre:", long_options, NULL);
+      r = getopt_long (argc, argv, "hvcd:e:", long_options, NULL);
       if      (r == -1)   break;
       else if (r == 'h')  return -(print_help ());
       else if (r == 'v')  return -(print_version ());
       else if (r == 'c')  return -(print_copyright ());
+      else if (r == 'd')
+	{
+	  USAGE_ASSERT (all, _("--device is used twice"));
+	  all = 0;
+	  if (!isdigit (*optarg))
+	    EXIT_USAGE (_("Invalid device number, not an integer"));
+	  errno = 0;
+	  devno_ = strtol (optarg, &p, 10);
+	  if ((devno_ == 0) && (errno == ERANGE))
+	    devno = -1;
+	  else if (*p)
+	    EXIT_USAGE (_("Invalid device number, not an integer"));
+	  else
+	    devno = (devno_ >= INT_MAX ? (INT_MAX - 1) : (int)devno_);
+	}
       else if (r == 'e')
 	{
-	  USAGE_ASSERT (exec == NULL, _("--exec is used twice."));
+	  USAGE_ASSERT (exec == NULL, _("--exec is used twice"));
 	  exec = optarg;
 	}
       else if (r == '?')
-	EXIT_USAGE (_("Invalid input."));
+	EXIT_USAGE (_("Invalid input"));
       else
 	abort ();
     }
   while (optind < argc)
     {
-      USAGE_ASSERT (filepattern == NULL, _("FILENAME-PATTERN is used twice."));
+      USAGE_ASSERT (filepattern == NULL, _("FILENAME-PATTERN is used twice"));
       filepattern = argv[optind++];
     }
   
   /* Take a screenshot of each framebuffer. */
-  r = save_fbs (filepattern, exec);
+  r = save_fbs (filepattern, exec, all, devno);
   if (r < 0)
     goto fail;
   if (r > 0)
@@ -389,7 +411,11 @@ main (int argc, char *argv[])
   return 1;
   
  no_fb:
-  print_not_found_help ();
+  if (all)
+    print_not_found_help ();
+  else
+    fprintf (stderr, _("%s: The selected device does not exist.\n"),
+	     execname);
   return 1;
 }
 

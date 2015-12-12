@@ -11,6 +11,9 @@
 	(unargumented  (options -c --copyright)  (complete --copyright)
 	 (desc 'Print copyright information.'))
 
+	(argumented  (options -d --device)  (complete --device)  (arg NUMBER)  (files -0)
+	 (desc 'Select framebuffer device.'))
+
 	(argumented  (options -e --exec)  (complete --exec)  (arg COMMAND)  (files -0)
 	 (desc 'Command to run for each saved image.'))
 

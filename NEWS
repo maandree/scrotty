@@ -40,6 +40,9 @@ scrotty NEWS                                          -*- outline -*-
   Tab-completion for GNU Bash, fish, and Z shell has been
   added as an optional features.
 
+  The option --device have been added to let you screenshot
+  just one framebuffer.
+
 ** Translations
 
   The program and the man page has been translated to Swedish.

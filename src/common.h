@@ -30,6 +30,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
+#include <limits.h>
 
 
 #ifdef USE_GETTEXT
