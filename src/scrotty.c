@@ -67,7 +67,7 @@ static int try_alt_fbpath = 0;
  * Create an image of a framebuffer.
  * 
  * @param   fbname    The framebuffer device.
- * @param   imgname   The pathname of the output image.
+ * @param   imgname   The pathname of the output image, `NULL` for piping.
  * @param   width     The width of the image.
  * @param   height    The height of the image.
  * @param   data      Additional data for  `convert_fb_to_png`.
@@ -77,14 +77,17 @@ static int
 save (const char *fbpath, const char *imgpath, long width,
       long height, void *restrict data)
 {
-  int imgfd = -1, fbfd = -1;
+  int imgfd = STDOUT_FILENO, fbfd = -1, piping = (imgpath == NULL);
   int saved_errno;
   
   /* Open output file. */
-  imgfd = open (imgpath, O_WRONLY | O_CREAT | O_TRUNC,
-		S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-  if (imgfd == -1)
-    FILE_FAILURE (imgpath);
+  if (!piping)
+    {
+      imgfd = open (imgpath, O_WRONLY | O_CREAT | O_TRUNC,
+		    S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+      if (imgfd == -1)
+	FILE_FAILURE (imgpath);
+    }
   
   /* Open the framebuffer device for reading. */
   fbfd = open (fbpath, O_RDONLY);
@@ -96,14 +99,15 @@ save (const char *fbpath, const char *imgpath, long width,
     goto fail;
   
   close (fbfd);
-  close (imgfd);
+  if (!piping)
+    close (imgfd);
   return 0;
   
  fail:
   saved_errno = errno;
   if (fbfd >= 0)
     close (fbfd);
-  if (imgfd >= 0)
+  if ((imgfd >= 0) && !piping)
     close (imgfd);
   errno = saved_errno;
   return -1;
@@ -181,7 +185,7 @@ exec_image (char *flatten_args)
  * Take a screenshot of a framebuffer.
  * 
  * @param   fbno         The number of the framebuffer.
- * @param   filepattern  The pattern for the filename, `NULL` for default.
+ * @param   filepattern  The pattern for the filename, `NULL` for piping.
  * @param   execpattern  The pattern for the command to run to
  *                       process the image, `NULL` for none.
  * @return               Zero on success, -1 on error, 1 if the framebuffer does not exist.
@@ -189,13 +193,12 @@ exec_image (char *flatten_args)
 static int
 save_fb (int fbno, const char *filepattern, const char *execpattern)
 {
-  char imgpath_[sizeof ("fb.png.") + 2 * 3 * sizeof (int)];
-  char *imgpath = imgpath_;
+  char *imgpath = NULL;
   char *fbpath; /* Statically allocate string is returned. */
   char *execargs = NULL;
   long width, height;
   void *data = NULL;
-  int i, rc = 0, saved_errno = 0;
+  int rc = 0, saved_errno = 0;
   
   /* Get pathname for framebuffer, and stop if we have read all existing ones. */
   fbpath = get_fbpath (try_alt_fbpath, fbno);
@@ -207,13 +210,7 @@ save_fb (int fbno, const char *filepattern, const char *execpattern)
     goto fail;
   
   /* Get output pathname. */
-  if (filepattern == NULL)
-    {
-      sprintf (imgpath, "fb%i.png", fbno);
-      for (i = 2; access (imgpath, F_OK) == 0; i++)
-	sprintf (imgpath, "fb%i.png.%i", fbno, i);
-    }
-  else
+  if (filepattern != NULL)
     {
       imgpath = evaluate (filepattern, fbno, width, height, NULL);
       if (imgpath == NULL)
@@ -223,7 +220,8 @@ save_fb (int fbno, const char *filepattern, const char *execpattern)
   /* Take a screenshot of the current framebuffer. */
   if (save (fbpath, imgpath, width, height, data) < 0)
     goto fail;
-  fprintf (stderr, _("Saved framebuffer %i to %s.\n"), fbno, imgpath);
+  if (imgpath)
+    fprintf (stderr, _("Saved framebuffer %i to %s.\n"), fbno, imgpath);
   
   /* Should we run a command over the image? */
   if (execpattern == NULL)
@@ -245,8 +243,7 @@ save_fb (int fbno, const char *filepattern, const char *execpattern)
   rc = -1;
  done:
   free (execargs);
-  if (imgpath != imgpath_)
-    free (imgpath);
+  free (imgpath);
   return errno = saved_errno, rc;
 }
 
@@ -254,7 +251,7 @@ save_fb (int fbno, const char *filepattern, const char *execpattern)
 /**
  * Take a screenshot of all, or one, framebuffers.
  * 
- * @param   filepattern  The pattern for the filename, `NULL` for default.
+ * @param   filepattern  The pattern for the filename, `NULL` for piping.
  * @param   execpattern  The pattern for the command to run to
  *                       process thes image, `NULL` for none.
  * @param   all          All framebuffers?
@@ -361,13 +358,13 @@ main (int argc, char *argv[])
 	  USAGE_ASSERT (all, _("--device is used twice"));
 	  all = 0;
 	  if (!isdigit (*optarg))
-	    EXIT_USAGE (_("Invalid device number, not an integer"));
+	    EXIT_USAGE (_("Invalid device number, not a non-negative integer"));
 	  errno = 0;
 	  devno_ = strtol (optarg, &p, 10);
 	  if ((devno_ == 0) && (errno == ERANGE))
 	    devno = -1;
 	  else if (*p)
-	    EXIT_USAGE (_("Invalid device number, not an integer"));
+	    EXIT_USAGE (_("Invalid device number, not a non-negative integer"));
 	  else
 	    devno = (devno_ >= INT_MAX ? (INT_MAX - 1) : (int)devno_);
 	}
@@ -385,6 +382,13 @@ main (int argc, char *argv[])
     {
       USAGE_ASSERT (filepattern == NULL, _("FILENAME-PATTERN is used twice"));
       filepattern = argv[optind++];
+    }
+  if (filepattern == NULL)
+    {
+      if (isatty(STDOUT_FILENO))
+	filepattern = "%Y-%m-%d_%H:%M:%S_$wx$h.$i.png";
+      else
+	USAGE_ASSERT (exec == NULL, _("--exec cannot be combined with piping"));
     }
   
   /* Take a screenshot of each framebuffer. */

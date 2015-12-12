@@ -30,7 +30,7 @@ int
 print_help (void)
 {
   return printf (_("SYNOPSIS\n"
-		   "\t%s [OPTIONS...] [--] [FILENAME-PATTERN]\n"
+		   "\t%s [OPTIONS...] [--] [FILENAME-PATTERN | > FILE]\n"
 		   "\n"
 		   "OPTIONS\n"
 		   "\t-h, --help         Print usage information.\n"

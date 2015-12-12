@@ -31,6 +31,10 @@ In addition to these options, a filename
 pattern, that does not start with a dash,
 can be added. This filename pattern selects
 with what filename the image should be saved.
+Alternatively, you can pipe stdout to another
+program, or file, and the framebuffer will
+be sent there. This requires that @option{--exec}
+is unused.
 
 Both the @option{--exec} and filename pattern
 parameters can take format specifiers that are

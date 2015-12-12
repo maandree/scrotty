@@ -184,9 +184,9 @@ evaluate (const char *restrict pattern, int fbno, long width,
   
   if (try_evaluate (buffer, size, pattern, fbno, width, height, path) < 0)
     {
+      size <<= 1;
       if (errno == ENAMETOOLONG)
 	goto retry;
-      size <<= 1;
       goto fail;
     }
   

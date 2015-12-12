@@ -2,7 +2,7 @@ NAME
 	scrotty 2.0-dev - Framebuffer screenshot program
 
 SYNOPSIS
-	scrotty [OPTION]... [--] [FILENAME_PATTERN]
+	scrotty [OPTION]... [--] [FILENAME_PATTERN | > FILE]
 
 DESCRIPTION
 	scrotty is a minimalist screenshoter for your framebuffers.

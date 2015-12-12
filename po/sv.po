@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: scrotty 1.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-12 08:34+0100\n"
+"POT-Creation-Date: 2015-12-12 09:08+0100\n"
 "PO-Revision-Date: 2015-12-07 18:50+0100\n"
 "Last-Translator: Mattias Andrée <maandree@member.fsf.org>\n"
 "Language-Team: none\n"
@@ -17,55 +17,55 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/scrotty.c:226
+#: src/scrotty.c:224
 #, c-format
 msgid "Saved framebuffer %i to %s.\n"
 msgstr "Bildrutebuffert %i sparad till %s.\n"
 
-#: src/scrotty.c:361 src/scrotty.c:364 src/scrotty.c:370 src/scrotty.c:376
-#: src/scrotty.c:380 src/scrotty.c:386
+#: src/scrotty.c:358 src/scrotty.c:361 src/scrotty.c:367 src/scrotty.c:373
+#: src/scrotty.c:377 src/scrotty.c:383 src/scrotty.c:391
 #, c-format
 msgid "%s: %s. Type '%s --help' for help.\n"
 msgstr "%s: %s. Kör '%s --help' för hjälp.\n"
 
-#: src/scrotty.c:361
-#, fuzzy
+#: src/scrotty.c:358
 msgid "--device is used twice"
-msgstr "--exec förkommer mer än en gång."
+msgstr "--device förkommer mer än en gång"
 
-#: src/scrotty.c:364 src/scrotty.c:370
-msgid "Invalid device number, not an integer"
-msgstr ""
+#: src/scrotty.c:361 src/scrotty.c:367
+msgid "Invalid device number, not a non-negative integer"
+msgstr "Ogiltigt enhetsnummer, måste vara ett ickenegativt heltal"
 
-#: src/scrotty.c:376
-#, fuzzy
+#: src/scrotty.c:373
 msgid "--exec is used twice"
-msgstr "--exec förkommer mer än en gång."
+msgstr "--exec förkommer mer än en gång"
 
-#: src/scrotty.c:380
-#, fuzzy
+#: src/scrotty.c:377
 msgid "Invalid input"
-msgstr "Ogiltig indata."
+msgstr "Ogiltig indata"
 
-#: src/scrotty.c:386
-#, fuzzy
+#: src/scrotty.c:383
 msgid "FILENAME-PATTERN is used twice"
 msgstr "FILNAMNSMÖNSTER förekommer mer än en gång"
 
-#: src/scrotty.c:399
+#: src/scrotty.c:391
+msgid "--exec cannot be combined with piping"
+msgstr "--exec kan inte kombineras med rördragning"
+
+#: src/scrotty.c:403
 #, c-format
 msgid "%s: It looks like you are inside a display server. If this is correct, what you see is probably not what you get.\n"
 msgstr "%s: Det ser ut som att du är innan för en grafikserver. Om detta är korrect, vad de ser är troligtvis inte vad du får.\n"
 
-#: src/scrotty.c:409
+#: src/scrotty.c:413
 #, c-format
 msgid "%s: %s: %s\n"
 msgstr "%s: %s: %s\n"
 
-#: src/scrotty.c:417
+#: src/scrotty.c:421
 #, c-format
 msgid "%s: The selected device does not exist.\n"
-msgstr ""
+msgstr "%s: Vald enhet existerar inte.\n"
 
 #: src/kern-linux.c:41
 #, c-format
@@ -73,10 +73,10 @@ msgid "%s: Unable to find a framebuffer. If you have a file named %s/MAKEDEV, ru
 msgstr "%s: Kunde inte hitta någon bildrutebuffert. Om filen %s/MAKEDEV finns ditt system, kör den med '-d /dev/fb' som root, eller testa att köra '%s'.\n"
 
 #: src/info.c:32
-#, c-format
+#, fuzzy, c-format
 msgid ""
 "SYNOPSIS\n"
-"\t%s [OPTIONS...] [--] [FILENAME-PATTERN]\n"
+"\t%s [OPTIONS...] [--] [FILENAME-PATTERN | > FILE]\n"
 "\n"
 "OPTIONS\n"
 "\t-h, --help         Print usage information.\n"
@@ -121,6 +121,7 @@ msgstr ""
 "\t-e, --exec KMD     Kommando att köra för varje sparad bild.\n"
 "\n"
 "\tVarje alternative kan endast användst en gång.\n"
+"\n"
 "SÄRSKILDA STRÄNGAR\n"
 "\tBåde --exec och filnamnsmönstrets tar formatspecifikationsargument som\n"
 "\tersätts av scrotty. Det finns två typer av formatspecifikationsargument.\n"
