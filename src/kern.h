@@ -58,28 +58,11 @@ char *get_fbpath (int altpath, int fbno);
  * @param   fbpath  The path to the framebuffer device..
  * @param   width   Output parameter for the width of the image.
  * @param   height  Output parameter for the height of the image.
- * @parma   data    Additional data to pass to `convert_fb_to_pnm`
- *                  and `convert_fb_to_png`.
+ * @parma   data    Additional data to pass to `convert_fb_to_png`.
  * @return          Zero on success, -1 on error.
  */
 int measure (int fbno, char *restrict fbpath, long *restrict width,
 	     long *restrict height, void **restrict data);
-
-/**
- * Convert read data from a framebuffer to PNM pixel data.
- * 
- * @param   file        The output image file.
- * @param   buf         Buffer with read data.
- * @param   n           The number of read characters.
- * @param   adjustment  Set to zero if all bytes were converted
- *                      (a whole number of pixels where available,)
- *                      otherwise, set to the number of bytes a
- *                      pixel is encoded.
- * @param   data        Data from `measure`.
- * @return              Zero on success, -1 on error.
- */
-int convert_fb_to_pnm (FILE *restrict file, const char *restrict buf, size_t n,
-		       size_t *restrict adjustment, void *restrict data);
 
 /**
  * Convert read data from a framebuffer to PNG pixel data.

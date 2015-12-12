@@ -13,23 +13,6 @@ Print program name and version and exit.
 @item -c
 @itemx --copyright
 Print copyright information and exit.
-@item -r
-@itemx --raw
-Save the images in portable anymap format
-(@sc{PNM}), rather than in Portable Network
-Graphics (@sc{PNG}).
-
-@sc{PNM} images are highly compressable with
-@command{bzip2}. Compressed images are comparable
-in size with @sc{PNG},@footnote{Usually a few
-bytes in difference.} and can in fact be smaller.
-
-@sc{PNM} is a good alternative for anything
-but storage. (Unless you compress them.)
-
-This option is also useful, in combination with
-@option{--exec} if you want to save the image
-in any other format.
 @item -e
 @itemx --exec CMD
 Run a command for each saved image.

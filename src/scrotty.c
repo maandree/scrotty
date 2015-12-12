@@ -20,7 +20,6 @@
 #include "common.h"
 #include "kern.h"
 #include "info.h"
-#include "pnm.h"
 #include "png.h"
 #include "pattern.h"
 
@@ -70,14 +69,12 @@ static int try_alt_fbpath = 0;
  * @param   imgname   The pathname of the output image.
  * @param   width     The width of the image.
  * @param   height    The height of the image.
- * @param   raw       Save in PNM?
- * @param   data      Additional data for `convert_fb_to_pnm`
- *                    and `convert_fb_to_png`.
+ * @param   data      Additional data for  `convert_fb_to_png`.
  * @return            Zero on success, -1 on error.
  */
 static int
 save (const char *fbpath, const char *imgpath, long width,
-      long height, int raw, void *restrict data)
+      long height, void *restrict data)
 {
   int imgfd = -1, fbfd = -1;
   int saved_errno;
@@ -94,7 +91,7 @@ save (const char *fbpath, const char *imgpath, long width,
     FILE_FAILURE (fbpath);
   
   /* Save image. */
-  if ((raw ? save_pnm : save_png) (fbfd, width, height, imgfd, data) < 0)
+  if (save_png (fbfd, width, height, imgfd, data) < 0)
     goto fail;
   
   close (fbfd);
@@ -183,16 +180,15 @@ exec_image (char *flatten_args)
  * Take a screenshot of a framebuffer.
  * 
  * @param   fbno         The number of the framebuffer.
- * @param   raw          Save in PNM rather than in PNG?.
  * @param   filepattern  The pattern for the filename, `NULL` for default.
  * @param   execpattern  The pattern for the command to run to
  *                       process the image, `NULL` for none.
  * @return               Zero on success, -1 on error, 1 if the framebuffer does not exist.
  */
 static int
-save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
+save_fb (int fbno, const char *filepattern, const char *execpattern)
 {
-  char imgpath_[sizeof ("fb.xyz.") + 2 * 3 * sizeof (int)];
+  char imgpath_[sizeof ("fb.png.") + 2 * 3 * sizeof (int)];
   char *imgpath = imgpath_;
   char *fbpath; /* Statically allocate string is returned. */
   char *execargs = NULL;
@@ -212,9 +208,9 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
   /* Get output pathname. */
   if (filepattern == NULL)
     {
-      sprintf (imgpath, "fb%i.%s", fbno, (raw ? "pnm" : "png"));
+      sprintf (imgpath, "fb%i.png", fbno);
       for (i = 2; access (imgpath, F_OK) == 0; i++)
-	sprintf (imgpath, "fb%i.%s.%i", fbno, (raw ? "pnm" : "png"), i);
+	sprintf (imgpath, "fb%i.png.%i", fbno, i);
     }
   else
     {
@@ -224,7 +220,7 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
     }
   
   /* Take a screenshot of the current framebuffer. */
-  if (save (fbpath, imgpath, width, height, raw, data) < 0)
+  if (save (fbpath, imgpath, width, height, data) < 0)
     goto fail;
   fprintf (stderr, _("Saved framebuffer %i to %s.\n"), fbno, imgpath);
   
@@ -257,14 +253,13 @@ save_fb (int fbno, int raw, const char *filepattern, const char *execpattern)
 /**
  * Take a screenshot of all framebuffers.
  * 
- * @param   raw          Save in PNM rather than in PNG?.
  * @param   filepattern  The pattern for the filename, `NULL` for default.
  * @param   execpattern  The pattern for the command to run to
  *                       process thes image, `NULL` for none.
  * @return               Zero on success, -1 on error, 1 if no framebuffer exists.
  */
 static
-int save_fbs (int raw, const char *filepattern, const char *exec)
+int save_fbs (const char *filepattern, const char *exec)
 {
   int r, fbno, found = 0;
   
@@ -272,7 +267,7 @@ int save_fbs (int raw, const char *filepattern, const char *exec)
   /* Take a screenshot of each framebuffer. */
   for (fbno = 0;; fbno++)
     {
-      r = save_fb (fbno, raw, filepattern, exec);
+      r = save_fb (fbno, filepattern, exec);
       if (r < 0)
 	goto fail;
       else if (r == 0)
@@ -326,7 +321,7 @@ main (int argc, char *argv[])
 #define USAGE_ASSERT(ASSERTION, MSG)  \
   do { if (!(ASSERTION))  EXIT_USAGE (MSG); } while (0)
   
-  int r, raw = 0;
+  int r, all = 1, devno = 0;
   char *exec = NULL;
   char *filepattern = NULL;
   struct option long_options[] =
@@ -334,7 +329,6 @@ main (int argc, char *argv[])
       {"help",      no_argument,       NULL, 'h'},
       {"version",   no_argument,       NULL, 'v'},
       {"copyright", no_argument,       NULL, 'c'},
-      {"raw",       no_argument,       NULL, 'r'},
       {"exec",      required_argument, NULL, 'e'},
       {NULL,        0,                 NULL,  0 }
     };
@@ -355,7 +349,6 @@ main (int argc, char *argv[])
       else if (r == 'h')  return -(print_help ());
       else if (r == 'v')  return -(print_version ());
       else if (r == 'c')  return -(print_copyright ());
-      else if (r == 'r')  raw = 1;
       else if (r == 'e')
 	{
 	  USAGE_ASSERT (exec == NULL, _("--exec is used twice."));
@@ -373,7 +366,7 @@ main (int argc, char *argv[])
     }
   
   /* Take a screenshot of each framebuffer. */
-  r = save_fbs (raw, filepattern, exec);
+  r = save_fbs (filepattern, exec);
   if (r < 0)
     goto fail;
   if (r > 0)

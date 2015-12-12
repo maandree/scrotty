@@ -36,7 +36,6 @@ print_help (void)
 		   "\t-h, --help         Print usage information.\n"
 		   "\t-v, --version      Print program name and version.\n"
 		   "\t-c, --copyright    Print copyright information.\n"
-		   "\t-r, --raw          Save in PNM rather than in PNG.\n"
 		   "\t-e, --exec CMD     Command to run for each saved image.\n"
 		   "\n"
 		   "SPECIAL STRINGS\n"

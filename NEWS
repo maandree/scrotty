@@ -21,10 +21,6 @@ scrotty NEWS                                          -*- outline -*-
 
 ** Improvements
 
-  The option --raw has been added. This option makes scrotty
-  store the images as a portable anymap format image rather
-  than as Portable Network Graphics image.
-
   The ability to pass arguments to convert(1) has been
   removed. Utilise the --exec option instead!
 

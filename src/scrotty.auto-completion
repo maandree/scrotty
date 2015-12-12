@@ -11,9 +11,6 @@
 	(unargumented  (options -c --copyright)  (complete --copyright)
 	 (desc 'Print copyright information.'))
 
-	(unargumented  (options -r --raw)  (complete --raw)
-	 (desc 'Save in PNM rather than in PNG.'))
-
 	(argumented  (options -e --exec)  (complete --exec)  (arg COMMAND)  (files -0)
 	 (desc 'Command to run for each saved image.'))
 

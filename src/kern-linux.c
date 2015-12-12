@@ -18,7 +18,6 @@
  */
 #include "common.h"
 #include "kern.h"
-#include "pnm.h"
 #include "png.h"
 
 
@@ -71,8 +70,7 @@ get_fbpath (int altpath, int fbno)
  * @param   fbpath  The path to the framebuffer device..
  * @param   width   Output parameter for the width of the image.
  * @param   height  Output parameter for the height of the image.
- * @parma   data    Additional data to pass to `convert_fb_to_pnm`
- *                  and `convert_fb_to_png`.
+ * @parma   data    Additional data to pass to `convert_fb_to_png`.
  * @return          Zero on success, -1 on error.
  */
 int
@@ -116,47 +114,6 @@ measure (int fbno, char *restrict fbpath, long *restrict width,
   return -1;
   
   (void) fbpath;
-}
-
-
-/**
- * Convert read data from a framebuffer to PNM pixel data.
- * 
- * @param   file        The output image file.
- * @param   buf         Buffer with read data.
- * @param   n           The number of read characters.
- * @param   adjustment  Set to zero if all bytes were converted
- *                      (a whole number of pixels where available,)
- *                      otherwise, set to the number of bytes a
- *                      pixel is encoded.
- * @param   data        Data from `measure`.
- * @return              Zero on success, -1 on error.
- */
-int
-convert_fb_to_pnm (FILE *restrict file, const char *restrict buf, size_t n,
-		   size_t *restrict adjustment, void *restrict data)
-{
-  const uint32_t *restrict pixel;
-  int r, g, b;
-  size_t off;
-  
-  for (off = 0; off < n; off += 4)
-    {
-      /* A pixel in the framebuffer is formatted as `%{blue}%{green}%{red}%{x}`
-	 in big-endian binary, or `%{x}%{red}%{green}%{blue}` in little-endian binary. */
-      pixel = (const uint32_t *)(buf + off);
-      r = (*pixel >> 16) & 255;
-      g = (*pixel >> 8) & 255;
-      b = (*pixel >> 0) & 255;
-      
-      if (SAVE_PNM_PIXEL (file, r, g, b) < 0)
-	goto fail;
-    }
-  
-  *adjustment = (off != n ? 4 : 0);
-  return 0;
- fail:
-  return -1;
 }
 
 

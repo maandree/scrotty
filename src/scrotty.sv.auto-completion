@@ -11,9 +11,6 @@
 	(unargumented  (options -c --copyright)  (complete --copyright)
 	 (desc 'Skriv ut upphovsrättsinformation.'))
 
-	(unargumented  (options -r --raw)  (complete --raw)
-	 (desc 'Spara som PNM-bild snarare än som PNG-bild.'))
-
 	(argumented  (options -e --exec)  (complete --exec)  (arg KOMMANDO)  (files -0)
 	 (desc 'Kör ett Kommando för varje sparad bild.'))
 

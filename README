@@ -24,9 +24,6 @@ OPTIONS
 	-c, --copyright
 		Print copyright information.
 
-	-r, --raw
-		Save in PNM rather than in PNG.
-
 	-e, --exec CMD
 		Command to run for each saved image.
 
