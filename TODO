@@ -1,7 +1,5 @@
 Take the screenshot of the framebuffers more simultaneously. (async)
 
-Support framebuffers with other depths.
-
 Investigate Hurd support.
 
 Make a release-test script that validates that the

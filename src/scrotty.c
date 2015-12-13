@@ -66,7 +66,7 @@ static int try_alt_fbpath = 0;
 /**
  * Create an image of a framebuffer.
  * 
- * @param   fbname    The framebuffer device.
+ * @param   fbfd      File descriptor for framebuffer device.
  * @param   imgname   The pathname of the output image, `NULL` for piping.
  * @param   width     The width of the image.
  * @param   height    The height of the image.
@@ -74,10 +74,10 @@ static int try_alt_fbpath = 0;
  * @return            Zero on success, -1 on error.
  */
 static int
-save (const char *fbpath, const char *imgpath, long width,
+save (int fbfd, const char *imgpath, long width,
       long height, void *restrict data)
 {
-  int imgfd = STDOUT_FILENO, fbfd = -1, piping = (imgpath == NULL);
+  int imgfd = STDOUT_FILENO, piping = (imgpath == NULL);
   int saved_errno;
   
   /* Open output file. */
@@ -88,11 +88,6 @@ save (const char *fbpath, const char *imgpath, long width,
       if (imgfd == -1)
 	FILE_FAILURE (imgpath);
     }
-  
-  /* Open the framebuffer device for reading. */
-  fbfd = open (fbpath, O_RDONLY);
-  if (fbfd == -1)
-    FILE_FAILURE (fbpath);
   
   /* Save image. */
   if (save_png (fbfd, width, height, imgfd, data) < 0)
@@ -105,8 +100,6 @@ save (const char *fbpath, const char *imgpath, long width,
   
  fail:
   saved_errno = errno;
-  if (fbfd >= 0)
-    close (fbfd);
   if ((imgfd >= 0) && !piping)
     close (imgfd);
   errno = saved_errno;
@@ -198,6 +191,7 @@ save_fb (int fbno, const char *filepattern, const char *execpattern)
   char *execargs = NULL;
   long width, height;
   void *data = NULL;
+  int fbfd = -1;
   int rc = 0, saved_errno = 0;
   
   /* Get pathname for framebuffer, and stop if we have read all existing ones. */
@@ -205,8 +199,13 @@ save_fb (int fbno, const char *filepattern, const char *execpattern)
   if (access (fbpath, F_OK))
     return 1;
   
+  /* Open the framebuffer device for reading. */
+  fbfd = open (fbpath, O_RDONLY);
+  if (fbfd == -1)
+    FILE_FAILURE (fbpath);
+  
   /* Get the size of the framebuffer. */
-  if (measure (fbno, fbpath, &width, &height, &data) < 0)
+  if (measure (fbno, fbfd, &width, &height, &data) < 0)
     goto fail;
   
   /* Get output pathname. */
@@ -218,7 +217,7 @@ save_fb (int fbno, const char *filepattern, const char *execpattern)
     }
   
   /* Take a screenshot of the current framebuffer. */
-  if (save (fbpath, imgpath, width, height, data) < 0)
+  if (save (fbfd, imgpath, width, height, data) < 0)
     goto fail;
   if (imgpath)
     fprintf (stderr, _("Saved framebuffer %i to %s.\n"), fbno, imgpath);
@@ -242,6 +241,8 @@ save_fb (int fbno, const char *filepattern, const char *execpattern)
   saved_errno = errno;
   rc = -1;
  done:
+  if (fbfd >= 0)
+    close (fbfd);
   free (execargs);
   free (imgpath);
   return errno = saved_errno, rc;
@@ -407,11 +408,11 @@ main (int argc, char *argv[])
   return 0;
   
  fail:
-  if (failure_file == NULL)
-    perror (execname);
-  else
+  if (failure_file != NULL)
     fprintf (stderr, _("%s: %s: %s\n"),
 	     execname, strerror (errno), failure_file);
+  else if (errno)
+    perror (execname);
   return 1;
   
  no_fb:

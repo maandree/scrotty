@@ -71,6 +71,7 @@ save_png (int fbfd, long width, long height, int imgfd, void *restrict data)
     goto fail;
   
   /* Initialise PNG write, and write head. */
+  errno = 0;
   if (setjmp (png_jmpbuf(pngbuf))) /* Failing libpng calls jump here. */
     goto fail;
   png_init_io (pngbuf, file);

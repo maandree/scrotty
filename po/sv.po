@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: scrotty 1.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-12 09:08+0100\n"
+"POT-Creation-Date: 2015-12-13 16:52+0100\n"
 "PO-Revision-Date: 2015-12-07 18:50+0100\n"
 "Last-Translator: Mattias Andrée <maandree@member.fsf.org>\n"
 "Language-Team: none\n"
@@ -17,60 +17,65 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/scrotty.c:224
+#: src/scrotty.c:223
 #, c-format
 msgid "Saved framebuffer %i to %s.\n"
 msgstr "Bildrutebuffert %i sparad till %s.\n"
 
-#: src/scrotty.c:358 src/scrotty.c:361 src/scrotty.c:367 src/scrotty.c:373
-#: src/scrotty.c:377 src/scrotty.c:383 src/scrotty.c:391
+#: src/scrotty.c:359 src/scrotty.c:362 src/scrotty.c:368 src/scrotty.c:374
+#: src/scrotty.c:378 src/scrotty.c:384 src/scrotty.c:392
 #, c-format
 msgid "%s: %s. Type '%s --help' for help.\n"
 msgstr "%s: %s. Kör '%s --help' för hjälp.\n"
 
-#: src/scrotty.c:358
+#: src/scrotty.c:359
 msgid "--device is used twice"
 msgstr "--device förkommer mer än en gång"
 
-#: src/scrotty.c:361 src/scrotty.c:367
+#: src/scrotty.c:362 src/scrotty.c:368
 msgid "Invalid device number, not a non-negative integer"
 msgstr "Ogiltigt enhetsnummer, måste vara ett ickenegativt heltal"
 
-#: src/scrotty.c:373
+#: src/scrotty.c:374
 msgid "--exec is used twice"
 msgstr "--exec förkommer mer än en gång"
 
-#: src/scrotty.c:377
+#: src/scrotty.c:378
 msgid "Invalid input"
 msgstr "Ogiltig indata"
 
-#: src/scrotty.c:383
+#: src/scrotty.c:384
 msgid "FILENAME-PATTERN is used twice"
 msgstr "FILNAMNSMÖNSTER förekommer mer än en gång"
 
-#: src/scrotty.c:391
+#: src/scrotty.c:392
 msgid "--exec cannot be combined with piping"
 msgstr "--exec kan inte kombineras med rördragning"
 
-#: src/scrotty.c:403
+#: src/scrotty.c:404
 #, c-format
 msgid "%s: It looks like you are inside a display server. If this is correct, what you see is probably not what you get.\n"
 msgstr "%s: Det ser ut som att du är innan för en grafikserver. Om detta är korrect, vad de ser är troligtvis inte vad du får.\n"
 
-#: src/scrotty.c:413
+#: src/scrotty.c:412
 #, c-format
 msgid "%s: %s: %s\n"
 msgstr "%s: %s: %s\n"
 
-#: src/scrotty.c:421
+#: src/scrotty.c:422
 #, c-format
 msgid "%s: The selected device does not exist.\n"
 msgstr "%s: Vald enhet existerar inte.\n"
 
-#: src/kern-linux.c:41
+#: src/kern-linux.c:52
 #, c-format
 msgid "%s: Unable to find a framebuffer. If you have a file named %s/MAKEDEV, run it with '-d /dev/fb' as root, or try running '%s'.\n"
 msgstr "%s: Kunde inte hitta någon bildrutebuffert. Om filen %s/MAKEDEV finns ditt system, kör den med '-d /dev/fb' som root, eller testa att köra '%s'.\n"
+
+#: src/kern-linux.c:106
+#, c-format
+msgid "%s: Unsupported framebuffer configurations: pixels are not encoded in whole bytes.\n"
+msgstr "%s: Ickestödd bildrutebuffertsinställningar: pixlar är inte kodade i hela byte:ar.\n"
 
 #: src/info.c:32
 #, fuzzy, c-format

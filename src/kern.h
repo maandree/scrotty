@@ -55,14 +55,13 @@ char *get_fbpath (int altpath, int fbno);
  * Get the dimensions of a framebuffer.
  * 
  * @param   fbno    The number of the framebuffer.
- * @param   fbpath  The path to the framebuffer device..
+ * @param   fbfd    File descriptor for framebuffer device.
  * @param   width   Output parameter for the width of the image.
  * @param   height  Output parameter for the height of the image.
  * @parma   data    Additional data to pass to `convert_fb_to_png`.
  * @return          Zero on success, -1 on error.
  */
-int measure (int fbno, char *restrict fbpath, long *restrict width,
-	     long *restrict height, void **restrict data);
+int measure (int fbno, int fbfd, long *restrict width, long *restrict height, void **restrict data);
 
 /**
  * Convert read data from a framebuffer to PNG pixel data.

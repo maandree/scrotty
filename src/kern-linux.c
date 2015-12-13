@@ -20,12 +20,23 @@
 #include "kern.h"
 #include "png.h"
 
+#include <sys/ioctl.h>
+#include <linux/fb.h>
+
 
 
 /**
  * Stop when `try_alt_fbpath` (in scrotty.c) reaches this value.
  */
 const int alt_fbpath_limit = 2;
+
+struct data
+{
+  unsigned long start;
+  unsigned long end;
+  long hblank;
+  unsigned long position;
+};
 
 
 
@@ -67,53 +78,49 @@ get_fbpath (int altpath, int fbno)
  * Get the dimensions of a framebuffer.
  * 
  * @param   fbno    The number of the framebuffer.
- * @param   fbpath  The path to the framebuffer device..
+ * @param   fbfd    File descriptor for framebuffer device.
  * @param   width   Output parameter for the width of the image.
  * @param   height  Output parameter for the height of the image.
  * @parma   data    Additional data to pass to `convert_fb_to_png`.
  * @return          Zero on success, -1 on error.
  */
 int
-measure (int fbno, char *restrict fbpath, long *restrict width,
-	 long *restrict height, void **restrict data)
+measure (int fbno, int fbfd, long *restrict width, long *restrict height, void **restrict data)
 {
-  static char buf[sizeof (SYSDIR "/class/graphics/fb/virtual_size") + 3 * sizeof(int)];
-  /* The string "/class/graphics/fb/virtual_size" is large enought for the call (*) "*/
-  char *delim;
-  int sizefd = -1;
-  ssize_t got;
-  int saved_errno;
+  static struct data d;
+  struct fb_fix_screeninfo fixinfo;
+  struct fb_var_screeninfo varinfo;
+  unsigned long int linelength;
   
-  /* Open the file with the framebuffer's dimensions. */
-  sprintf (buf, "%s/class/graphics/fb%i/virtual_size", SYSDIR, fbno);
-  sizefd = open (buf, O_RDONLY);
-  if (sizefd == -1)
-    FILE_FAILURE (buf);
-  
-  /* Get the dimensions of the framebuffer. */
-  got = read (sizefd, buf, sizeof (buf) / sizeof (char) - 1); /* (*) */
-  if (got < 0)
+  if (ioctl (fbfd, FBIOGET_FSCREENINFO, &fixinfo))
     goto fail;
-  close (sizefd);
   
-  /* The read content is formated as `%{width},%{height}\n`,
-     convert it to `%{width}\0%{height}\0` and parse it. */
-  buf[got] = '\0';
-  delim = strchr (buf, ',');
-  *delim++ = '\0';
-  *width = atol (buf);
-  *height = atol (delim);
+  if (ioctl (fbfd, FBIOGET_VSCREENINFO, &varinfo))
+    goto fail;
   
+  *width  = varinfo.xres;
+  *height = varinfo.yres;
+  
+  if (varinfo.bits_per_pixel & 7)
+    {
+      fprintf(stderr, _("%s: Unsupported framebuffer configurations: "
+			"pixels are not encoded in whole bytes.\n"), execname);
+      exit(1);
+    }
+  
+  linelength = fixinfo.line_length / (varinfo.bits_per_pixel / 8);
+  d.start = varinfo.yoffset * linelength;
+  d.start += varinfo.xoffset;
+  d.end = d.start + linelength * varinfo.yres;
+  d.hblank = linelength - *width;
+  d.position = 0;
+  
+  /* TODO depth support */
+  
+  *data = &d;
   return 0;
-  
  fail:
-  saved_errno = errno;
-  if (sizefd >= 0)
-    close (sizefd);
-  errno = saved_errno;
   return -1;
-  
-  (void) fbpath;
 }
 
 
@@ -133,16 +140,19 @@ measure (int fbno, char *restrict fbpath, long *restrict width,
  * @param   data        Data from `measure`.
  * @return              Zero on success, -1 on error.
  */
-int convert_fb_to_png (png_struct *pngbuf, png_byte *restrict pixbuf, const char *restrict buf,
-		       size_t n, long width3, size_t *restrict adjustment, long *restrict state,
-		       void *restrict data)
+int
+convert_fb_to_png (png_struct *pngbuf, png_byte *restrict pixbuf, const char *restrict buf, size_t n,
+		   long width3, size_t *restrict adjustment, long *restrict state, void *restrict data)
 {
   const uint32_t *restrict pixel;
   int r, g, b;
   size_t off;
   long x3 = *state;
+  struct data d = *(struct data *)data;
+  unsigned long pos = d.position;
+  long lineend = width3 + d.hblank * 3;
   
-  for (off = 0; off < n; off += 4)
+  for (off = 0; off < n; off += 4, pos++)
     {
       /* A pixel in the framebuffer is formatted as `%{blue}%{green}%{red}%{x}`
 	 in big-endian binary, or `%{x}%{red}%{green}%{blue}` in little-endian binary. */
@@ -151,9 +161,13 @@ int convert_fb_to_png (png_struct *pngbuf, png_byte *restrict pixbuf, const char
       g = (*pixel >> 8) & 255;
       b = (*pixel >> 0) & 255;
       
-      SAVE_PNG_PIXEL (pixbuf, x3, r, g, b);
+      if ((pos < d.start) || (pos >= d.end))
+	continue;
+      
+      if (x3 < width3)
+	SAVE_PNG_PIXEL (pixbuf, x3, r, g, b);
       x3 += 3;
-      if (x3 == width3)
+      if (x3 == lineend)
 	{
 	  SAVE_PNG_ROW (pngbuf, pixbuf);
 	  x3 = 0;
@@ -162,6 +176,7 @@ int convert_fb_to_png (png_struct *pngbuf, png_byte *restrict pixbuf, const char
   
   *adjustment = (off != n ? 4 : 0);
   *state = x3;
+  ((struct data *)data)->position = pos;
   return 0;
 }
 
