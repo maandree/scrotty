@@ -81,8 +81,6 @@ endif
 endif
 __TEXI_SRC = $(foreach S,$(__TEXI_SRC_),$(foreach F,$(shell cd $(v)doc/info && $(ECHO) $(S)),aux/doc/$(F)))
 endif
-X:
-	@echo $(__TEXI_SRC)
 
 # Split parts of the info manual.
 ifdef _INFOPARTS
