@@ -89,9 +89,9 @@ _COPYING = COPYING
 
 # Used by mk/dist.mk
 ___EVERYTHING_INFO = scrotty titlepage-data content hardcopy-copying  \
-                   appx/fdl appx/free-software-needs-free-documentation appx/gpl  \
-                   chap/invoking chap/overview chap/strftime  \
-                   reusable/macros reusable/paper reusable/titlepage
+                     appx/fdl appx/free-software-needs-free-documentation appx/gpl  \
+                     chap/invoking chap/overview chap/strftime  \
+                     reusable/macros reusable/paper reusable/titlepage
 ___EVERYTHING_H = common kern info pattern png
 _EVERYTHING = $(foreach F,$(___EVERYTHING_INFO),doc/info/$(F).texinfo)  \
               $(foreach F,$(___EVERYTHING_H),src/$(F).h)  \
