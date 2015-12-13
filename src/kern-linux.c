@@ -30,11 +30,31 @@
  */
 const int alt_fbpath_limit = 2;
 
+/**
+ * Addition metadata for the framebuffer.
+ */
 struct data
 {
+  /**
+   * The number dead pixels at the beginning.
+   */
   unsigned long start;
+  
+  /**
+   * The byte where the frame end. Zero if
+   * there is neither panning or padding.
+   */
   unsigned long end;
+  
+  /**
+   * The number of dead pixels between lines.
+   */
   long hblank;
+  
+  /**
+   * This variable is used to keep track of
+   * how many pixels have been read.
+   */
   unsigned long position;
 };
 
@@ -92,15 +112,17 @@ measure (int fbno, int fbfd, long *restrict width, long *restrict height, void *
   struct fb_var_screeninfo varinfo;
   unsigned long int linelength;
   
+  /* Get configurations. */
   if (ioctl (fbfd, FBIOGET_FSCREENINFO, &fixinfo))
     goto fail;
-  
   if (ioctl (fbfd, FBIOGET_VSCREENINFO, &varinfo))
     goto fail;
   
+  /* Get dimension. */
   *width  = varinfo.xres;
   *height = varinfo.yres;
   
+  /* Are the configurations supported? */
   if (varinfo.bits_per_pixel & 7)
     {
       fprintf(stderr, _("%s: Unsupported framebuffer configurations: "
@@ -108,10 +130,13 @@ measure (int fbno, int fbfd, long *restrict width, long *restrict height, void *
       exit(1);
     }
   
+  /* Get dead area information. */
   linelength = fixinfo.line_length / (varinfo.bits_per_pixel / 8);
   d.start = varinfo.yoffset * linelength;
   d.start += varinfo.xoffset;
   d.end = d.start + linelength * varinfo.yres;
+  if ((d.start == 0) && (linelength == 0))
+    d.end = 0;
   d.hblank = linelength - *width;
   d.position = 0;
   
@@ -144,6 +169,24 @@ int
 convert_fb_to_png (png_struct *pngbuf, png_byte *restrict pixbuf, const char *restrict buf, size_t n,
 		   long width3, size_t *restrict adjustment, long *restrict state, void *restrict data)
 {
+#define STORE(PADDING_AND_PANNING)			\
+  do							\
+    {							\
+      if (PADDING_AND_PANNING)				\
+	if ((pos < d.start) || (pos >= d.end))		\
+	  continue;					\
+							\
+      if (PADDING_AND_PANNING ? (x3 < width3) : 1)	\
+	SAVE_PNG_PIXEL (pixbuf, x3, r, g, b);		\
+      x3 += 3;						\
+      if (x3 == lineend)				\
+	{						\
+	  SAVE_PNG_ROW (pngbuf, pixbuf);		\
+	  x3 = 0;					\
+	}						\
+    }							\
+  while (0)
+  
   const uint32_t *restrict pixel;
   int r, g, b;
   size_t off;
@@ -152,27 +195,30 @@ convert_fb_to_png (png_struct *pngbuf, png_byte *restrict pixbuf, const char *re
   unsigned long pos = d.position;
   long lineend = width3 + d.hblank * 3;
   
-  for (off = 0; off < n; off += 4, pos++)
-    {
-      /* A pixel in the framebuffer is formatted as `%{blue}%{green}%{red}%{x}`
-	 in big-endian binary, or `%{x}%{red}%{green}%{blue}` in little-endian binary. */
-      pixel = (const uint32_t *)(buf + off);
-      r = (*pixel >> 16) & 255;
-      g = (*pixel >> 8) & 255;
-      b = (*pixel >> 0) & 255;
-      
-      if ((pos < d.start) || (pos >= d.end))
-	continue;
-      
-      if (x3 < width3)
-	SAVE_PNG_PIXEL (pixbuf, x3, r, g, b);
-      x3 += 3;
-      if (x3 == lineend)
-	{
-	  SAVE_PNG_ROW (pngbuf, pixbuf);
-	  x3 = 0;
-	}
-    }
+  if ((d.start == 0) && (d.hblank == 0) && (d.end == 0)) /* Optimised version for customary settings. */
+    for (off = 0; off < n; off += 4)
+      {
+	/* A pixel in the framebuffer is formatted as `%{blue}%{green}%{red}%{x}`
+	   in big-endian binary, or `%{x}%{red}%{green}%{blue}` in little-endian binary. */
+	pixel = (const uint32_t *)(buf + off);
+	r = (*pixel >> 16) & 255;
+	g = (*pixel >> 8) & 255;
+	b = (*pixel >> 0) & 255;
+	
+	STORE(0);
+      }
+  else
+    for (off = 0; off < n; off += 4, pos++)
+      {
+	/* A pixel in the framebuffer is formatted as `%{blue}%{green}%{red}%{x}`
+	   in big-endian binary, or `%{x}%{red}%{green}%{blue}` in little-endian binary. */
+	pixel = (const uint32_t *)(buf + off);
+	r = (*pixel >> 16) & 255;
+	g = (*pixel >> 8) & 255;
+	b = (*pixel >> 0) & 255;
+	
+	STORE(1);
+      }
   
   *adjustment = (off != n ? 4 : 0);
   *state = x3;
