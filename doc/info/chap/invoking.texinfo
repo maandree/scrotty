@@ -1,7 +1,7 @@
 @node Invoking
 @chapter Invoking
 
-@command{scrotty} recognises four options:
+@command{scrotty} recognises the options:
 
 @table @option
 @item -h
