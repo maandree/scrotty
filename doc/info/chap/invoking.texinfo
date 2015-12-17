@@ -21,11 +21,9 @@ if this option is omitted.
 @item -e
 @itemx --exec CMD
 Run a command for each saved image.
-
-Can only be specified once.
 @end table
 
-Each option can only ube used once.
+Each option can only be used once.
 
 In addition to these options, a filename
 pattern, that does not start with a dash,
