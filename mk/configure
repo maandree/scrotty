@@ -29,6 +29,19 @@ exec 10>config.status
 exec 20>.config.mk
 
 
+# Print a quoted (if necessary) version of a string
+quote ()
+{
+    value="$1"
+    if ! test "${value%%\'*}" = "${value}"; then
+	value="'$(echo "${value}" | sed "s/'/'\\\\''/g")'"
+    elif ! test "$(printf '%s' ${value})" = "${value}"; then
+	value="'${value}'"
+    fi
+    echo "${value}"
+}
+
+
 # Parse command line.
 incomplete=
 dashed=
@@ -284,7 +297,7 @@ for option; do
     if test "${option%%=*}" = "${option}"; then
 	incomplete="${option}"
     else
-	eval "${nodash}=${option#*=}"
+	eval "${nodash}=$(quote "${option#*=}")"
 	eval "have_${nodash}=yes"
     fi
 done
@@ -395,13 +408,8 @@ fi
 # Set unset directories to their default.
 defdir ()
 {
-    p="${2}"
+    p="$(quote "${2}")"
     if ! test "${p%%\'*}" = "${p}"; then
-	p="$(echo "${p}" | sed "s/'/'\\\\''/g")"
-	p="'${p}'"
-	p="$(echo "${p}" | sed "s/'/'\\\\''/g")"
-    elif ! test "$(printf '%s' ${p})" = "${p}"; then
-	p="'${p}'"
 	p="$(echo "${p}" | sed "s/'/'\\\\''/g")"
     fi
     if ! test -n "$(eval echo '${have_'"${1}"'}')"; then
@@ -496,7 +504,7 @@ defdir man7 "man7${MAN_SECTION_SUFFIX}"
 defdir man8 "man8${MAN_SECTION_SUFFIX}"
 defdir man9 "man9${MAN_SECTION_SUFFIX}"
 if test -n "${MAN_SECTION}" && ! test -n "$(eval echo '${man'"${MAN_SECTION}"'ext}')"; then
-    defdir man${MAN_SECTION}ext "$(eval echo '${man'"${MAN_SECTION}"'ext}')"
+    defdir "man${MAN_SECTION}ext" "$(eval echo '${man'"${MAN_SECTION}"'ext}')"
 fi
 defdir man0ext ".0"
 defdir man1ext ".1"
@@ -522,12 +530,7 @@ fi
 if test -n "${srcdir}"; then
     srcdir="$(realpath "${srcdir}")/"
     srcdir_proper="${srcdir}"
-    if ! test "${srcdir%%\'*}" = "${srcdir}"; then
-	srcdir="$(echo "${srcdir}" | sed "s/'/'\\\\''/g")"
-	srcdir="'${srcdir}'"
-    elif ! test "$(printf '%s' ${srcdir})" = "${srcdir}"; then
-	srcdir="'${srcdir}'"
-    fi
+    srcdir="$(quote "${srcdir}")"
 fi
 if ! test -f "${srcdir_proper}Makefile.in"; then
     echo "${0}: error: cannot found source directory."
@@ -548,7 +551,11 @@ echo >&10
 echo 'cd "$(dirname "${0}")"' >&10
 
 # config.status calls ./configure with all arguments you called ./configure.
-echo "exec ${0}" "$@" >&10
+printf "exec %s" "${0}" >&10
+for option; do
+    printf " %s" "$(quote "${option}")" >&10
+done
+echo >&10
 
 # Close config.status.
 exec 10>&-

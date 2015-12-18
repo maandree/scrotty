@@ -60,11 +60,11 @@ endif
 # BUILD VARIABLES:
 
 # Optimisation settings for C code compilation.
+ifndef OPTIMISE
 ifndef DEBUG
 OPTIMISE = -O2 -g
 endif
-ifndef DEBUG
-ifdef OPTIMISE
+ifdef DEBUG
 ifdef __USING_GCC
 OPTIMISE = -Og -g
 endif
@@ -78,6 +78,7 @@ endif
 ifdef _PEDANTIC
 _PEDANTIC = -pedantic
 endif
+ifndef WARN
 ifndef DEBUG
 WARN = -Wall
 endif
@@ -99,6 +100,7 @@ ifndef __USING_GCC
 WARN = -Wall -Wextra $(_PEDANTIC)
 endif
 endif
+endif
 
 # Support for internationalisation?
 ifndef WITHOUT_GETTEXT
@@ -112,9 +114,15 @@ _CPPFLAGS += $(foreach D,$(_ALL_DIRS),-D'$(D)="$($(D))"')
 # MORE HELP VARIABLES:
 
 # Compilation and linking flags, and command.
+ifndef CPPFLAGS
 CPPFLAGS =
+endif
+ifndef CFLAGS
 CFLAGS = $(OPTIMISE) $(WARN)
+endif
+ifndef LDFLAGS
 LDFLAGS = $(OPTIMISE) $(WARN)
+endif
 __CC = $(CC) -std=$(_C_STD) -c $(_CPPFLAGS) $(_CFLAGS)
 __LD = $(CC) -std=$(_C_STD) $(_LDFLAGS)
 __CC_POST = $(CPPFLAGS) $(CFLAGS) $(EXTRA_CPPFLAGS) $(EXTRA_CFLAGS)
