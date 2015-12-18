@@ -173,7 +173,7 @@ include aux/lang-c.mk
 aux/lang-c.mk: Makefile
 	@$(MKDIR) -p aux
 	@$(ECHO) > aux/lang-c.mk
-	@$(foreach B,$(_BIN),$(ECHO) bin/$(B): $(foreach O,$(_OBJ_$(B)),aux/$(O).o) >> aux/lang-c.mk)
+	@$(foreach B,$(_BIN),$(ECHO) bin/$(B): $(foreach O,$(_OBJ_$(B)),aux/$(O).o) >> aux/lang-c.mk &&) $(TRUE)
 
 
 # INSTALL RULES:
