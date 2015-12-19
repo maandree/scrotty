@@ -101,7 +101,7 @@ install-base-strip, and install-cmd-strip, respectively.
 
 The untranslated man page is installed via the rule install-man-untranslated.
 Additional translations are installed via the rule install-man-locale, which
-installes the locales listed in MAN_LOCALES.
+installs the locales listed in MAN_LOCALES.
 
 It is not possible to multiple translations of the tab-completion scripts.
 But you may select select one translation by setting SHELL_LOCALE. Note,
