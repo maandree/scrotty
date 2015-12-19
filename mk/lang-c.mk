@@ -36,6 +36,20 @@
 # that lists all objects files (without the
 # suffix and without the aux/ prefix) that
 # are required to build the command.
+# 
+# Binary you want installed to /sbin rather than
+# /bin shall be listed in _SBIN rather than in
+# _BIN. _SBIN and _BIN may not list binaries
+# with identical names. Analogically, you may
+# add _LIBEXEC for binary to be installed to
+# /libexec.
+# 
+# If you only have one binary, you may select
+# to define _BINDIR to name the variable with
+# the pathname for the directory the binary
+# shall be installed. For example, if you want
+# the binary to be installed to /usr/sbin,
+# define _BINDIR = SBINDIR.
 
 
 ifdef _C_STD
@@ -110,9 +124,6 @@ endif
 # Add CPP definitions for all directories.
 _CPPFLAGS += $(foreach D,$(_ALL_DIRS),-D'$(D)="$($(D))"')
 
-
-# MORE HELP VARIABLES:
-
 # Compilation and linking flags, and command.
 ifndef CPPFLAGS
 CPPFLAGS =
@@ -147,11 +158,16 @@ endif
 endif
 endif
 
+# Directory for the binary if there is only one binary.
+ifndef _BINDIR
+_BINDIR = BINDIR
+endif
+
 
 # BUILD RULES:
 
 .PHONY: cmd-c
-cmd-c: $(foreach B,$(_BIN),bin/$(B))
+cmd-c: $(foreach B,$(_BIN) $(_SBIN) $(_LIBEXEC),bin/$(B))
 
 # Compile a C file into an object file.
 aux/%.o: $(v)src/%.c $(foreach H,$(__H),$(v)$(H))
@@ -173,20 +189,31 @@ include aux/lang-c.mk
 aux/lang-c.mk: Makefile
 	@$(MKDIR) -p aux
 	@$(ECHO) > aux/lang-c.mk
-	@$(foreach B,$(_BIN),$(ECHO) bin/$(B): $(foreach O,$(_OBJ_$(B)),aux/$(O).o) >> aux/lang-c.mk &&) $(TRUE)
+	@$(foreach B,$(_BIN) $(_SBIN) $(_LIBEXEC),$(ECHO) bin/$(B): $(foreach O,$(_OBJ_$(B)),aux/$(O).o) >> aux/lang-c.mk &&) $(TRUE)
 
 
 # INSTALL RULES:
 
 .PHONY: install-cmd-c
-install-cmd-c: $(foreach B,$(_BIN),bin/$(B))
+install-cmd-c: $(foreach B,$(_BIN) $(_SBIN) $(_LIBEXEC),bin/$(B))
 	@$(PRINTF_INFO) '\e[00;01;31mINSTALL\e[34m %s\e[00m\n' "$@"
-	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$(BINDIR)"
-ifdef COMMAND
-	$(Q)$(INSTALL_PROGRAM) $(__STRIP) $^ -- "$(DESTDIR)$(BINDIR)"
-endif
 ifndef COMMAND
-	$(Q)$(INSTALL_PROGRAM) $(__STRIP) $^ -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
+ifdef _BIN
+	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$(BINDIR)"
+	$(Q)$(INSTALL_PROGRAM) $(__STRIP) $(foreach B,$(_BIN),bin/$(B)) -- "$(DESTDIR)$(BINDIR)"
+endif
+ifdef _SBIN
+	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$(SBINDIR)"
+	$(Q)$(INSTALL_PROGRAM) $(__STRIP) $(foreach B,$(_SBIN),bin/$(B)) -- "$(DESTDIR)$(SBINDIR)"
+endif
+ifdef _LIBEXEC
+	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$(LIBEXECDIR)/$(PKGNAME)"
+	$(Q)$(INSTALL_PROGRAM) $(__STRIP) $(foreach B,$(_LIBEXEC),bin/$(B)) -- "$(DESTDIR)$(LIBEXECDIR)/$(PKGNAME)"
+endif
+endif
+ifdef COMMAND
+	$(Q)$(INSTALL_DIR) -- "$(DESTDIR)$($(_BINDIR))"
+	$(Q)$(INSTALL_PROGRAM) $(__STRIP) $^ -- "$(DESTDIR)$($(_BINDIR))/$(COMMAND)"
 endif
 	@$(ECHO_EMPTY)
 
@@ -196,10 +223,19 @@ endif
 .PHONY: uninstall-cmd-c
 uninstall-cmd-c:
 ifdef COMMAND
-	-$(Q)$(RM) -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
+	-$(Q)$(RM) -- "$(DESTDIR)$($(_BINDIR))/$(COMMAND)"
 endif
 ifndef COMMAND
+ifdef _BIN
 	-$(Q)$(RM) -- $(foreach B,$(_BIN),"$(DESTDIR)$(BINDIR)/$(B)")
+endif
+ifdef _SBIN
+	-$(Q)$(RM) -- $(foreach B,$(_SBIN),"$(DESTDIR)$(SBINDIR)/$(B)")
+endif
+ifdef _LIBEXEC
+	-$(Q)$(RM) -- $(foreach B,$(_LIBEXEC),"$(DESTDIR)$(LIBEXECDIR)/$(PKGNAME)/$(B)")
+	-$(Q)$(RMDIR) -- "$(DESTDIR)$(LIBEXECDIR)/$(PKGNAME)"
+endif
 endif
 
 
