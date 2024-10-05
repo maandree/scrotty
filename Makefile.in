@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Mattias Andrée <maandree@member.fsf.org>
+# Copyright (C) 2015  Mattias Andrée <m@maandree.se>
 # 
 # Copying and distribution of this file, with or without modification,
 # are permitted in any medium without royalty provided the copyright
@@ -70,7 +70,7 @@ _LDFLAGS += $(shell pkg-config --libs libpng)
 # Used by mk/i18n.mk
 _SRC = $(foreach B,$(_BIN),$(foreach F,$(_OBJ_$(B)),$(F).c))
 _PROJECT_FULL = scrotty
-_COPYRIGHT_HOLDER = Mattias Andrée (maandree@member.fsf.org)
+_COPYRIGHT_HOLDER = Mattias Andrée (m@maandree.se)
 
 # Used by mk/texinfo.mk
 _TEXINFO_DIRLEVELS = 2

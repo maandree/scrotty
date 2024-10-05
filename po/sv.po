@@ -1,7 +1,7 @@
 # Swedish translations for scrotty package.
-# Copyright (C) 2015 Mattias Andrée (maandree@member.fsf.org)
+# Copyright (C) 2015 Mattias Andrée (m@maandree.se)
 # This file is distributed under the same license as the scrotty package.
-# Mattias Andrée <maandree@member.fsf.org>, 2015.
+# Mattias Andrée <m@maandree.se>, 2015.
 #
 msgid ""
 msgstr ""
@@ -9,7 +9,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-12-13 16:52+0100\n"
 "PO-Revision-Date: 2015-12-07 18:50+0100\n"
-"Last-Translator: Mattias Andrée <maandree@member.fsf.org>\n"
+"Last-Translator: Mattias Andrée <m@maandree.se>\n"
 "Language-Team: none\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"

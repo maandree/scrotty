@@ -1,7 +1,7 @@
 /**
  * scrotty — Screenshot program for Linux's TTY
  * 
- * Copyright © 2014, 2015  Mattias Andrée (maandree@member.fsf.org)
+ * Copyright © 2014, 2015  Mattias Andrée (m@maandree.se)
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ print_copyright (void)
 		   "\n"
 		   "You should have received a copy of the GNU General Public License\n"
 		   "along with this program.  If not, see <http://www.gnu.org/licenses/>.\n"),
-		 "2014, 2015  Mattias Andrée (maandree@member.fsf.org)"
+		 "2014, 2015  Mattias Andrée (m@maandree.se)"
 		 ) < 0 ? -1 : 0;
 }
 
